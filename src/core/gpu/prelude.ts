@@ -536,7 +536,7 @@ export function patchParams(
   over: Partial<Record<ParamName, number>>,
 ): void {
   const dv = new DataView(out)
-  for (const [name, v] of Object.entries(over)) {
+  for (const [name, v] of Object.entries<number | undefined>(over)) {
     const slot = PARAM_SLOT.get(name)
     if (slot !== undefined && v !== undefined) {
       reportNonFinite(name, v)

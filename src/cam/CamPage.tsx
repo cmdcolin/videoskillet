@@ -198,7 +198,7 @@ export function CamPage(props: { link: CamLink | null }) {
   // A tap puts a look up outright, the way a photo app's filter does, and a
   // second tap on the look already up opens its knobs.
   const pick = (name: string) => {
-    if (look !== null && look.name === name && !look.rolled) toggle('tune')
+    if (look?.name === name && !look.rolled) toggle('tune')
     else sc.pick(name)
   }
 
@@ -276,7 +276,8 @@ export function CamPage(props: { link: CamLink | null }) {
   const step = (dir: 1 | -1) => {
     const order: (string | null)[] = [null, ...shelf.looks]
     const at = look === null || look.rolled ? 0 : order.indexOf(look.name)
-    const name = order[(Math.max(at, 0) + dir + order.length) % order.length]!
+    const name =
+      order[(Math.max(at, 0) + dir + order.length) % order.length] ?? null
     sc.land(name === null ? null : { name, strength: 1, rolled: false })
     announce(
       name === null

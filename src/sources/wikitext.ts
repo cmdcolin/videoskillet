@@ -330,7 +330,7 @@ export async function passageAbout(
 
   let result: Passage | null = null
   for (const article of candidates) {
-    if (result === null) result = await tryArticle(article, true)
+    result ??= await tryArticle(article, true)
   }
   for (let i = 0; result === null && i < RANDOM_ATTEMPTS; i++)
     result = await tryArticle(await randomArticle(signal), false)

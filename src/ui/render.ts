@@ -124,6 +124,7 @@ export async function renderTake(
   spec: RenderSpec,
 ): Promise<Blob> {
   const { frames, fps, seed } = spec
+  const replaced = () => engine.isDestroyed
   const wasRunning = engine.pauseLoop()
   // **Let the loop actually finish stopping before taking the frames.**
   //
@@ -156,7 +157,7 @@ export async function renderTake(
   if (wasRunning) await twoFramesOr(3000)
   // Before `startTake`, which writes every buffer: on a destroyed engine those
   // writes raise errors on a device its successor may have adopted.
-  if (engine.isDestroyed) throw new RenderEngineReplaced()
+  if (replaced()) throw new RenderEngineReplaced()
   // After the two frames above, not before: those strays are the live loop's
   // last, and stepping them through a freshly-cleared signal path would put two
   // frames of someone else's take at the front of this one.
@@ -187,7 +188,7 @@ export async function renderTake(
       await engine.pullVideo(i)
       // After the last await of the frame: a replacement lands between tasks,
       // and `step` and `frame` below run in one.
-      if (engine.isDestroyed) throw new RenderEngineReplaced()
+      if (replaced()) throw new RenderEngineReplaced()
       // Step, then take what it drew: `step()` renders synchronously, so the
       // canvas holds frame `i` by the time this returns. Taking the frame first
       // would record the state *before* the render and shift the whole take one

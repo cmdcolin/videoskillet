@@ -23,7 +23,7 @@ function bandsOf<T extends string>(
   for (const o of options) {
     const group = o.group ?? null
     const last = bands.at(-1)
-    if (last !== undefined && last.group === group) last.options.push(o)
+    if (last?.group === group) last.options.push(o)
     else bands.push({ group, options: [o] })
   }
   return bands

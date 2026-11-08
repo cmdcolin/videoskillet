@@ -271,7 +271,7 @@ export function CueRow(props: {
   keys: { tap: string; retrigger: string }
 }) {
   const { cue } = props
-  const armed = cue !== null && cue.out === null
+  const armed = cue?.out === null
   const looping = cue !== null && cue.out !== null
   return (
     <div className={styles.cueRow}>

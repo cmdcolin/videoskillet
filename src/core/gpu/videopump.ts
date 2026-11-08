@@ -385,6 +385,10 @@ export class VideoPump {
   // Whether this slot's pictures are coming from a decoder rather than from its
   // element. The guard on every path that would otherwise read or move the
   // element's own playhead.
+  private isDisposed(): boolean {
+    return this.disposed
+  }
+
   private pulling(slot: Slot): boolean {
     return this.takeFps !== null && slot.pull !== null
   }
@@ -486,7 +490,7 @@ export class VideoPump {
       // Checked after the await as well as before: a source change during the
       // conversion retires this frame rather than landing the outgoing clip in
       // the incoming one's texture.
-      if (this.disposed || !this.pulling(slot)) {
+      if (this.isDisposed() || !this.pulling(slot)) {
         bmp.close()
         return
       }

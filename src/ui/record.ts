@@ -326,15 +326,14 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   // A take whose sound cannot be encoded is still a take, silent. So is one
   // whose context is not running: its clock stands still, and every frame would
   // land in the first period.
-  const tap =
-    spec.audio === undefined || spec.audio === null ? null : spec.audio
+  const tap = spec.audio ?? null
   if (tap !== null && tap.context.state !== 'running')
     await Promise.race([
       tap.context.resume().catch(() => {}),
       new Promise(r => setTimeout(r, CLOCK_WARMUP_MS)),
     ])
   const sound =
-    tap === null || tap.context.state !== 'running'
+    tap?.context.state !== 'running'
       ? null
       : await startAudio(tap, spec.channels ?? 1).catch(() => null)
 

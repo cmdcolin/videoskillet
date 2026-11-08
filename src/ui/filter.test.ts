@@ -86,7 +86,7 @@ describe('the motion mode', () => {
     const other = GROUPS.find(g => !g.sliders.some(s => s.key === QUIET))
     expect(other).toBeDefined()
     expect(groupMatches(groupFor(QUIET), MOVING, onlyQuiet)).toBe(true)
-    expect(groupMatches(other as Group, MOVING, onlyQuiet)).toBe(false)
+    expect(groupMatches(other!, MOVING, onlyQuiet)).toBe(false)
   })
 
   it('shows nothing at all when the bay is empty', () => {

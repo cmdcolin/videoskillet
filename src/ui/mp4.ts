@@ -176,8 +176,8 @@ export function normaliseAvcc(
 
   const sets: { type: number; data: Uint8Array<ArrayBuffer> }[] = []
   let at = 6
-  let whole = true
   const take = (count: number, expect: number) => {
+    let whole = true
     for (let i = 0; i < count && whole; i++) {
       const len = at + 2 <= raw.length ? (raw[at]! << 8) | raw[at + 1]! : 0
       at += 2
@@ -191,9 +191,10 @@ export function normaliseAvcc(
         sets.push({ type: expect, data: doubled ? data.slice(1) : data })
       }
     }
+    return whole
   }
-  take(raw[5]! & 0x1f, 7)
-  if (at < raw.length) take(raw[at++]!, 8)
+  const whole =
+    take(raw[5]! & 0x1f, 7) && (at >= raw.length || take(raw[at++]!, 8))
 
   const sps = sets.filter(s => s.type === 7)
   const pps = sets.filter(s => s.type === 8)
@@ -363,7 +364,7 @@ function runTable(
   const runs: [number, number][] = []
   for (const v of values) {
     const last = runs.at(-1)
-    if (last !== undefined && last[1] === v) last[0]++
+    if (last?.[1] === v) last[0]++
     else runs.push([1, v])
   }
   return fullBox(

@@ -66,9 +66,7 @@ describe('helpBlocks', () => {
 describe('mode switch blurbs', () => {
   const BOLD = /\*\*([^*]+)\*\*/g
   const sliders = GROUPS.flatMap(g => g.sliders)
-  const modes = sliders.filter(
-    s => s.choices !== undefined && s.help !== undefined,
-  )
+  const modes = sliders.filter(s => s.choices !== undefined)
 
   it('has mode switches to check', () => {
     expect(modes.length).toBeGreaterThan(10)
@@ -77,7 +75,7 @@ describe('mode switch blurbs', () => {
   for (const s of modes) {
     const choices = s.choices ?? []
     const bold = new Set(
-      [...(s.help ?? '').matchAll(BOLD)].map(m => m[1]!.toLowerCase()),
+      [...s.help.matchAll(BOLD)].map(m => m[1]!.toLowerCase()),
     )
     const named = choices.filter(c => bold.has(c.toLowerCase()))
     if (named.length === 0) continue

@@ -38,7 +38,7 @@ interface RenderApi {
   render: (
     seconds: number,
     seed: number,
-    onFrame?: (frame: number) => void,
+    onFrame?: (frame: number) => void | Promise<void>,
   ) => void
   cancel: () => void
 }
@@ -56,7 +56,11 @@ export function useRender(
   const cancelled = useRef(false)
 
   const render = useCallback(
-    (seconds: number, seed: number, onFrame?: (frame: number) => void) => {
+    (
+      seconds: number,
+      seed: number,
+      onFrame?: (frame: number) => void | Promise<void>,
+    ) => {
       const canvas = canvasRef.current
       if (engine === null || canvas === null || seconds <= 0) return
       cancelled.current = false

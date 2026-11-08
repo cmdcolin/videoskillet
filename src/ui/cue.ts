@@ -78,7 +78,7 @@ export function tapCue(cue: Cue | null, time: number, duration: number): Cue {
   // Nothing marked, or a loop already running: this press starts a new cue and
   // whatever loop was running drops. Same branch, because "re-arm" and "arm" are
   // the same act — the only difference is what was there before.
-  if (cue === null || cue.out !== null) return { in: t, out: null }
+  if (cue?.out !== null) return { in: t, out: null }
   const lo = Math.min(cue.in, t)
   const hi = Math.max(cue.in, t)
   const out = clampTo(Math.max(hi, lo + MIN_CUE_LOOP), duration)

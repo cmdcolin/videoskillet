@@ -482,7 +482,7 @@ function roll(slot: VideoSlot, v: HTMLVideoElement): void {
 // url is promoted; anything else loads as it always did.
 export function playUrl(slot: VideoSlot, url: string): void {
   const parked = slot.next.current
-  const ready = parked !== null && parked.url === url ? parked.el : null
+  const ready = parked?.url === url ? parked.el : null
   if (ready !== null) slot.next.current = null
   const v = ready ?? makeSlotVideo(slot, 'clip')
   if (ready === null) {

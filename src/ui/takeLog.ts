@@ -94,13 +94,12 @@ export interface TakeNote {
 let release: (() => void) | null = null
 
 const holdLock = () => {
-  if (release !== null || typeof navigator.locks?.request !== 'function') return
+  const nav: Partial<Navigator> = navigator
+  if (release !== null || typeof nav.locks?.request !== 'function') return
   const held = new Promise<void>(r => {
     release = r
   })
-  void navigator.locks
-    .request(KEY, { mode: 'shared' }, () => held)
-    .catch(() => {})
+  void nav.locks.request(KEY, { mode: 'shared' }, () => held).catch(() => {})
 }
 
 export const noteTake = (note: TakeNote) => {
@@ -116,9 +115,10 @@ export const clearTake = () => {
 
 // Whether any open tab is recording a take.
 export async function takeLive(): Promise<boolean> {
-  if (typeof navigator.locks?.query !== 'function') return false
-  const { held } = await navigator.locks.query().catch(() => ({ held: [] }))
-  return held?.some(l => l.name === KEY) ?? false
+  const nav: Partial<Navigator> = navigator
+  if (typeof nav.locks?.query !== 'function') return false
+  const { held = [] } = await nav.locks.query().catch(() => ({ held: [] }))
+  return held.some(l => l.name === KEY)
 }
 
 interface HighEntropy {

@@ -48,7 +48,7 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
   })
 
   afterAll(async () => {
-    await env?.cleanup()
+    await env.cleanup()
   })
 
   // Seeded through withSecurityRulesDisabled, so a read test is testing the read

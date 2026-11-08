@@ -175,7 +175,7 @@ export function useClipLibrary(
       return
     }
     const how = access.clips.get(clip.id)
-    if (how === undefined || how.open === null) {
+    if (how?.open == null) {
       setNote(`${clip.name} — reconnect this shelf to play it`)
     } else {
       setNote('')
@@ -249,7 +249,7 @@ export function useClipLibrary(
     if (clip.seconds > 0 || clip.kind !== 'video')
       return Promise.resolve(clip.seconds)
     const how = access.clips.get(clip.id)
-    if (how === undefined || how.open === null) return Promise.resolve(0)
+    if (how?.open == null) return Promise.resolve(0)
     return how
       .open()
       .then(probeDuration)

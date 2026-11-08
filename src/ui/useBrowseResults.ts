@@ -80,9 +80,7 @@ export function useBrowseResults(origin: PoolOrigin, query: string): Browsing {
 
   return query === ''
     ? IDLE
-    : answered !== undefined &&
-        answered.origin === origin &&
-        answered.query === query
+    : answered?.origin === origin && answered.query === query
       ? answered.result
       : BUSY
 }

@@ -643,18 +643,14 @@ export function learnClipSeconds(
   seconds: number,
 ): Strip {
   if (seconds <= 0) return strip
-  let changed = false
-  const rows = strip.rows.map(row => {
-    // Truthiness, on `stepEffects`' rule: a hand-built row can omit `clip`
-    // entirely, and `undefined` is not `null` — tested against null alone this
-    // read `.id` off nothing and threw on the first probe to land.
-    if (!row.clip || row.clip.id !== clipId || row.clip.seconds > 0) {
-      return row
-    }
-    changed = true
-    return { ...row, clip: { ...row.clip, seconds } }
-  })
-  return changed ? { ...strip, rows } : strip
+  const rows = strip.rows.map(row =>
+    !row.clip || row.clip.id !== clipId || row.clip.seconds > 0
+      ? row
+      : { ...row, clip: { ...row.clip, seconds } },
+  )
+  return rows.some((row, i) => row !== strip.rows[i])
+    ? { ...strip, rows }
+    : strip
 }
 
 // How far through its hold the current row is, 0..1, or null when there is

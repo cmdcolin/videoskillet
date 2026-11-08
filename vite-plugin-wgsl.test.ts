@@ -60,7 +60,7 @@ describe('stripWgslComments', () => {
       for (const line of src.split('\n')) {
         const code = line.slice(
           0,
-          line.indexOf('//') === -1 ? undefined : line.indexOf('//'),
+          line.includes('//') ? line.indexOf('//') : undefined,
         )
         if (code.trim() !== '') {
           expect(kept).toContain(code.trimEnd())

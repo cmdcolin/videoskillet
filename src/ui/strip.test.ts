@@ -122,7 +122,7 @@ describe('holdSpan', () => {
       expect(n).not.toBeNull()
       expect(n).toBeGreaterThanOrEqual(360)
       expect(n).toBeLessThanOrEqual(600)
-      lengths.add(n as number)
+      lengths.add(n!)
     }
     expect(lengths.size).toBeGreaterThan(30)
   })
@@ -421,7 +421,7 @@ describe('advance', () => {
   it('comes back round, on the next lap', () => {
     const first = start(two, CLOCK(0))
     const second = advance(two, first.walk, CLOCK(480))
-    const third = advance(two, second?.walk as Walk, CLOCK(960))
+    const third = advance(two, second!.walk, CLOCK(960))
     expect(third?.walk).toMatchObject({ row: 0, lap: 1 })
   })
 
@@ -1179,7 +1179,7 @@ describe('a walk is reproducible', () => {
   it('asks the same question however the row was reached', () => {
     const played = advance(
       mixed,
-      advance(mixed, start(mixed, CLOCK(0)).walk, CLOCK(480))?.walk as Walk,
+      advance(mixed, start(mixed, CLOCK(0)).walk, CLOCK(480))!.walk,
       CLOCK(960),
     )
     const jumped = fire(mixed, STOPPED, 2, CLOCK(0))

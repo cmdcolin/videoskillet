@@ -88,14 +88,13 @@ const listModeOf = (mode: SourceMode | SourceBMode): ListMode | null =>
 export const feedShowing = (
   feed: DeckFeed,
   mode: SourceMode | SourceBMode,
-): boolean =>
-  isPoolMode(mode) || (feed.list !== null && feed.list.mode === mode)
+): boolean => isPoolMode(mode) || feed.list?.mode === mode
 
 // The list's next item resolved and dropped, which leaves its bytes in the
 // caches the real show will read from.
 const warmNext = (list: FeedList) => {
   const item = list.items[list.next]
-  if (item !== undefined && item.at === 'ref')
+  if (item?.at === 'ref')
     void resolvePool(item.ref).then(
       pick => {
         warm(pick)
@@ -134,7 +133,7 @@ export function useFeeds(deps: FeedDeps) {
     const held = ahead.current[key]
     if (held !== null && held.aim !== aim) dropAhead(key)
     ahead.current[key] = null
-    return held !== null && held.aim === aim ? held.pick : null
+    return held?.aim === aim ? held.pick : null
   }
 
   const rollAhead = (
@@ -225,7 +224,7 @@ export function useFeeds(deps: FeedDeps) {
   const draw = (key: StashSlot) => {
     const mode = deps.modeOf(key)
     const { list, settings } = feeds[key]
-    if (list !== null && list.mode === mode) playList(key, list)
+    if (list?.mode === mode) playList(key, list)
     else if (isPoolMode(mode))
       rollTopic(key, mode, settings.topic[MODE_ORIGIN[mode]].aim)
   }

@@ -841,7 +841,9 @@ export function App() {
       eng.a.mode === 'library' ||
       eng.b.mode === 'library',
     eng.loadClip,
-    (slot, ref) => eng.showRef(slot, ref, 'library'),
+    (slot, ref) => {
+      void eng.showRef(slot, ref, 'library')
+    },
     (slot, url, secs) => eng.loadYtUrl(slot, url, secs),
   )
 

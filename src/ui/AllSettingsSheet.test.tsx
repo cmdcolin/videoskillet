@@ -10,11 +10,12 @@ import { ModSlotsContext } from './ModSlotsContext'
 import type { Controls } from '../core/controls'
 import type { ControlsApi } from './ControlsContext'
 import type { ModSlotsApi } from './ModSlotsContext'
+import type * as React from 'react'
 
 // The sheet rendered to markup on bare node. A server render refuses a store
 // with no server snapshot, so the rows read the store's snapshot directly.
 vi.mock('react', async actual => ({
-  ...(await actual<typeof import('react')>()),
+  ...(await actual<typeof React>()),
   useSyncExternalStore: (_: unknown, get: () => unknown) => get(),
 }))
 

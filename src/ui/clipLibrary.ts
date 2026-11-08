@@ -832,7 +832,7 @@ export async function openClipById(id: string): Promise<ClipOpen | null> {
   const ref = clipRef(clip)
   if (ref !== null) return { at: 'pool', name: clip.name, ref }
   const access = (await accessLibrary(lib, [clip])).clips.get(id)
-  return access === undefined || access.open === null
+  return access?.open == null
     ? null
     : {
         at: 'disk',

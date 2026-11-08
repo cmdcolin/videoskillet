@@ -383,7 +383,7 @@ function PresetCatalog(props: {
   // further on. Holding it too would mean accumulating a high-water mark across
   // renders, and a row that grows for as long as a hand rests on it.
   const [pinned, setPinned] = useState<Set<string> | null>(null)
-  const picked = pinned === null ? live : pinned
+  const picked = pinned ?? live
   const shortlist = PRESETS.filter(p => picked.has(p.name))
 
   // The caption describes the chip under the pointer, so it may only name a

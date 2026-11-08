@@ -733,11 +733,7 @@ export function toEngineSlots(
   const driven = new Set(
     slots.flatMap(s => {
       const def = s.target === '' || !s.on ? undefined : bayDefFor(s.target)
-      return def === undefined ||
-        def.field !== 'depth' ||
-        s.depth * master === 0
-        ? []
-        : [def.slot]
+      return def?.field !== 'depth' || s.depth * master === 0 ? [] : [def.slot]
     }),
   )
   return slots.flatMap((s, id): ModSlot[] => {
@@ -844,7 +840,7 @@ export function slotsToRoutings(slots: readonly UiSlot[]): ModRouting[] {
     slots.flatMap(s => {
       const def =
         s.target === '' || s.depth === 0 ? undefined : bayDefFor(s.target)
-      return def === undefined || def.field !== 'depth' ? [] : [def.slot]
+      return def?.field !== 'depth' ? [] : [def.slot]
     }),
   )
   const keep = slots.map(

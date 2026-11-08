@@ -330,7 +330,7 @@ export function parseSessionParams(search: string): SessionParams {
       // wins on a bar that is carrying both. That is the same order
       // `writeSessionParams` picks the sticky form in: what a mangled query
       // shows is what the next write keeps.
-      ...(packed === null ? {} : packed),
+      ...packed,
       ...(setParam === null ? {} : parseSet(setParam)),
     },
     damaged: packed === null,
@@ -642,12 +642,8 @@ export const queryString = (q: URLSearchParams): string =>
 // reason, and *that* failure has a banner of its own.
 export const urlName = (url: string): string => {
   try {
-    // The base is only ever needed to resolve a *relative* url, and only a
-    // document has one — read off globalThis rather than as a bare `location`
-    // so this stays a function about a string, testable without a DOM. Reading
-    // the bare global instead made every call throw under the test runner, and
-    // the catch above swallowed it: the happy path could not be asserted at all.
-    const path = new URL(url, globalThis.location?.href).pathname
+    const scope: Partial<typeof globalThis> = globalThis
+    const path = new URL(url, scope.location?.href).pathname
     const name = decodeURIComponent(path.slice(path.lastIndexOf('/') + 1))
     return name === '' ? url : name
   } catch {

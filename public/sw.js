@@ -130,7 +130,9 @@ const navigate = async request => {
   } catch (err) {
     const hit = await lookup(page, { ignoreSearch: true })
     const home = page.startsWith(shellUrl('cam/')) ? 'cam/' : 'app/'
-    return hit ?? (await lookup(shellUrl(home))) ?? Promise.reject(err)
+    const shell = hit ?? (await lookup(shellUrl(home)))
+    if (shell === undefined) throw err
+    return shell
   }
 }
 
@@ -151,7 +153,10 @@ const revalidating = async request => {
   const hit = await lookup(request)
   const live = fetch(request)
     .then(response => putIfOk(request, response))
-    .catch(err => hit ?? Promise.reject(err))
+    .catch(err => {
+      if (hit === undefined) throw err
+      return hit
+    })
   return hit ?? live
 }
 

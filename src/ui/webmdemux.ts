@@ -274,7 +274,7 @@ function blockHead(bytes: Uint8Array, el: Element) {
 
 export function demuxWebm(bytes: Uint8Array): DemuxedTrack | null {
   const header = vint(bytes, 0, true)
-  if (header === null || header.value !== 0x1a45dfa3) return null
+  if (header?.value !== 0x1a45dfa3) return null
   let segment: Element | null = null
   let at = 0
   while (segment === null && at < bytes.length) {

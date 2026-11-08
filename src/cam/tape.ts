@@ -137,7 +137,7 @@ export async function recordTape(
         if (rec.frames() < total) requestAnimationFrame(tick)
         else done()
       } catch (e) {
-        fail(e)
+        fail(e instanceof Error ? e : new Error(String(e)))
       }
     }
     requestAnimationFrame(tick)

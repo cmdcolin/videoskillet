@@ -187,7 +187,7 @@ export function HueWheel({
           className={on ? own.level : own.levelOff}
         />
       )}
-      {dotAt && dot && (
+      {dotAt && (
         <>
           <circle cx={dotAt[0]} cy={dotAt[1]} r={3} className={own.dot} />
           <Label x={dotAt[0] + 5} y={dotAt[1] - 4}>

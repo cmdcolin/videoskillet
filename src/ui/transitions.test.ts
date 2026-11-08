@@ -29,7 +29,7 @@ describe('the shelf', () => {
         // Total by construction — every control has exactly one slider, which
         // controls.test.ts holds — so this throws rather than asserting.
         const def = sliderFor(key)
-        const v = t.peak[key] as number
+        const v = t.peak[key]!
         expect(v, `${t.name}.${key}`).toBeGreaterThanOrEqual(def.min)
         expect(v, `${t.name}.${key}`).toBeLessThanOrEqual(def.max)
       }

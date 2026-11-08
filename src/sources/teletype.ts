@@ -187,7 +187,7 @@ export function sextantRows(ch: string): string[] | null {
   if (ch === '▌') return ['10', '10', '10']
   if (ch === '▐') return ['01', '01', '01']
   const rows = mosaicRows(ch)
-  return rows !== null && rows.length === 3 ? rows : null
+  return rows?.length === 3 ? rows : null
 }
 
 // The inverse of sextantRows: a painted pattern back to the character that

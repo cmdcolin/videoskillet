@@ -56,7 +56,7 @@ export function useGestures(opts: {
     if (pointers.current.size > 2) return
     const timer = window.setTimeout(() => {
       const g = gesture.current
-      if (g !== null && g.kind === 'pending') {
+      if (g?.kind === 'pending') {
         g.kind = 'compare'
         opts.onCompare(true)
       }

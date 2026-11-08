@@ -45,10 +45,11 @@ export function useTilt(onTilt: (t: Tilt) => void) {
       last = e.timeStamp
       const r = e.rotationRate
       if (r === null) return
+      const display: Partial<Screen> = screen
       t = integrate(
         t,
         { alpha: r.alpha ?? 0, beta: r.beta ?? 0, gamma: r.gamma ?? 0 },
-        screen.orientation?.angle ?? 0,
+        display.orientation?.angle ?? 0,
         dt,
       )
       report(t)

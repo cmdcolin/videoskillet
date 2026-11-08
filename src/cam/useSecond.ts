@@ -161,7 +161,7 @@ export function useSecond(
     )
     o.stream.getVideoTracks()[0]?.addEventListener('ended', () => {
       const b = held.current
-      if (b !== null && b.kind === 'live' && b.cam === o) eject()
+      if (b?.kind === 'live' && b.cam === o) eject()
     })
     return { kind: 'live', cam: o, relay }
   }
@@ -277,7 +277,7 @@ export function useSecond(
   // B in the meantime may stop it.
   const swap = async () => {
     const b = held.current
-    if (b === null || b.kind !== 'live') return
+    if (b?.kind !== 'live') return
     const back = cam.adopt(b.cam)
     b.relay.stop()
     const mine = ++turn.current

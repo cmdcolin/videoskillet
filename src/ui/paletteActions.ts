@@ -38,7 +38,7 @@ import type { AnySlotView } from './slotView'
 const cueVerbs = (slot: AnySlotView): PaletteAction[] => {
   const { tag, cue } = slot
   const noClip = slot.duration === 0
-  const cueArmed = cue !== null && cue.out === null
+  const cueArmed = cue?.out === null
   return [
     {
       name: cueArmed

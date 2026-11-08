@@ -352,7 +352,7 @@ export async function initGpu(
   // document (`?gpu=`), so it cannot have changed under a live device, and honouring
   // a change that cannot happen would cost the thing this exists to save.
   const held = gpuGlobals.ntscGpu
-  if (held !== undefined && held.live) {
+  if (held?.live) {
     trace.add('gpuReuse', `${gpuBuilds()} in this page`)
     return present(canvas, held)
   }

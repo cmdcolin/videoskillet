@@ -8,7 +8,6 @@ import {
   outOfGpuBudget,
 } from '../core/gpu/context'
 import { debugLog, pageSearch } from '../core/gpu/env'
-import { Engine } from '../core/gpu/pipeline'
 import { MAX_SRC_EDGE } from '../core/gpu/sources'
 import { reportPreviousTrace, trace } from '../core/gpu/trace'
 import { publicUrl } from '../publicUrl'
@@ -83,6 +82,7 @@ import {
 
 import type { Controls, FrameStats } from '../core/controls'
 import type { EngineApi } from '../core/gpu/engineapi'
+import type { Engine } from '../core/gpu/pipeline'
 import type { FrozenKind } from '../core/gpu/renderloop'
 import type { Store } from '../core/listeners'
 import type { Rand } from '../core/rng'
@@ -1440,10 +1440,7 @@ export function useEngine(args: { rand: Rand }) {
     const mine = nextLookahead()
     void openClipById(id)
       .then(open =>
-        open === null ||
-        open.at !== 'disk' ||
-        open.needsGesture ||
-        open.kind !== 'video'
+        open?.at !== 'disk' || open.needsGesture || open.kind !== 'video'
           ? undefined
           : open.open().then(file =>
               // Checked here rather than only at the top, because this is
@@ -1759,7 +1756,7 @@ export function useEngine(args: { rand: Rand }) {
   // no gesture and has already been put back above.
   const reopenPending = (key: StashSlot) => {
     const stashed = pending[key]
-    if (stashed !== null && stashed.at === 'file')
+    if (stashed?.at === 'file')
       stashed.open().then(
         // `adoptInto` is what clears the park, since every way out of it ends
         // there — the grant landing, or another source arriving first.

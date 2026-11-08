@@ -109,7 +109,7 @@ export function MagnifierFrame(props: {
   }
   const moveLens = (e: PointerEvent<HTMLDivElement>) => {
     e.stopPropagation()
-    if (drag !== null && drag.kind === 'move') {
+    if (drag?.kind === 'move') {
       const snap = !e.altKey
       const rawU = (e.clientX - drag.px) / drag.fw
       const rawV = (e.clientY - drag.py) / drag.fh
@@ -130,7 +130,7 @@ export function MagnifierFrame(props: {
   // Drawn only once the drag is long enough to mean it, so a click doesn't
   // flash a box across the miniature.
   const marquee =
-    drag !== null && drag.kind === 'box' && covered(drag) >= MIN_BOX
+    drag?.kind === 'box' && covered(drag) >= MIN_BOX
       ? {
           left: `${Math.min(drag.a.u, drag.b.u) * 100}%`,
           top: `${Math.min(drag.a.v, drag.b.v) * 100}%`,

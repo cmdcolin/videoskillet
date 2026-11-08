@@ -659,7 +659,7 @@ export function createMidi(cb: MidiCallbacks): MidiManager {
     // A Note Off goes to the action its note is bound to, which lets a held
     // transition heal. A one-shot is struck and decays on its own clock, so a
     // key lift has nothing to say to it.
-    const n = data === null || data === undefined ? null : readNote(data)
+    const n = data === null ? null : readNote(data)
     if (n?.on === true) {
       if (armedNote !== null) {
         bindNote(armedNote, { channel: n.channel, note: n.note })

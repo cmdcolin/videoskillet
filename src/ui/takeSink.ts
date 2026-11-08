@@ -127,16 +127,19 @@ const messageOf = (e: unknown): string =>
 
 // The origin's own directory, or null in a browser that has none and in a
 // private window, where asking for one throws.
-const root = (): Promise<FileSystemDirectoryHandle | null> =>
-  typeof navigator.storage?.getDirectory === 'function'
-    ? navigator.storage.getDirectory().catch(() => null)
+const root = (): Promise<FileSystemDirectoryHandle | null> => {
+  const nav: Partial<Navigator> = navigator
+  return typeof nav.storage?.getDirectory === 'function'
+    ? nav.storage.getDirectory().catch(() => null)
     : Promise.resolve(null)
+}
 
 // What the browser will let this origin store beyond what it already has, or
 // null where it will not say.
 async function available(): Promise<number | null> {
-  if (typeof navigator.storage?.estimate !== 'function') return null
-  const { quota, usage } = await navigator.storage
+  const nav: Partial<Navigator> = navigator
+  if (typeof nav.storage?.estimate !== 'function') return null
+  const { quota, usage } = await nav.storage
     .estimate()
     .catch(() => ({ quota: undefined, usage: undefined }))
   return quota === undefined ? null : Math.max(0, quota - (usage ?? 0))
