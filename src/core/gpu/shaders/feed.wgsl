@@ -24,10 +24,14 @@
 @group(0) @binding(2) var<storage, read_write> dst: array<f32>;
 @group(0) @binding(3) var<storage, read> synthLine: array<vec2f>;
 
+// How far back the termination's echo reaches, in samples.
+const ECHO_LAG = 5u;
 // Snow deviates staged once per workgroup: the 1-2-1 band-limit below reads
 // each neighbour's deviate, and gauss() is Box-Muller — the same redundancy
 // channel.wgsl stages away.
-var<workgroup> tileNs: array<f32, TILE_WG + 2u>;
+var<workgroup> tileNs: array<f32, TILE_WG + 2u + ECHO_LAG>;
+// The feed's output for the workgroup's samples and the ECHO_LAG before them.
+var<workgroup> tileOut: array<f32, TILE_WG + ECHO_LAG>;
 
 // The tape at sample i as the head-end sent it to be recorded. A premium
 // channel is scrambled per channel, so each feed scrambles its own input, with
@@ -56,29 +60,11 @@ fn tapeAt(i: i32) -> f32 {
   return scrambleAt(v, row, s, P.scramble, P.scrambleMode, P.srcFrame);
 }
 
-@compute @workgroup_size(TILE_WG, 1, 1)
-fn main(
-  @builtin(global_invocation_id) gid: vec3u,
-  @builtin(local_invocation_id) lid: vec3u,
-  @builtin(workgroup_id) wid: vec3u,
-) {
-  let row = wid.y;
-  if (P.noiseSigma > 0.0) {
-    let ns = pcg(P.frame * 2654435761u + P.gen * 2246822519u);
-    // slot 1 is this workgroup's first sample, so slot i is global index n0+i-1
-    let n0 = row * SPL + wid.x * TILE_WG;
-    for (var i = lid.x; i < TILE_WG + 2u; i = i + TILE_WG) {
-      tileNs[i] = gauss((n0 + i - 1u) ^ ns);
-    }
-  }
-  workgroupBarrier();
-
-  let s = gid.x;
-  if (s >= SPL || row >= NLINES) {
-    return;
-  }
-  let n = row * SPL + s;
-
+// One sample of the feed's output, before the termination. `slot` is the
+// sample's place in the workgroup's noise tile.
+fn feedAt(n: u32, slot: u32) -> f32 {
+  let row = n / SPL;
+  let s = n % SPL;
   // This feed's deck paused (bPause/bPauseBar/bShift0/bRowOff carry whichever
   // deck's values pipeline.ts packed — A's servo state for feedA, B's for
   // feedB on the dirty path, and zeros for feedB genlocked, where the TBC
@@ -104,7 +90,6 @@ fn main(
   // happen after the deck, on the way to the mixer.
   var srcS = s;
   var srcRow = row;
-  var echoBase = i32(n);
   var out: f32;
   var cv = 0.0;
   if (P.synthDelay > 0.0 || P.synthVca > 0.0 || P.synthSync > 0.0) {
@@ -134,7 +119,6 @@ fn main(
     srcRow = wrapRow(i32(row) + i32(floor(P.bRowOff)));
     let np = i32(srcRow * SPL + srcS);
     out = catmull(tapeAt(np - 1), tapeAt(np), tapeAt(np + 1), tapeAt(np + 2), frac);
-    echoBase = np;
     // The mistrack stripe itself: where the parked head sweeps off the
     // recorded track the RF nulls and the deck's detector hands back snow —
     // sync, burst and all, since the null does not care what it lands on.
@@ -152,7 +136,6 @@ fn main(
     let tape = clampIdx(a0);
     srcRow = tape / SPL;
     srcS = tape % SPL;
-    echoBase = a0;
   } else {
     out = tapeAt(i32(n));
   }
@@ -203,7 +186,7 @@ fn main(
   // (It is also a field packFeed does not override, so taking it here would be
   // the trap this file's header warns about.)
   if (P.noiseSigma > 0.0) {
-    let cn = lid.x + 1u;
+    let cn = slot;
     out = out + P.noiseSigma * 0.4082 * (tileNs[cn - 1u] + 2.0 * tileNs[cn] + tileNs[cn + 1u]);
   }
 
@@ -242,17 +225,51 @@ fn main(
   // and burst included. Unlike a negative bus gain this holds regardless of
   // what the mixer is doing — the fault is in the cable, not the fader.
   out = mix(out, -out, P.polarityFlip);
+  return out;
+}
 
-  // Cable termination fault on this feed alone (prelude `terminate`). The echo
-  // taps the tape where the deck is reading it, so it follows the paused deck's
-  // resample and the synth's delay line. It carries the head-end's scrambling
-  // the deck recorded and travels the same swapped pair. The deck's dropouts and
-  // mistrack snow and the cable's other faults stay off it (`IDEAS.md` ›
-  // S-video).
-  if (P.termination != 0.0) {
-    let echo = tapeAt(echoBase - 5);
-    out = terminate(out, P.termination, mix(echo, -echo, P.polarityFlip));
+// The termination's echo is the feed's own output five samples back. A
+// workgroup's first five samples need the five before its tile, which another
+// workgroup computes, so while the line is mismatched each workgroup computes
+// those five again. Every stage in `feedAt` depends only on the sample's
+// position, so both copies agree.
+@compute @workgroup_size(TILE_WG, 1, 1)
+fn main(
+  @builtin(global_invocation_id) gid: vec3u,
+  @builtin(local_invocation_id) lid: vec3u,
+  @builtin(workgroup_id) wid: vec3u,
+) {
+  let row = wid.y;
+  let n0 = row * SPL + wid.x * TILE_WG;
+  if (P.noiseSigma > 0.0) {
+    let ns = pcg(P.frame * 2654435761u + P.gen * 2246822519u);
+    // slot i is global index n0 + i - 1 - ECHO_LAG
+    for (var i = lid.x; i < TILE_WG + 2u + ECHO_LAG; i = i + TILE_WG) {
+      tileNs[i] = gauss((n0 + i - 1u - ECHO_LAG) ^ ns);
+    }
+  }
+  workgroupBarrier();
+
+  let s = gid.x;
+  let n = row * SPL + s;
+  let live = s < SPL && row < NLINES;
+  var out = 0.0;
+  if (live) {
+    out = feedAt(n, lid.x + 1u + ECHO_LAG);
   }
 
-  dst[n] = out;
+  // Cable termination fault on this feed alone (prelude `terminate`).
+  if (P.termination != 0.0) {
+    if (lid.x < ECHO_LAG) {
+      let e = max(i32(n0) - i32(ECHO_LAG) + i32(lid.x), 0);
+      tileOut[lid.x] = feedAt(u32(e), u32(e - i32(n0) + i32(1u + ECHO_LAG)));
+    }
+    tileOut[lid.x + ECHO_LAG] = out;
+    workgroupBarrier();
+    out = terminate(out, P.termination, tileOut[lid.x]);
+  }
+
+  if (live) {
+    dst[n] = out;
+  }
 }

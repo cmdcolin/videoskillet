@@ -500,7 +500,7 @@ and change `osd`, `lineAnalyze`, `vir`, `storePrev` and decode's staging.
 `decode` already binds eight storage buffers, the default
 `maxStorageBuffersPerShaderStage`, so C would have to share `compA`.
 
-Six smaller items sit next to this:
+Five smaller items sit next to this:
 
 - **The source pins run at the encoder, ahead of the feed.** `feed.wgsl` only
   sees the summed composite, so it cannot separate C. A feed's mistrack snow,
@@ -522,21 +522,6 @@ Six smaller items sit next to this:
   are: a ground loop rides the shield whichever pin touches, and RF damage
   reaches the deck before its separator, so its chroma-band part is on C. Moving
   the pin after the tape damage means deciding what each fault does to C.
-- **A feed's termination echo skips most of the feed.** The program bus taps
-  its echo off the timebase pass's own output, so it carries everything. A feed
-  has no pass after it, so its echo is rebuilt from the tape where the deck
-  reads it: it follows the paused deck's resample and the synth's delay line
-  and carries Discret's line delay, the scrambler and the swapped pair. The
-  mistrack stripe, dropouts, the synth's VCA and summed sync, the dirty pot and
-  the connector stay off it, and where one of those removes or shrinks sync,
-  the echo hands a little sync back. The connector's open centre pin is the
-  clearest case, since no signal reaches the terminator to reflect. Every stage
-  in the feed depends only on the sample's position, so a workgroup can
-  compute five extra samples ahead of its tile, with its noise staging widened
-  to match, and read the echo off its own output. Splitting the feed into a
-  deck pass and a cable pass, which the source pins' chroma extract above
-  needs anyway, makes that simpler: the cable pass reads the deck's output
-  from a buffer.
 - **The program bus's cable runs ahead of the OSD and the enhancer.** The plug,
   the swapped pair and the termination act in the timebase pass, but the deck's
   OSD and the outboard enhancer both sit between the deck and the set's

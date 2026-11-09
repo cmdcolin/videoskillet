@@ -1058,10 +1058,10 @@ fn connectorAt(v: f32, row: u32, n: u32, frame: u32, gen: u32, amt: f32, mode: f
 // edge rings with a short round-trip echo. Daisy-chaining a second monitor
 // double-terminates (<0), halving the signal so contrast and sync depth collapse
 // toward a dim, barely-locking roll. The echo argument is the sample one round
-// trip back down the cable, the cable's own signal reflected. The program bus
-// takes it from the cable's own output in the timebase pass. A feed rebuilds it
-// from the tape, through the head-end's scrambler and its cable's swapped pair.
-// Callers guard on a non-zero term, so a correct line costs no tap.
+// trip back down the cable, the cable's own signal reflected, so each caller
+// takes it from its own output: the program bus in the timebase pass, a feed
+// from the five samples each workgroup computes ahead of its tile. Callers
+// guard on a non-zero term, so a correct line costs no tap.
 fn terminate(v: f32, term: f32, echo: f32) -> f32 {
   return v * pow(2.0, term) + max(term, 0.0) * 0.6 * echo;
 }
