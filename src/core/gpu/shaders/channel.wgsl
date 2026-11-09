@@ -144,6 +144,13 @@ fn pinnedIn(i: i32, pin: f32) -> f32 {
   return v;
 }
 
+// The pre-channel signal at i as the head-end sends it down the cable, through
+// the program bus's chroma pin and the scrambler.
+fn sentAt(i: i32, pin: f32, scramble: f32) -> f32 {
+  let ci = clampIdx(i);
+  return scrambleAt(pinnedIn(i, pin), ci / SPL, ci % SPL, scramble, P.scrambleMode, P.frame);
+}
+
 @compute @workgroup_size(TILE_WG, 1, 1)
 fn main(
   @builtin(global_invocation_id) gid: vec3u,
@@ -382,11 +389,12 @@ fn main(
   // feeds, which scramble one input alone.
   out = scrambleAt(out, row, s, scramble, P.scrambleMode, P.frame);
 
-  // multipath ghost of the pre-channel signal, through the same pin
+  // A multipath ghost is a delayed copy of what the head-end sent, so it
+  // carries the same pin and the same scrambling.
   if (P.ghostGain != 0.0) {
     let g0 = i32(n) + i32(floor(-P.ghostDelay));
     out = out + P.ghostGain
-      * catmull(pinnedIn(g0 - 1, pin), pinnedIn(g0, pin), pinnedIn(g0 + 1, pin), pinnedIn(g0 + 2, pin), fract(-P.ghostDelay));
+      * catmull(sentAt(g0 - 1, pin, scramble), sentAt(g0, pin, scramble), sentAt(g0 + 1, pin, scramble), sentAt(g0 + 2, pin, scramble), fract(-P.ghostDelay));
   }
 
   // Additive noise (snow), through one of two paths with the same deviates.
@@ -712,16 +720,13 @@ fn main(
   out = mix(out, -out, flip);
 
   // Cable termination fault on the program bus (prelude `terminate`). The echo
-  // is a round trip back down the same cable, so it is tapped off the
-  // pre-channel signal as the cable carries it: through the missing pin, the
-  // head-end's scrambler, the descrambler box and the swapped pair.
+  // is a round trip back down the same cable. It is tapped off the pre-channel
+  // signal and put through the missing pin, the head-end's scrambler, the
+  // descrambler box and the swapped pair.
   let term = select(0.0, P.termination, toSet);
   if (term != 0.0) {
     let e = clampIdx(i32(n) - 5);
-    let eRow = e / SPL;
-    let eS = e % SPL;
-    let sent = scrambleAt(pinnedIn(i32(e), pin), eRow, eS, scramble, P.scrambleMode, P.frame);
-    let echo = descrambleAt(sent, eRow, eS, scramble, P.scrambleMode, P.frame, P.decoderDb);
+    let echo = descrambleAt(sentAt(i32(e), pin, scramble), e / SPL, e % SPL, scramble, P.scrambleMode, P.frame, P.decoderDb);
     out = terminate(out, term, mix(echo, -echo, flip));
   }
 

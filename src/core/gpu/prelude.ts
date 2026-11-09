@@ -1060,8 +1060,9 @@ fn connectorAt(v: f32, row: u32, n: u32, frame: u32, gen: u32, amt: f32, mode: f
 // toward a dim, barely-locking roll. The echo argument is the sample one round
 // trip back down the cable, which each caller taps out of its own input buffer:
 // the program bus off the pre-channel signal, a feed off that source's own deck.
-// The echo travels the same wires, so each caller puts the tap through its
-// cable's swapped pair, and the program bus through its missing pin as well.
+// The echo is the cable's own signal reflected, so each caller puts the tap
+// through the head-end's scrambler and its cable's swapped pair, the program bus
+// through its missing pin and the descrambler box as well.
 // Callers guard on a non-zero term, so a correct line costs no tap.
 fn terminate(v: f32, term: f32, echo: f32) -> f32 {
   return v * pow(2.0, term) + max(term, 0.0) * 0.6 * echo;
