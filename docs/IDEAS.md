@@ -506,7 +506,14 @@ Four smaller items sit next to this:
   sees the summed composite, so it cannot separate C. A feed's mistrack snow,
   tape dropouts, scrambler and the synth's summed sync are added after the pin,
   and they put luma and sync-like content back on a pinned source, though the
-  panel draws the pin at the plug in the mixer's jack.
+  panel draws the pin at the plug in the mixer's jack. The route that models it
+  is the program bus's own: a tape recorded from composite carries the recording
+  deck's bandpass as its C track, so `chroma_extract.wgsl`'s bandpass of the
+  feed's damaged output is the C a deck's S-video lead sends. That splits
+  `feed.wgsl` into the deck's stages and the cable's stages, with a gated
+  extract between them that runs only while the pin is in, and the pin moves to
+  the start of the cable half. A pinned source then carries the bandpass's luma
+  near the subcarrier, as the program bus's pin already does.
 
 - **The program bus's pin runs ahead of that generation's tape damage.** The
   last generation's FM luma noise and head-switch noise land on the pinned
