@@ -500,7 +500,7 @@ and change `osd`, `lineAnalyze`, `vir`, `storePrev` and decode's staging.
 `decode` already binds eight storage buffers, the default
 `maxStorageBuffersPerShaderStage`, so C would have to share `compA`.
 
-Four smaller items sit next to this:
+Five smaller items sit next to this:
 
 - **The source pins run at the encoder, ahead of the feed.** `feed.wgsl` only
   sees the summed composite, so it cannot separate C. A feed's mistrack snow,
@@ -522,6 +522,18 @@ Four smaller items sit next to this:
   are: a ground loop rides the shield whichever pin touches, and RF damage
   reaches the deck before its separator, so its chroma-band part is on C. Moving
   the pin after the tape damage means deciding what each fault does to C.
+- **The termination echo skips most of the cable's faults.** It is rebuilt from
+  the tap through the stages that change sync: the pin, the scrambler, the
+  descrambler box, the line delay and the swapped pair. Every other stage
+  between the tap and the terminator stays off it: head clog, tracking,
+  shuttle, dropouts, the mistrack stripe, the synth's VCA, the dirty pot and
+  the connector. Where one of those removes or shrinks sync, the echo hands a
+  little of it back. The connector's open centre pin is the clearest case,
+  since no signal reaches the terminator to reflect. Rebuilding each stage per
+  tap does not scale. Reading the echo off the pass's own output needs the
+  sample five back, which another workgroup computes at a tile's start, so the
+  route is a workgroup that computes five extra samples ahead of its tile, or a
+  second pass.
 - **A fractional Y/C delay.** `ycDelayNs` rounds to whole samples, about 70 ns,
   so the LFO on `the colour keeps walking` moves the colour a pixel at a time.
   Rotating the carrier by the fraction does not help: the burst rotates with it

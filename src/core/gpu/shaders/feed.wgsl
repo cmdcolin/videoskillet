@@ -28,24 +28,31 @@
 // channel.wgsl stages away.
 var<workgroup> tileNs: array<f32, TILE_WG + 2u>;
 
-// Line-delay scrambling (prelude `discretDelay`) reads a line's picture from
-// earlier on the tape line; sync, blanking and burst keep their place. The
-// line's start comes out of the delay as the blanking that went in ahead of the
-// picture.
-fn lineDelayed(v: f32, row: u32, s: u32) -> f32 {
+// The tape at sample i as the head-end sent it to be recorded. A premium
+// channel is scrambled per channel, so each feed scrambles its own input, with
+// the mechanism in the prelude, shared with the program-bus copy in
+// channel.wgsl. Line-delay scrambling (prelude `discretDelay`) reads a line's
+// picture from earlier on the line, and sync, blanking and burst keep their
+// place; the line's start comes out of the delay as the blanking that went in
+// ahead of the picture. The deck reads this, so the sync gate follows the sync
+// tip wherever a held deck or the synth's delay line displaces it.
+fn tapeAt(i: i32) -> f32 {
+  let ci = clampIdx(i);
+  let row = ci / SPL;
+  let s = ci % SPL;
   let inPicture = s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W
     && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H;
-  var out = v;
+  var v = src[ci];
   if (u32(P.scrambleMode + 0.5) == 7u && P.scramble > 0.0 && inPicture) {
-    let at = f32(row * SPL + s) - discretDelay(row, P.srcFrame, P.scramble);
+    let at = f32(ci) - discretDelay(row, P.srcFrame, P.scramble);
     let a0 = i32(floor(at));
-    out = select(
+    v = select(
       catmull(src[clampIdx(a0 - 1)], src[clampIdx(a0)], src[clampIdx(a0 + 1)], src[clampIdx(a0 + 2)], at - f32(a0)),
       IRE_BLANK,
       at < f32(row * SPL + ACTIVE_START),
     );
   }
-  return out;
+  return scrambleAt(v, row, s, P.scramble, P.scrambleMode, P.srcFrame);
 }
 
 @compute @workgroup_size(TILE_WG, 1, 1)
@@ -117,7 +124,7 @@ fn main(
     // land a line short on one side alone. mix_b floors the same quantity.
     srcRow = wrapRow(i32(row) + i32(floor(P.bRowOff)));
     let np = i32(srcRow * SPL + srcS);
-    out = catmull(src[clampIdx(np - 1)], src[clampIdx(np)], src[clampIdx(np + 1)], src[clampIdx(np + 2)], frac);
+    out = catmull(tapeAt(np - 1), tapeAt(np), tapeAt(np + 1), tapeAt(np + 2), frac);
     echoBase = np;
     // The mistrack stripe itself: where the parked head sweeps off the
     // recorded track the RF nulls and the deck's detector hands back snow —
@@ -137,26 +144,12 @@ fn main(
     // the hue turns wherever the delay moves.
     let at = f32(n) - P.synthDelay * cv;
     let a0 = i32(floor(at));
-    out = catmull(src[clampIdx(a0 - 1)], src[clampIdx(a0)], src[clampIdx(a0 + 1)], src[clampIdx(a0 + 2)], at - f32(a0));
+    out = catmull(tapeAt(a0 - 1), tapeAt(a0), tapeAt(a0 + 1), tapeAt(a0 + 2), at - f32(a0));
+    echoBase = a0;
   } else {
-    out = src[n];
-  }
-  // The synth's output on a VCA in A's cable, after the delay line. It scales
-  // the whole waveform about blanking, so where the synth is high the picture
-  // dims and its sync tips shrink with it. Once they fall short of the set's
-  // slicer the set loses lock, and its AGC chases the level up and down.
-  if (P.synthVca > 0.0) {
-    out = IRE_BLANK + (out - IRE_BLANK) * (1.0 - P.synthVca * cv);
-  }
-  // The synth's output summed into A's cable upside down, with nothing to clip
-  // it at black. Dark picture where the synth is high goes below the set's
-  // slicer and arrives as sync.
-  if (P.synthSync > 0.0) {
-    out = out - P.synthSync * cv;
+    out = tapeAt(i32(n));
   }
   let srcN = srcRow * SPL + srcS;
-
-  out = lineDelayed(out, srcRow, srcS);
 
   // Dropouts on this deck's own tape: shed oxide, so for a moment the head
   // reads nothing and the detector hands back snow. Same event model as the
@@ -182,12 +175,19 @@ fn main(
     }
   }
 
-  // Head-end scrambling on this feed alone — a premium channel is scrambled per
-  // channel by nature. The mechanism itself lives in the prelude, shared with
-  // the program-bus copy in channel.wgsl. On the tape position, because the
-  // head-end scrambled this before the deck ever recorded it: the sync gate has
-  // to follow the sync tip when a held deck displaces it.
-  out = scrambleAt(out, srcRow, srcS, P.scramble, P.scrambleMode, P.srcFrame);
+  // The synth's output on a VCA in A's cable, after the delay line. It scales
+  // the whole waveform about blanking, so where the synth is high the picture
+  // dims and its sync tips shrink with it. Once they fall short of the set's
+  // slicer the set loses lock, and its AGC chases the level up and down.
+  if (P.synthVca > 0.0) {
+    out = IRE_BLANK + (out - IRE_BLANK) * (1.0 - P.synthVca * cv);
+  }
+  // The synth's output summed into A's cable upside down, with nothing to clip
+  // it at black. Dark picture where the synth is high goes below the set's
+  // slicer and arrives as sync.
+  if (P.synthSync > 0.0) {
+    out = out - P.synthSync * cv;
+  }
 
   // Additive noise (snow), 1-2-1 band-limited. Deliberately not the program
   // bus's tilted floor: the tilt is an FM discriminator's triangular noise,
@@ -237,14 +237,13 @@ fn main(
   out = mix(out, -out, P.polarityFlip);
 
   // Cable termination fault on this feed alone (prelude `terminate`). The echo
-  // taps the deck's output, so under pause it follows the resampled position
-  // rather than the nominal raster. It carries the head-end's scrambling the
-  // deck recorded and travels the same swapped pair.
+  // taps the tape where the deck is reading it, so it follows the paused deck's
+  // resample and the synth's delay line. It carries the head-end's scrambling
+  // the deck recorded and travels the same swapped pair. The deck's dropouts and
+  // mistrack snow and the cable's other faults stay off it (`IDEAS.md` ›
+  // S-video).
   if (P.termination != 0.0) {
-    let e = clampIdx(echoBase - 5);
-    let eRow = e / SPL;
-    let eS = e % SPL;
-    let echo = scrambleAt(lineDelayed(src[e], eRow, eS), eRow, eS, P.scramble, P.scrambleMode, P.srcFrame);
+    let echo = tapeAt(echoBase - 5);
     out = terminate(out, P.termination, mix(echo, -echo, P.polarityFlip));
   }
 
