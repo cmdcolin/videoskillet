@@ -81,7 +81,7 @@ export function DubDiagram() {
       COL.dub,
       ROW_Y,
       'dub',
-      'Runs the whole tape and channel stage this many times over: a copy of a copy. Each generation adds its own noise, dropouts and timebase wander on top of the last, and narrows the bandwidth again.',
+      'Runs the tape and channel stage this many times over: a copy of a copy. Each generation adds its own noise, dropouts and timebase wander on top of the last, and narrows the bandwidth again. The scrambler and the faults on the cable into the set act once, on the copy the set plays back.',
     ),
   ]
 

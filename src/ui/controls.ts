@@ -2829,7 +2829,7 @@ export const GROUPS: Group[] = [
         max: 4,
         step: 1,
         unit: 'x',
-        help: 'Runs the whole tape/channel stage this many times over: a copy of a copy. Each generation adds its own noise, dropouts and timebase wander on top of the last.',
+        help: 'Runs the tape/channel stage this many times over: a copy of a copy. Each generation adds its own noise, dropouts and timebase wander on top of the last. The scrambler and the faults on the cable into the set act once, on the copy the set plays back.',
       },
     ],
   },

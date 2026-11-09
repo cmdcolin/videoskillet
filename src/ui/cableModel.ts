@@ -54,13 +54,19 @@ const carrierScaled = (ire: number, db: number) => {
   return (1 - 10 ** (-db / 20) * carrier) / 0.00625 - 40
 }
 
+const pinned = (v: number, s: number, pin: number) => {
+  const chroma = inBurst(s) ? v - IRE_BLANK : 0
+  return (v - chroma) * (1 - pin) + chroma
+}
+
 // An even line through channel.wgsl's cable stages, in the shader's order: the
 // chroma pin, the head-end scrambler, the polarity swap, the termination. The
-// echo reads the line as it was before the channel, five samples back.
+// echo reads the line as it was before the channel, five samples back, through
+// the same pin and swap.
 export function cableLine(c: Cable, line = TEST_LINE): number[] {
+  const flip = 1 - 2 * c.polarityFlip
   return line.map((v, s) => {
-    const chroma = inBurst(s) ? v - IRE_BLANK : 0
-    let out = (v - chroma) * (1 - c.chromaPinOnly) + chroma
+    let out = pinned(v, s, c.chromaPinOnly)
     if (c.scramble > 0) {
       const system = Math.round(c.scrambleMode)
       if (system === 3 || system === 4) {
@@ -74,8 +80,9 @@ export function cableLine(c: Cable, line = TEST_LINE): number[] {
         }
       }
     }
-    out *= 1 - 2 * c.polarityFlip
-    const echo = line[Math.max(s - ECHO_SAMPLES, 0)]!
+    out *= flip
+    const e = Math.max(s - ECHO_SAMPLES, 0)
+    const echo = pinned(line[e]!, e, c.chromaPinOnly) * flip
     return out * 2 ** c.termination + Math.max(c.termination, 0) * 0.6 * echo
   })
 }

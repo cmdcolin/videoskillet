@@ -354,16 +354,23 @@ fn main(
     chr = chr * cut * cut;
   }
 
+  // The head-end, the cable and its plug sit between the last deck and the
+  // set, so their faults act once, on the generation the set plays back. The
+  // dubs before it are copied deck to deck and never pass through them.
+  let toSet = P.gen == P.lastGen;
+  let pin = select(0.0, P.chromaPinOnly, toSet);
+  let scramble = select(0.0, P.scramble, toSet);
+
   // C-pin-only feed: only the chroma pin reaches the composite input, so there
   // is no luma and no sync tips — just burst-locked color that can't hold
   // vertical or horizontal lock.
-  var out = luma * (1.0 - P.chromaPinOnly) + chr;
+  var out = luma * (1.0 - pin) + chr;
 
   // Analog premium-channel scrambling on the program bus, applied at the
   // head-end so everything below it in this file is damage the cable adds on
   // top. The mechanism itself lives in the prelude, shared with the per-source
   // feeds, which scramble one input alone.
-  out = scrambleAt(out, row, s, P.scramble, P.scrambleMode, P.frame);
+  out = scrambleAt(out, row, s, scramble, P.scrambleMode, P.frame);
 
   // multipath ghost of the pre-channel signal
   if (P.ghostGain != 0.0) {
@@ -500,7 +507,7 @@ fn main(
   // The descrambler box (prelude `descrambleAt`), on the subscriber's side of
   // everything the cable did above, so it raises the cable's noise in its gate
   // along with the carrier.
-  out = descrambleAt(out, row, s, P.scramble, P.scrambleMode, P.frame, P.decoderDb);
+  out = descrambleAt(out, row, s, scramble, P.scrambleMode, P.frame, P.decoderDb);
 
   // Audio patched straight into the video line — the classic bend. Sampled at
   // line rate the waveform paints one level per row, so bass rolls horizontal
@@ -684,18 +691,24 @@ fn main(
 
   // Loose connector on the program bus (prelude `connectorAt`), shared with the
   // per-source feeds, which wiggle one input's plug alone.
-  out = connectorAt(out, row, n, P.frame, P.gen, P.connectorGlitch, P.connectorMode);
+  let plug = select(0.0, P.connectorGlitch, toSet);
+  out = connectorAt(out, row, n, P.frame, P.gen, plug, P.connectorMode);
 
   // Hard polarity flip: signal and ground fully swapped on the line. Unlike the
   // clean encoder invert (active video only), this negates the whole waveform —
   // sync tips and burst included — so the receiver's sync separator latches onto
   // the wrong level and the picture tears and rolls while the colors invert.
-  out = mix(out, -out, P.polarityFlip);
+  let flip = select(0.0, P.polarityFlip, toSet);
+  out = mix(out, -out, flip);
 
-  // Cable termination fault on the program bus (prelude `terminate`); the echo
-  // is a round trip back down the cable, tapped off the pre-channel signal.
-  if (P.termination != 0.0) {
-    out = terminate(out, P.termination, comp[clampIdx(i32(n) - 5)]);
+  // Cable termination fault on the program bus (prelude `terminate`). The echo
+  // is a round trip back down the same cable, so it is tapped off the
+  // pre-channel signal with the missing pin and the swapped pair applied.
+  let term = select(0.0, P.termination, toSet);
+  if (term != 0.0) {
+    let e = clampIdx(i32(n) - 5);
+    let pinned = comp[e] - pin * (comp[e] - chroma[e]);
+    out = terminate(out, term, mix(pinned, -pinned, flip));
   }
 
   outBuf[n] = out;

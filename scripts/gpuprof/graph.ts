@@ -23,7 +23,12 @@ import {
   TILE_WG,
 } from '../../src/core/gpu/prelude'
 import { reflectBindings } from '../../src/core/gpu/reflect'
-import { loRadPerSample, uniformValues } from '../../src/core/gpu/uniforms'
+import {
+  dubGenerations,
+  loRadPerSample,
+  MAX_GENS,
+  uniformValues,
+} from '../../src/core/gpu/uniforms'
 import { wrap } from '../../src/core/math'
 import { rngFor } from '../../src/core/rng'
 import { CaptionState } from '../../src/core/signal/captionstate'
@@ -53,7 +58,6 @@ import type { DeckPause } from '../../src/core/signal/mixstate'
 
 const N = SAMPLES_PER_LINE * LINES
 const LINE_PARAM_BYTES = LINES * 32
-const MAX_GENS = 4
 
 type Res = GPUBuffer | GPUTextureView | GPUSampler
 
@@ -806,7 +810,7 @@ export class Graph {
       0,
       this.lineState.update(lineControls, this.frame),
     )
-    const gens = Math.min(Math.max(Math.round(c.dubGens), 1), MAX_GENS)
+    const gens = dubGenerations(c.dubGens)
     const dv = new DataView(this.paramScratch)
     if (gens > 1) d.queue.writeBuffer(this.genParamsBuf, 0, this.paramScratch)
     for (let g = 1; g < gens; g++) {

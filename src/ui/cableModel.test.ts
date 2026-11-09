@@ -92,6 +92,18 @@ describe('cableLine', () => {
     expect(line[BAR]).toBe(0)
     expect(line.some(v => v !== 0)).toBe(true)
   })
+
+  it('echoes only the chroma pin when the line is open', () => {
+    const line = cableLine({ ...STOCK, chromaPinOnly: 1, termination: 0.7 })
+    expect(line[SYNC]).toBe(0)
+    expect(line[BAR]).toBe(0)
+  })
+
+  it('swaps the echo along with the signal', () => {
+    const open = cableLine({ ...STOCK, termination: 0.7 })
+    const swapped = cableLine({ ...STOCK, polarityFlip: 1, termination: 0.7 })
+    expect(swapped).toEqual(open.map(v => -v))
+  })
 })
 
 describe('contactBands', () => {

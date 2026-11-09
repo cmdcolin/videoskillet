@@ -59,7 +59,8 @@ between them puts program on one side of each stroke and black on the other.
 
 Everything between the recorder and the set: bandwidth, nonlinearity, noise, the
 tuner, colour-under, the tape and heads. The stage can run up to four times,
-once per dub generation.
+once per dub generation. The scrambler and the faults on the cable into the set
+act once, on the last copy.
 
 Tracking is a second-order servo with a dead band, so with servo hunt raised it
 sweeps, overshoots, rings and settles, and a scene change or an audio transient

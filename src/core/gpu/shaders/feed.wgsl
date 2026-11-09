@@ -232,9 +232,10 @@ fn main(
 
   // Cable termination fault on this feed alone (prelude `terminate`). The echo
   // taps the deck's output, so under pause it follows the resampled position
-  // rather than the nominal raster.
+  // rather than the nominal raster, and it travels the same swapped pair.
   if (P.termination != 0.0) {
-    out = terminate(out, P.termination, src[clampIdx(echoBase - 5)]);
+    let echo = src[clampIdx(echoBase - 5)];
+    out = terminate(out, P.termination, mix(echo, -echo, P.polarityFlip));
   }
 
   dst[n] = out;

@@ -3,7 +3,7 @@
 // function of the controls and the engine's per-frame state so the headless
 // profiler (scripts/gpuprof) packs exactly what the app packs.
 
-import { clamp01 } from '../math'
+import { clamp, clamp01 } from '../math'
 import {
   ACTIVE_HEIGHT,
   ACTIVE_WIDTH,
@@ -23,6 +23,11 @@ import type { OsdStep } from '../signal/osdstate'
 // so the key edge generator's border comes out the same width all round.
 const LINES_PER_US =
   (ACTIVE_HEIGHT * 4 * SAMPLE_RATE * 1e-6) / (3 * ACTIVE_WIDTH)
+
+export const MAX_GENS = 4
+
+export const dubGenerations = (dubGens: number) =>
+  clamp(Math.round(dubGens), 1, MAX_GENS)
 
 // Bent-crystal demod LO: how fast a detuned 3.58 MHz oscillator's phase error
 // grows, per composite sample.
@@ -102,6 +107,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
   return {
     frame: env.frame,
     gen: 0,
+    lastGen: dubGenerations(c.dubGens) - 1,
     canvasW: env.canvasW,
     canvasH: env.canvasH,
     srcAspect: env.srcAspect,

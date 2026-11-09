@@ -51,6 +51,7 @@ import {
 export const PARAM_DEFS = [
   ['frame', 'u32'],
   ['gen', 'u32'], // dub generation index: decorrelates noise/dropout seeds per pass
+  ['lastGen', 'u32'], // the generation the set plays back, the one the cable faults act on
   ['canvasW', 'f32'],
   ['canvasH', 'f32'],
   ['srcAspect', 'f32'],
@@ -1041,6 +1042,8 @@ fn connectorAt(v: f32, row: u32, n: u32, frame: u32, gen: u32, amt: f32, mode: f
 // toward a dim, barely-locking roll. The echo argument is the sample one round
 // trip back down the cable, which each caller taps out of its own input buffer:
 // the program bus off the pre-channel signal, a feed off that source's own deck.
+// The echo travels the same wires, so each caller puts the tap through its
+// cable's swapped pair, and the program bus through its missing pin as well.
 // Callers guard on a non-zero term, so a correct line costs no tap.
 fn terminate(v: f32, term: f32, echo: f32) -> f32 {
   return v * pow(2.0, term) + max(term, 0.0) * 0.6 * echo;

@@ -85,7 +85,12 @@ import timebaseSrc from './shaders/timebase.wgsl?raw'
 import underDownSrc from './shaders/under_down.wgsl?raw'
 import virSrc from './shaders/vir.wgsl?raw'
 import { Sources } from './sources'
-import { loRadPerSample, uniformValues } from './uniforms'
+import {
+  dubGenerations,
+  loRadPerSample,
+  MAX_GENS,
+  uniformValues,
+} from './uniforms'
 import { VideoPump } from './videopump'
 
 import type {
@@ -117,7 +122,6 @@ const N = SAMPLES_PER_LINE * LINES
 const driftPhase = (phase: number, detuneKHz: number) =>
   (phase + loRadPerSample(detuneKHz) * N) % (2 * Math.PI)
 const LINE_PARAM_BYTES = LINES * 32
-const MAX_GENS = 4
 
 // frameLock's last choice: pick the divisor from the loop's own cadence —
 // the state machine that does the picking lives in framelock.ts.
@@ -2764,7 +2768,7 @@ export class Engine implements EngineApi {
     // Each extra dub generation is an independent playback pass: its own gen
     // seed (decorrelating noise and dropouts) and a fresh time-base/phase
     // walk, staged now and copied over the live buffers between generations.
-    const gens = clamp(Math.round(c.dubGens), 1, MAX_GENS)
+    const gens = dubGenerations(c.dubGens)
     const dv = new DataView(this.paramScratch)
     // Slot 0 is this frame's own params, staged so the loop below can put them
     // back before the receiver runs (see the restore after it).
