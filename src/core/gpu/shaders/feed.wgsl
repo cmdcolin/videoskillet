@@ -13,7 +13,8 @@
 // packFeed does not override will silently apply a program-bus knob to one
 // source, and it will look like it works.
 //
-// Only per-sample damage and the paused deck's per-line resample live here.
+// Only per-sample damage and three resamples live here: the paused deck's,
+// Discret's line delay and the synth's delay line.
 // Anything needing the FIR bank or the color-under path (luma bandwidth,
 // rainbow instability) stays on the program bus — duplicating that per source
 // would triple the expensive work for effects whose per-source value is low.
@@ -90,14 +91,15 @@ fn main(
   // wobbles with the displacement, exactly what a no-TBC deck hands a set.
   //
   // srcS/srcRow are where on this deck's own tape the output sample is reading
-  // from — with the deck playing, the sample itself. They exist because
-  // everything that happened UPSTREAM of the deck has to be evaluated there
-  // rather than at the output position: the head-end scrambled this before it
-  // was ever recorded, and a dropout is missing oxide at a fixed place on the
-  // tape. Read at the output position, that damage stands still on the glass
-  // while the picture it belongs to scatters around it, and the scrambler
-  // lifts whatever has drifted under the sync gate instead of the sync tip —
-  // measurably, a third of the lines kept a full-depth tip under a held deck.
+  // from — with the deck playing and no delay line, the sample itself. They
+  // exist because everything that happened UPSTREAM of the deck has to be
+  // evaluated there rather than at the output position: the head-end scrambled
+  // this before it was ever recorded, and a dropout is missing oxide at a fixed
+  // place on the tape. Read at the output position, that damage stands still on
+  // the glass while the picture it belongs to scatters around it, and the
+  // scrambler lifts whatever has drifted under the sync gate instead of the sync
+  // tip — measurably, a third of the lines kept a full-depth tip under a held
+  // deck.
   // The cable faults further down deliberately keep the output raster: those
   // happen after the deck, on the way to the mixer.
   var srcS = s;
@@ -108,6 +110,13 @@ fn main(
   if (P.synthDelay > 0.0 || P.synthVca > 0.0 || P.synthSync > 0.0) {
     cv = synthOut(row, s, synthPatch(P), 0.0, synthLine[row]);
   }
+  // The synth's output driving a delay line in A's cable: the whole composite,
+  // sync and burst too, comes out late by an amount that follows the synth's
+  // level. Where the delay changes along a line the picture is stretched or
+  // squeezed, and the subcarrier slides against the burst, so the hue turns
+  // wherever the delay moves. The deck's output enters the delay line, so the
+  // tape is read that much earlier, and a paused deck's resample adds to it.
+  let lag = P.synthDelay * cv;
   if (P.bPause > 0.0) {
     let dr = abs(f32(row) - P.bPauseBar);
     let dBar = min(dr, f32(NLINES) - dr);
@@ -115,7 +124,7 @@ fn main(
       + P.bPause * 7.0 * (rand01(pcg(row * 613u + P.frame * 40961u)) - 0.5)
       + P.bPause * 28.0 * exp(-dBar / 9.0);
     let spl = f32(SPL);
-    var su = f32(s) + off;
+    var su = f32(s) + off - lag;
     su = su - floor(su / spl) * spl;
     srcS = u32(su);
     let frac = su - f32(srcS);
@@ -136,15 +145,13 @@ fn main(
       // while the tape is parked, unlike the dropouts below
       out = rfNull(out, edge * 1.6 * P.bPause, n ^ pcg(P.frame * 15187u + row * 5u));
     }
-  } else if (P.synthDelay > 0.0) {
-    // The synth's output driving a delay line in A's cable: the whole
-    // composite, sync and burst too, comes out late by an amount that follows
-    // the synth's level. Where the delay changes along a line the picture is
-    // stretched or squeezed, and the subcarrier slides against the burst, so
-    // the hue turns wherever the delay moves.
-    let at = f32(n) - P.synthDelay * cv;
+  } else if (lag > 0.0) {
+    let at = f32(n) - lag;
     let a0 = i32(floor(at));
     out = catmull(tapeAt(a0 - 1), tapeAt(a0), tapeAt(a0 + 1), tapeAt(a0 + 2), at - f32(a0));
+    let tape = clampIdx(a0);
+    srcRow = tape / SPL;
+    srcS = tape % SPL;
     echoBase = a0;
   } else {
     out = tapeAt(i32(n));
