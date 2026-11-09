@@ -572,10 +572,10 @@ fn decodeAt(row: u32, ry: u32, hoff: i32, toff: u32, tj: i32, col: i32, keyed: f
   // line difference through the takeoff bandpass, which passes most of the
   // chroma band of colour that holds still down the picture.
   //
-  // S-video miswire: cross-wiring the Y and C pins bleeds the color
-  // subcarrier back into brightness — at 0.5 the subtraction is defeated (raw
-  // composite as luma, dot crawl everywhere), past it the chroma re-adds and
-  // the subcarrier crawls as a herringbone while colored detail smears into Y.
+  // A takeoff fault scales that subtraction down. At 0.5 the luma is the raw
+  // composite, with dot crawl everywhere. Past 0.5 the takeoff's polarity is
+  // reversed, so the chroma is added back and the subcarrier crawls as a
+  // herringbone while coloured detail smears into Y.
   let sc0 = carrier(n, P.frame);
   var chromaRecon = us * sc0.x + vs * sc0.y;
   if (P.combMode >= 0.5) {

@@ -160,7 +160,7 @@ export function DecoderDiagram() {
       ROW.split,
       TOP_Y,
       'Y/C split',
-      'What feeds the chroma demodulator. The trap passes the composite as it is, so still detail in the colour band decodes as colour. The 2-line and 3-line combs subtract the line above, or the lines above and below, so only what alternates line to line reaches it. Luma is the composite minus chroma: on the trap, the chroma the demodulator recovered, remodulated onto the subcarrier; on a comb, its line difference through a 1.5 MHz bandpass about the subcarrier. S-video bleed scales that subtraction down, and past 0.5 adds the chroma back.',
+      'What feeds the chroma demodulator. The trap passes the composite as it is, so still detail in the colour band decodes as colour. The 2-line and 3-line combs subtract the line above, or the lines above and below, so only what alternates line to line reaches it. Luma is the composite minus chroma: on the trap, the chroma the demodulator recovered, remodulated onto the subcarrier; on a comb, its line difference through a 1.5 MHz bandpass about the subcarrier. The takeoff fault scales that subtraction down, and past 0.5 adds the chroma back.',
     ),
     box(
       'demod',

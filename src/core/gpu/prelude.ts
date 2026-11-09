@@ -251,7 +251,7 @@ export const PARAM_DEFS = [
   ['virLag', 'f32'], // the corrector's time constant, frames
   ['accLines', 'f32'], // chroma AGC time constant, lines of burst memory (0 = instantaneous)
   ['afpcLines', 'f32'], // burst phase lock time constant, lines (0 = per line)
-  ['svideoBleed', 'f32'], // Y/C cross-wire: chroma bled into luma (0.5 defeats the trap)
+  ['svideoBleed', 'f32'], // luma takeoff fault: 0.5 subtracts no chroma, 1 adds it back
   ['chromaCoarse', 'f32'], // chroma demod decimation factor; >1 lerps between lattice points (CUE rainbows)
   ['demodReach', 'u32'], // taps either side of the demod kernel's centre that can be nonzero (filters.ts demodReach)
   // channel / tape

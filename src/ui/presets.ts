@@ -3565,7 +3565,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'colour a step to the right',
     group: 'Tape wear',
     blurb:
-      "The deck's chroma path mistrimmed against its luma path by a microsecond and a half. Every coloured area sits that far right of the edge it belongs to, bleeding out of one side of things and falling short of the other. The burst travels the same path, so hue is correct and only the position is wrong, which is what tells a Y/C delay from a timebase error.",
+      "The deck's chroma path mistrimmed against its luma path by a microsecond and a half. Every coloured area sits that far right of the edge it belongs to, bleeding out of one side of things and falling short of the other. The burst travels the same path, so hue stays correct, which tells a Y/C delay from a timebase error. More than half the delayed burst falls outside the set's burst gate, so the set reads a weak burst and roughly doubles the saturation.",
     patch: {
       colorUnderMix: 1,
       ycDelayNs: 1400,

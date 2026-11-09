@@ -73,7 +73,7 @@ export const DEFAULT_CONTROLS = {
   killThresh: 2, // IRE
   accLagLines: 0, // chroma AGC time constant, lines of burst memory (0 = instantaneous)
   afpcLagLines: 0, // burst phase lock time constant, lines (0 = per line)
-  svideoBleed: 0, // Y/C miswire: bleed chroma into luma (S-video pins into composite)
+  svideoBleed: 0, // luma takeoff fault: 0.5 subtracts no chroma, 1 adds it back
   combMode: 0,
   hHold: 0.35,
   syncSlicer: 0, // 0 fixed slice at -20 IRE, 1 peak-following (halfway to the deepest level on the line), 2 AC-coupled into a phase comparator

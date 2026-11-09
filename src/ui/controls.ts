@@ -3074,7 +3074,7 @@ export const GROUPS: Group[] = [
         step: 70,
         redline: [-840, 840],
         unit: 'ns',
-        help: 'The chroma path through a deck or proc amp runs its own filters and delay lines, and mistrimmed against the luma path the colour arrives late or early, bleeding off its edges. The burst travels the same path, so hue stays correct: the colour is displaced, not rotated. Steps are whole samples, about 70 ns.',
+        help: "The chroma path through a deck or proc amp runs its own filters and delay lines, and mistrimmed against the luma path the colour arrives late or early, bleeding off its edges. The burst travels the same path, so hue holds. Past a few hundred nanoseconds the burst also slides out of the set's burst gate, so the colour amplifier turns saturation up, and near 2 µs the colour killer cuts the colour. Steps are whole samples, about 70 ns.",
       },
       {
         key: 'trackAmt',
@@ -3807,13 +3807,13 @@ export const GROUPS: Group[] = [
       {
         key: 'svideoBleed',
         id: 32,
-        label: 'S-video bleed',
+        label: 'takeoff fault',
         min: 0,
         max: 1,
         step: 0.01,
         unit: '',
         fine: true,
-        help: 'Chroma crossing into the luma path, as if the Y and C wires were shorted, so the subcarrier appears in the picture as a dense moving dot pattern over anything coloured.',
+        help: "The luma path's takeoff subtracts the separated chroma from the composite, and this fault takes away its gain. At 0.5 it subtracts nothing, so the subcarrier stays in the picture as a dense moving dot pattern over anything coloured. Past 0.5 its polarity is reversed and it adds the chroma a second time, so the subcarrier crawls through brightness as a herringbone.",
       },
       {
         key: 'demodMHz',
