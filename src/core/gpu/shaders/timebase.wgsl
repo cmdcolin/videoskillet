@@ -33,10 +33,10 @@ fn resampled(row: u32, s: u32) -> f32 {
   return catmull(src[clampIdx(i0 - 1)], src[clampIdx(i0)], src[clampIdx(i0 + 1)], src[clampIdx(i0 + 2)], fract(off));
 }
 
-// The cable's output at a sample. A loose plug on the program bus (prelude
-// `connectorAt`), shared with the per-source feeds, which wiggle one input's
-// plug alone. Then a hard polarity flip, with signal and ground fully swapped
-// on the line. Unlike the clean encoder invert (active video only), this
+// cableAt gives the cable's output at a sample. It passes through a loose plug
+// on the program bus (prelude `connectorAt`), shared with the per-source feeds,
+// which wiggle one input's plug alone, and then a hard polarity flip, with
+// signal and ground fully swapped on the line. Unlike the clean encoder invert (active video only), this
 // negates the whole waveform, sync tips and burst included, so the receiver's
 // sync separator latches onto the wrong level and the picture tears and rolls
 // while the colours invert.
@@ -55,11 +55,12 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   let n = row * SPL + s;
   var out: f32;
   if (P.gen == P.lastGen) {
-    out = cableAt(row, s);
-    if (P.termination != 0.0) {
+    var echo = 0.0;
+    if (P.termination > 0.0) {
       let e = clampIdx(i32(n) - 5);
-      out = terminate(out, P.termination, cableAt(e / SPL, e % SPL));
+      echo = cableAt(e / SPL, e % SPL);
     }
+    out = terminate(cableAt(row, s), P.termination, echo);
   } else {
     out = resampled(row, s);
   }

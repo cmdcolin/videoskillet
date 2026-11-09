@@ -144,8 +144,8 @@ fn pinnedIn(i: i32, pin: f32) -> f32 {
   return v;
 }
 
-// The pre-channel signal at i as the head-end sends it, through the program
-// bus's chroma pin and the scrambler.
+// sentAt gives the pre-channel signal at i as the head-end sends it, through
+// the program bus's chroma pin and the scrambler.
 fn sentAt(i: i32, pin: f32, scramble: f32) -> f32 {
   let ci = clampIdx(i);
   return scrambleAt(pinnedIn(i, pin), ci / SPL, ci % SPL, scramble, P.scrambleMode, P.frame);

@@ -24,18 +24,19 @@
 @group(0) @binding(2) var<storage, read_write> dst: array<f32>;
 @group(0) @binding(3) var<storage, read> synthLine: array<vec2f>;
 
-// How far back the termination's echo reaches, in samples.
+// The termination's echo reaches this many samples back.
 const ECHO_LAG = 5u;
 // Snow deviates staged once per workgroup: the 1-2-1 band-limit below reads
 // each neighbour's deviate, and gauss() is Box-Muller — the same redundancy
 // channel.wgsl stages away.
 var<workgroup> tileNs: array<f32, TILE_WG + 2u + ECHO_LAG>;
-// The feed's output for the workgroup's samples and the ECHO_LAG before them.
+// tileOut holds the feed's output for the workgroup's samples and the ECHO_LAG
+// samples before them.
 var<workgroup> tileOut: array<f32, TILE_WG + ECHO_LAG>;
 
-// The tape at sample i as the head-end sent it to be recorded. A premium
-// channel is scrambled per channel, so each feed scrambles its own input, with
-// the mechanism in the prelude, shared with the program-bus copy in
+// tapeAt gives the tape at sample i as the head-end sent it to be recorded. A
+// premium channel is scrambled per channel, so each feed scrambles its own
+// input, with the mechanism in the prelude, shared with the program-bus copy in
 // channel.wgsl. Line-delay scrambling (prelude `discretDelay`) reads a line's
 // picture from earlier on the line, and sync, blanking and burst keep their
 // place; the line's start comes out of the delay as the blanking that went in
@@ -60,8 +61,8 @@ fn tapeAt(i: i32) -> f32 {
   return scrambleAt(v, row, s, P.scramble, P.scrambleMode, P.srcFrame);
 }
 
-// One sample of the feed's output, before the termination. `slot` is the
-// sample's place in the workgroup's noise tile.
+// feedAt gives one sample of the feed's output before the termination. `slot`
+// is the sample's place in the workgroup's noise tile.
 fn feedAt(n: u32, slot: u32) -> f32 {
   let row = n / SPL;
   let s = n % SPL;
@@ -230,8 +231,8 @@ fn feedAt(n: u32, slot: u32) -> f32 {
 
 // The termination's echo is the feed's own output five samples back. A
 // workgroup's first five samples need the five before its tile, which another
-// workgroup computes, so while the line is mismatched each workgroup computes
-// those five again. Every stage in `feedAt` depends only on the sample's
+// workgroup computes, so while the line is open each workgroup computes those
+// five again. Every stage in `feedAt` depends only on the sample's
 // position, so both copies agree.
 @compute @workgroup_size(TILE_WG, 1, 1)
 fn main(
@@ -258,16 +259,19 @@ fn main(
     out = feedAt(n, lid.x + 1u + ECHO_LAG);
   }
 
-  // Cable termination fault on this feed alone (prelude `terminate`).
-  if (P.termination != 0.0) {
+  // Cable termination fault on this feed alone (prelude `terminate`). Only an
+  // open line echoes.
+  var echo = 0.0;
+  if (P.termination > 0.0) {
     if (lid.x < ECHO_LAG) {
       let e = max(i32(n0) - i32(ECHO_LAG) + i32(lid.x), 0);
       tileOut[lid.x] = feedAt(u32(e), u32(e - i32(n0) + i32(1u + ECHO_LAG)));
     }
     tileOut[lid.x + ECHO_LAG] = out;
     workgroupBarrier();
-    out = terminate(out, P.termination, tileOut[lid.x]);
+    echo = tileOut[lid.x];
   }
+  out = terminate(out, P.termination, echo);
 
   if (live) {
     dst[n] = out;
