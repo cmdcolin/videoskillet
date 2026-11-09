@@ -134,6 +134,16 @@ var<workgroup> tileFmSrc: array<f32, FM_SRC>;
 var<workgroup> tileFmOver: array<f32, FM_SRC>;
 var<workgroup> tileFm: array<f32, TILE_WG + 2u * LUMA_REACH>;
 
+// The pre-channel signal at i as the program bus's chroma pin leaves it.
+fn pinnedIn(i: i32, pin: f32) -> f32 {
+  let ci = clampIdx(i);
+  var v = comp[ci];
+  if (pin != 0.0) {
+    v = v - pin * (v - chroma[ci]);
+  }
+  return v;
+}
+
 @compute @workgroup_size(TILE_WG, 1, 1)
 fn main(
   @builtin(global_invocation_id) gid: vec3u,
@@ -372,11 +382,11 @@ fn main(
   // feeds, which scramble one input alone.
   out = scrambleAt(out, row, s, scramble, P.scrambleMode, P.frame);
 
-  // multipath ghost of the pre-channel signal
+  // multipath ghost of the pre-channel signal, through the same pin
   if (P.ghostGain != 0.0) {
     let g0 = i32(n) + i32(floor(-P.ghostDelay));
     out = out + P.ghostGain
-      * catmull(comp[clampIdx(g0 - 1)], comp[clampIdx(g0)], comp[clampIdx(g0 + 1)], comp[clampIdx(g0 + 2)], fract(-P.ghostDelay));
+      * catmull(pinnedIn(g0 - 1, pin), pinnedIn(g0, pin), pinnedIn(g0 + 1, pin), pinnedIn(g0 + 2, pin), fract(-P.ghostDelay));
   }
 
   // Additive noise (snow), through one of two paths with the same deviates.
@@ -642,7 +652,7 @@ fn main(
     // Nothing to patch with if the line it is holding lost the same samples, or
     // at the top of the frame where it has not seen a good line yet.
     if (P.dropoutComp > 0.5 && row >= bl && !droppedAt(row - bl, s)) {
-      out = out + comp[clampIdx(i32(n) - i32(bl * SPL))] - comp[n];
+      out = out + pinnedIn(i32(n) - i32(bl * SPL), pin) - pinnedIn(i32(n), pin);
     } else {
       out = dropoutNull(out, 0.95, n ^ pcg(P.frame * 977u + P.gen * 7919u));
     }
@@ -706,9 +716,8 @@ fn main(
   // pre-channel signal with the missing pin and the swapped pair applied.
   let term = select(0.0, P.termination, toSet);
   if (term != 0.0) {
-    let e = clampIdx(i32(n) - 5);
-    let pinned = comp[e] - pin * (comp[e] - chroma[e]);
-    out = terminate(out, term, mix(pinned, -pinned, flip));
+    let echo = pinnedIn(i32(n) - 5, pin);
+    out = terminate(out, term, mix(echo, -echo, flip));
   }
 
   outBuf[n] = out;
