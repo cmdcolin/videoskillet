@@ -10,10 +10,12 @@
 // on the burst. Steps (the head switch, a track crossing) stay steps.
 //
 // The cable from the last deck to the set comes after its time-base error, so
-// the program bus's termination fault (prelude `terminate`) acts here, on the
-// generation the set plays back. Its echo is this pass's own output five
-// samples back, which is everything the deck and the cable did to the signal,
-// and an open centre pin upstream leaves nothing to reflect.
+// its faults act here, on the generation the set plays back: the loose plug,
+// the swapped pair and the termination. The termination's echo is the cable's
+// own output five samples back, which carries everything the decks and the
+// cable did to the signal, and an open centre pin leaves nothing to reflect.
+// The deck's OSD and the outboard enhancer run in later passes, so the echo
+// leaves them out.
 
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var<storage, read> lineParams: array<vec4f>;
@@ -31,6 +33,18 @@ fn resampled(row: u32, s: u32) -> f32 {
   return catmull(src[clampIdx(i0 - 1)], src[clampIdx(i0)], src[clampIdx(i0 + 1)], src[clampIdx(i0 + 2)], fract(off));
 }
 
+// The cable's output at a sample. A loose plug on the program bus (prelude
+// `connectorAt`), shared with the per-source feeds, which wiggle one input's
+// plug alone. Then a hard polarity flip, with signal and ground fully swapped
+// on the line. Unlike the clean encoder invert (active video only), this
+// negates the whole waveform, sync tips and burst included, so the receiver's
+// sync separator latches onto the wrong level and the picture tears and rolls
+// while the colours invert.
+fn cableAt(row: u32, s: u32) -> f32 {
+  let v = connectorAt(resampled(row, s), row, row * SPL + s, P.frame, P.gen, P.connectorGlitch, P.connectorMode);
+  return mix(v, -v, P.polarityFlip);
+}
+
 @compute @workgroup_size(64, 1, 1)
 fn main(@builtin(global_invocation_id) gid: vec3u) {
   let s = gid.x;
@@ -39,11 +53,15 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     return;
   }
   let n = row * SPL + s;
-  var out = resampled(row, s);
-  let term = select(0.0, P.termination, P.gen == P.lastGen);
-  if (term != 0.0) {
-    let e = clampIdx(i32(n) - 5);
-    out = terminate(out, term, resampled(e / SPL, e % SPL));
+  var out: f32;
+  if (P.gen == P.lastGen) {
+    out = cableAt(row, s);
+    if (P.termination != 0.0) {
+      let e = clampIdx(i32(n) - 5);
+      out = terminate(out, P.termination, cableAt(e / SPL, e % SPL));
+    }
+  } else {
+    out = resampled(row, s);
   }
   dst[n] = out;
 }

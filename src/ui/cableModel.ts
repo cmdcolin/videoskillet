@@ -59,13 +59,13 @@ const pinned = (v: number, s: number, pin: number) => {
   return (v - chroma) * (1 - pin) + chroma
 }
 
-// An even line through channel.wgsl's cable stages, in the shader's order: the
-// chroma pin, the head-end scrambler, the polarity swap, the termination. The
-// echo reads the line as it was before the channel, five samples back, through
-// the same pin and swap.
+// An even line through the program bus's cable stages, in the shaders' order:
+// the chroma pin and the head-end scrambler in channel.wgsl, then the polarity
+// swap and the termination in timebase.wgsl. The echo is the line the cable
+// carries, five samples back.
 export function cableLine(c: Cable, line = TEST_LINE): number[] {
   const flip = 1 - 2 * c.polarityFlip
-  return line.map((v, s) => {
+  const carried = line.map((v, s) => {
     let out = pinned(v, s, c.chromaPinOnly)
     if (c.scramble > 0) {
       const system = Math.round(c.scrambleMode)
@@ -80,11 +80,15 @@ export function cableLine(c: Cable, line = TEST_LINE): number[] {
         }
       }
     }
-    out *= flip
-    const e = Math.max(s - ECHO_SAMPLES, 0)
-    const echo = pinned(line[e]!, e, c.chromaPinOnly) * flip
-    return out * 2 ** c.termination + Math.max(c.termination, 0) * 0.6 * echo
+    return out * flip
   })
+  return carried.map(
+    (v, s) =>
+      v * 2 ** c.termination +
+      Math.max(c.termination, 0) *
+        0.6 *
+        (carried[Math.max(s - ECHO_SAMPLES, 0)] ?? 0),
+  )
 }
 
 const bands = (chance: number, seed: number): Band[] => {

@@ -707,17 +707,5 @@ fn main(
   out = shuttleNull(out, row, P.shuttleBars, P.shuttlePhase,
     n ^ pcg(P.frame * 24593u + row * 3u + P.gen * 389u));
 
-  // Loose connector on the program bus (prelude `connectorAt`), shared with the
-  // per-source feeds, which wiggle one input's plug alone.
-  let plug = select(0.0, P.connectorGlitch, toSet);
-  out = connectorAt(out, row, n, P.frame, P.gen, plug, P.connectorMode);
-
-  // Hard polarity flip: signal and ground fully swapped on the line. Unlike the
-  // clean encoder invert (active video only), this negates the whole waveform —
-  // sync tips and burst included — so the receiver's sync separator latches onto
-  // the wrong level and the picture tears and rolls while the colors invert.
-  let flip = select(0.0, P.polarityFlip, toSet);
-  out = mix(out, -out, flip);
-
   outBuf[n] = out;
 }

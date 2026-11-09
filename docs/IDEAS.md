@@ -500,7 +500,7 @@ and change `osd`, `lineAnalyze`, `vir`, `storePrev` and decode's staging.
 `decode` already binds eight storage buffers, the default
 `maxStorageBuffersPerShaderStage`, so C would have to share `compA`.
 
-Five smaller items sit next to this:
+Six smaller items sit next to this:
 
 - **The source pins run at the encoder, ahead of the feed.** `feed.wgsl` only
   sees the summed composite, so it cannot separate C. A feed's mistrack snow,
@@ -537,6 +537,12 @@ Five smaller items sit next to this:
   deck pass and a cable pass, which the source pins' chroma extract above
   needs anyway, makes that simpler: the cable pass reads the deck's output
   from a buffer.
+- **The program bus's cable runs ahead of the OSD and the enhancer.** The plug,
+  the swapped pair and the termination act in the timebase pass, but the deck's
+  OSD and the outboard enhancer both sit between the deck and the set's
+  terminator and run in later passes. A double-terminated line into an enhancer
+  with sync regeneration therefore arrives with full-depth sync, where the
+  halved cable would halve the regenerated sync too.
 - **A fractional Y/C delay.** `ycDelayNs` rounds to whole samples, about 70 ns,
   so the LFO on `the colour keeps walking` moves the colour a pixel at a time.
   Rotating the carrier by the fraction does not help: the burst rotates with it

@@ -1059,9 +1059,9 @@ fn connectorAt(v: f32, row: u32, n: u32, frame: u32, gen: u32, amt: f32, mode: f
 // double-terminates (<0), halving the signal so contrast and sync depth collapse
 // toward a dim, barely-locking roll. The echo argument is the sample one round
 // trip back down the cable, the cable's own signal reflected. The program bus
-// taps it off the timebase pass's own output, so it carries everything
-// upstream. A feed rebuilds it from the tape, through the head-end's scrambler
-// and its cable's swapped pair. Callers guard on a non-zero term, so a correct line costs no tap.
+// takes it from the cable's own output in the timebase pass. A feed rebuilds it
+// from the tape, through the head-end's scrambler and its cable's swapped pair.
+// Callers guard on a non-zero term, so a correct line costs no tap.
 fn terminate(v: f32, term: f32, echo: f32) -> f32 {
   return v * pow(2.0, term) + max(term, 0.0) * 0.6 * echo;
 }
