@@ -18,9 +18,9 @@
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var<storage, read> prev: array<f32>;
 @group(0) @binding(2) var<storage, read_write> comp: array<f32>;
-// Program as the mixer had it, before this pass crossfades over it. Only the
-// keyer's external key input reads it, and the pipeline only refreshes it on
-// the frames that input is patched in.
+// Program as the mixer had it, before this pass crossfades over it. The
+// keyer's external key input and the return's Y/C split read it, and the
+// pipeline refreshes it only on the frames one of them is patched in.
 @group(0) @binding(3) var<storage, read> prog: array<f32>;
 
 // The loop amplifier's output stage. A hard rail pins runaway energy into
@@ -156,6 +156,20 @@ fn nearest(r: StoreRead) -> i32 {
   return r.at + select(0, 1, r.frac >= 0.5);
 }
 
+// `storeLuma` returns the Y/C separator's luma about sample c. Four samples at
+// 4x fsc span one subcarrier cycle, so five with the end two at half weight
+// null chroma too, and the window is centred on c instead of half a sample
+// behind it.
+fn storeLuma(c: i32) -> f32 {
+  let ends = prev[wrapIdx(c - 2)] + prev[wrapIdx(c + 2)];
+  return 0.25 * (0.5 * ends + prev[wrapIdx(c - 1)] + prev[wrapIdx(c)] + prev[wrapIdx(c + 1)]);
+}
+
+fn progLuma(c: i32) -> f32 {
+  let ends = prog[clampIdx(c - 2)] + prog[clampIdx(c + 2)];
+  return 0.25 * (0.5 * ends + prog[clampIdx(c - 1)] + prog[clampIdx(c)] + prog[clampIdx(c + 1)]);
+}
+
 @compute @workgroup_size(64, 1, 1)
 fn main(
   @builtin(global_invocation_id) gid: vec3u,
@@ -228,11 +242,12 @@ fn main(
   var fb = catmull(prev[wrapIdx(i0 - 1)], prev[wrapIdx(i0)], prev[wrapIdx(i0 + 1)], prev[wrapIdx(i0 + 2)], pos.frac);
   if (P.cfbReturn > 0.5) {
     // A Y/C separator on the return and a recombiner after it, so one wire
-    // comes from the loop and the other from the live picture. Four
-    // consecutive samples at 4x fsc span exactly one subcarrier cycle, so
-    // their sum nulls chroma however the span happens to land — the same
-    // aperture the keyer below slices with, doing the job a trap does in a
-    // set. What is left when that mean comes off is the chroma.
+    // comes from the loop and the other from the live picture. The separator
+    // takes luma off a one-cycle window (`storeLuma`), doing the job a trap
+    // does in a set, and what is left when that comes off is the chroma. The
+    // window has to sit where the return is read, between two samples, or
+    // the luma it misses by a fraction of a sample shows up on every edge as
+    // chroma.
     //
     // The recombiner is what makes this a patch rather than a mute. One wire
     // alone cannot go into a crossfader: a chroma line rides about blanking,
@@ -252,16 +267,8 @@ fn main(
     // dispatch is part way through overwriting. The keyer's external input
     // takes it from there for the same reason; the pipeline refreshes it
     // whenever either of them is patched in.
-    var ry = 0.0;
-    var py = 0.0;
-    let c0 = nearest(pos) - 2;
-    let p0 = i32(n) - 2;
-    for (var k = 0; k < 4; k = k + 1) {
-      ry = ry + prev[wrapIdx(c0 + k)];
-      py = py + prog[clampIdx(p0 + k)];
-    }
-    ry = ry * 0.25;
-    py = py * 0.25;
+    let ry = mix(storeLuma(pos.at), storeLuma(pos.at + 1), pos.frac);
+    let py = progLuma(i32(n));
     fb = select(ry + (prog[n] - py), py + (fb - ry), P.cfbReturn < 1.5);
   }
   if (P.cfbNoise > 0.0) {
