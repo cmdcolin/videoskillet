@@ -8,7 +8,7 @@ clamped, not refused.
 Modulation sources for #mod=: sine, triangle, walk, smooth, hold, lorenz, level, hit, trig, pull.
 Up to 8 routings, rate 0.02..10 Hz, depth 0..1.
 
-Presets for #preset=: clean, vhs, protectedTape, wornTape, pictureSearch, stuckTape, trackingBand, servoHunt, hueRidesTheLight, overDeviatedWhite, oneLineBack, broadcast, mistunedRf, fringeReception, ignitionStorm, deadChannel, dimmerHash, scrambledChannel, gatedScramble, turboSyncLoss, almostDecoded, ssavi, triModeScrambler, sixDbBox, sineWaveScrambler, keyedSsavi, lineDelay, verticalHoldGone, bentScan, supplyChaos, fullCollapse, bassSmack, lineNineteen, collapsedAxes, mixerLoop, strobeTrails, keyLoop, fbBloom, woundSpiral, shadowLadder, ladderClimb, subcarrierSiren, huntingServos, meltdown, zoomBloom, aimedAHairOff, turnedAHair, theIrisHoldsTheEdge, tunnelOut, spiral, subcarrierComb, ringLoop, ringLadder, ringStorm, ringOnTheBeat, invertedRungs, ringInTheHighlights, ringInTheShadows, warpInTheHighlights, warpInTheShadows, rungsInTheLight, ringingInTheHighlights, chasingItsOwnColour, carvedByTheLivePicture, theHoleTheSubjectKeeps, itOnlyEatsTheRed, theFaceStaysOutOfIt, theWrongClock, clockAndCrystal, colourInTheDark, greyUnderTheColour, noColourToTrade, theLightIsALapBehind, lightBecomesHue, theSecondCrystal, keyedOnWhatItMade, layeredByBrightness, intermodLoop, whereTheProductsLand, shearedAndStacked, servoWarp, bothLoops, runaway, syncInTheLoop, lorenzLoop, strobeBloom, beamBendsItsOwnScan, flagOnEveryLap, colourKeepsWalking, shearedEveryGeneration, encoderWiredBackwards, wheelBehindTheSubject, handOnTheChassis, cleanDissolve, dirtyMix, ringMix, outOfVolts, pauseFight, relayMidFrame, leakingFader, genlockLosesGrip, pirateFeed, negativeDrifter, houseDeckHeld, differenceKey, greenScreen, matteFlood, keySweep, extrudedRibbons, keyOffADub, keyIntoTheLoop, wipeFight, negative, signalAndGroundSwapped, sVideoMiswire, noTerminator, daisyChained, looseConnector, bentEnhancer, contourLines, pouredColour, silkscreen, falseColour, tornBands, tornCircle, jitteryRingMod, slowSwim, crushedSync, lostOnTheBeat, blockColour, litAtTheEdges, contoursOnContours, ringPlaid, twoMultipliers, punchIn, rainbowStorm, neonTube, strobedTube, roundTube, burnedIn, degauss, greenTerminal, radarTube, noseAgainstTheGlass, bentDetailer, latchedEnhancer, latchedCameraLoop, howlroundLoom, falseSync, paperclipChroma, blackRestore, magnetised, misconverged, transmissionFault, nightMonitor, everyColourButOne, pastTheYoke, arcStorm, railSlam, chromaRails, outOfHeadroom, soundAtTheRails, lightThatStays, servicePosition, foldover, powerOff, powerOn, channelChange, splitPhase, potMixer, partsDrawer, wiggledPlugs, threeServos, cometTails, nightTube, hairOffTheCrystal, clampInThePicture, colourAStepRight, aimedAtTheVcr, oneHeadPacked, tapeIn, tintInASlowHand, overmodulatedChyron, bentFontRom, scrambledCharacterRom, thePictureInTheType, scrambledIdent, typeEcho, fontCrawl, heldRaster, pageShuffle, wanderingInset.
+Presets for #preset=: clean, vhs, protectedTape, wornTape, pictureSearch, stuckTape, trackingBand, servoHunt, hueRidesTheLight, overDeviatedWhite, oneLineBack, broadcast, mistunedRf, fringeReception, ignitionStorm, deadChannel, dimmerHash, scrambledChannel, gatedScramble, turboSyncLoss, almostDecoded, ssavi, triModeScrambler, sixDbBox, sineWaveScrambler, keyedSsavi, lineDelay, verticalHoldGone, bentScan, supplyChaos, fullCollapse, bassSmack, lineNineteen, collapsedAxes, mixerLoop, strobeTrails, keyLoop, fbBloom, woundSpiral, shadowLadder, ladderClimb, subcarrierSiren, huntingServos, meltdown, zoomBloom, aimedAHairOff, turnedAHair, theIrisHoldsTheEdge, tunnelOut, spiral, subcarrierComb, ringLoop, ringLadder, ringStorm, ringOnTheBeat, invertedRungs, ringInTheHighlights, ringInTheShadows, warpInTheHighlights, warpInTheShadows, rungsInTheLight, ringingInTheHighlights, chasingItsOwnColour, carvedByTheLivePicture, theHoleTheSubjectKeeps, itOnlyEatsTheRed, theFaceStaysOutOfIt, theWrongClock, clockAndCrystal, colourInTheDark, greyUnderTheColour, noColourToTrade, theLightIsALapBehind, lightBecomesHue, theSecondCrystal, keyedOnWhatItMade, layeredByBrightness, intermodLoop, whereTheProductsLand, shearedAndStacked, servoWarp, bothLoops, runaway, syncInTheLoop, lorenzLoop, strobeBloom, beamBendsItsOwnScan, flagOnEveryLap, colourKeepsWalking, shearedEveryGeneration, encoderWiredBackwards, wheelBehindTheSubject, handOnTheChassis, cleanDissolve, dirtyMix, ringMix, outOfVolts, pauseFight, relayMidFrame, leakingFader, genlockLosesGrip, pirateFeed, negativeDrifter, houseDeckHeld, differenceKey, greenScreen, matteFlood, keySweep, extrudedRibbons, keyOffADub, keyIntoTheLoop, wipeFight, negative, signalAndGroundSwapped, sVideoMiswire, onlyTheChromaPin, noTerminator, daisyChained, looseConnector, bentEnhancer, contourLines, pouredColour, silkscreen, falseColour, tornBands, tornCircle, jitteryRingMod, slowSwim, crushedSync, lostOnTheBeat, blockColour, litAtTheEdges, contoursOnContours, ringPlaid, twoMultipliers, punchIn, rainbowStorm, neonTube, strobedTube, roundTube, burnedIn, degauss, greenTerminal, radarTube, noseAgainstTheGlass, bentDetailer, latchedEnhancer, latchedCameraLoop, howlroundLoom, falseSync, paperclipChroma, blackRestore, magnetised, misconverged, transmissionFault, nightMonitor, everyColourButOne, pastTheYoke, arcStorm, railSlam, chromaRails, outOfHeadroom, soundAtTheRails, lightThatStays, servicePosition, foldover, powerOff, powerOn, channelChange, splitPhase, potMixer, partsDrawer, wiggledPlugs, threeServos, cometTails, nightTube, hairOffTheCrystal, clampInThePicture, colourAStepRight, aimedAtTheVcr, oneHeadPacked, tapeIn, tintInASlowHand, overmodulatedChyron, bentFontRom, scrambledCharacterRom, thePictureInTheType, scrambledIdent, typeEcho, fontCrawl, heldRaster, pageShuffle, wanderingInset.
 
 ## Signal (source A)
 
@@ -225,6 +225,10 @@ aTermination  (A termination (-1 daisy, +1 open))
 aPolarity  (A polarity (flips sync))
   0..1 step 0.01  default 0
   A signal/ground swap on A's own connector, negating A's waveform and its sync before the mixer. B is untouched, so the receiver may latch onto B.
+
+aChromaPin  (A chroma pin only)
+  0..1 step 0.01  default 0
+  A's S-video lead pushed into a composite jack with only its chroma pin making contact. A arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. Mixed with B, the receiver can lock to B's sync and decode A's colour over B's picture.
 
 ## Camera feedback (optical)
 
@@ -525,6 +529,10 @@ bTermination  (B termination (-1 daisy, +1 open))
 bPolarity  (B polarity (flips sync))
   0..1 step 0.01  default 0
   A signal/ground swap on B's own connector, negating B's waveform and sync before the summing bus.
+
+bChromaPin  (B chroma pin only)
+  0..1 step 0.01  default 0
+  B's S-video lead pushed into a composite jack with only its chroma pin making contact. B arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. Summed over A, B's colour rides on A's picture and slips and rolls with B's own raster.
 
 ## Character generator (chyron)
 
@@ -936,7 +944,7 @@ termination  (termination (-1 daisy, +1 open))
 
 chromaPinOnly  (chroma-pin only)
   0..1 step 0.01  default 0
-  S-video miswired into a composite input, so only the chroma pin arrives. With no luma and no sync the receiver free-runs on a bare subcarrier.
+  The deck's S-video lead in a composite input with only its chroma pin making contact. With no luma and no sync the receiver free-runs on a bare subcarrier. The deck separates its chroma from the composite with a bandpass, or with colour-under up plays it back off the tape, so fine luma detail near the subcarrier comes through as colour. Each source's own chroma pin, in its feed's cable group, carries the encoder's chroma alone.
 
 connectorGlitch  (loose connector)
   0..1 step 0.01  default 0

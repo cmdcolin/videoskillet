@@ -218,6 +218,13 @@ export const CARD_PRESETS: CardPreset[] = [
     patch: { aPotOhms: 40, aPotFiddle: 1 },
   },
   {
+    group: FEED_A_CABLE_GROUP,
+    name: 'chroma pin',
+    blurb:
+      'A’s S-video lead with its luma pin barely touching, so A arrives as its colour and burst with less than half its sync, and the hue swings while the outlines hold',
+    patch: { aChromaPin: 0.6 },
+  },
+  {
     group: FEED_B_CABLE_GROUP,
     name: 'ground loop, other leg',
     blurb:
@@ -237,6 +244,13 @@ export const CARD_PRESETS: CardPreset[] = [
     blurb:
       'B’s centre pin making and breaking, so B stops pushing sync for a band and then comes back fighting',
     patch: { bConnector: 0.35, bConnectorMode: 0 },
+  },
+  {
+    group: FEED_B_CABLE_GROUP,
+    name: 'chroma pin',
+    blurb:
+      'only the chroma pin of B’s S-video lead touching, so with B summed in, B’s colour rides over A’s picture and slips with B’s own raster',
+    patch: { bChromaPin: 1 },
   },
   {
     group: 'Crosspoint',

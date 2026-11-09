@@ -2315,17 +2315,24 @@ export const PRESETS: PresetDef[] = [
     displayName: 's-video miswire',
     group: 'Cross-wired',
     blurb:
-      'S-video pins jammed into a composite jack, with the chroma pin making the best contact. Colour glows hot through a darkened, barely-locking picture, the subcarrier herringbones through brightness, detail decodes as rainbow blocks, and the frame rolls when the shallow sync loses lock.',
+      'An S-video lead jammed into a composite jack, with the chroma pin making the best contact and the luma pin a poor one. A little under half the luma and the sync arrive, so the picture is dark and the colour, turned up at the set, glows hot over it. The sync tips are shallow enough that the deepest colour in the picture nearly reaches the slicer, and the set holds lock only until a saturated patch or a burst of noise pulls the line start away, then rolls.',
     patch: {
-      svideoBleed: 1,
+      aChromaPin: 0.54,
       chromaGain: 2.6,
-      demodMHz: 1.4,
-      encChromaMHz: 2,
-      chromaTail: 0.6,
-      chromaCoarse: 2,
-      chromaPinOnly: 0.5,
       hHold: 0.15,
       noiseIre: 2,
+    },
+  },
+  {
+    name: 'onlyTheChromaPin',
+    displayName: 'only the chroma pin',
+    group: 'Cross-wired',
+    blurb:
+      "An S-video lead in a composite jack with its luma pin barely touching, so what reaches the set is the source's colour and burst with less than half its luma and sync. That sync is too shallow to hold the line oscillator, which runs on its own, so the burst gate lands on the burst on some lines and on picture colour on others, and the hue swings across the wheel from one field to the next, dropping to grey when the colour killer finds no burst at all. The colour still carries every outline, so the face reads through it.",
+    patch: {
+      aChromaPin: 0.6,
+      chromaGain: 1.6,
+      hHold: 0.15,
     },
   },
   {

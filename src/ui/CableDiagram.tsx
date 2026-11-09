@@ -86,7 +86,7 @@ export function CableDiagram() {
       COL.chroma,
       ROW_Y,
       'chroma',
-      'Only the chroma pin of an S-video lead reaches the composite input: burst-locked colour with no luma and no sync tips.',
+      "Only the chroma pin of the deck's S-video lead reaches the composite input: burst-locked colour with no luma and no sync tips, separated from the composite by the deck's own bandpass.",
     ),
     box(
       'plug',

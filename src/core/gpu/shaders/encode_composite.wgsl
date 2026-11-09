@@ -54,6 +54,7 @@ fn main(
   // active picture is filled in here, from the workgroup-tiled chroma FIR.
   let slot = ntscLineSlot(row, s, n, P.frame, 0.0);
   var out = slot.value;
+  var cWire = slot.chroma;
   if (slot.picture) {
     // folded on the kernel's symmetry: mirrored taps share one coefficient
     let m = (ENC_CHROMA_TAPS - 1u) / 2u;
@@ -62,7 +63,9 @@ fn main(
     for (var k = 0u; k < m; k = k + 1u) {
       uv = uv + filters[SEC_ENC_CHROMA * FILTER_STRIDE + k] * (tileUV[c + k - m] + tileUV[c + m - k]);
     }
-    out = activeComposite(tileY[lid.x], uv.x, uv.y, carrier(n, P.frame), 1.0, P.invert);
+    let sc = carrier(n, P.frame);
+    out = activeComposite(tileY[lid.x], uv.x, uv.y, sc, 1.0, P.invert);
+    cWire = activeChroma(uv.x, uv.y, sc, 1.0, P.invert);
   }
 
   // What broadcasters actually parked in the vertical interval: test and
@@ -75,6 +78,7 @@ fn main(
   if (P.vbi > 0.5 && row >= 17u && row <= CC_LINE && row != 20u
       && s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W) {
     let x = s - ACTIVE_START;
+    cWire = 0.0;
     if (row == 17u) {
       if (x < 70u) {
         out = 100.0; // the white flag multiburst opens with
@@ -97,11 +101,13 @@ fn main(
     } else if (row == 18u) {
       // five-step staircase with the subcarrier riding every step
       let stair = f32(min(x / 151u, 4u));
-      out = 10.0 + 20.0 * stair + 10.0 * carrier(n, P.frame).y;
+      cWire = 10.0 * carrier(n, P.frame).y;
+      out = 10.0 + 20.0 * stair + cWire;
     } else if (row == VIR_LINE) {
       // VIR: chroma reference at burst phase on 70 IRE, then luma and black
       if (x < 380u) {
-        out = 70.0 - 20.0 * carrierRot(n, P.frame, 0.0).x;
+        cWire = -20.0 * carrierRot(n, P.frame, 0.0).x;
+        out = 70.0 + cWire;
       } else if (x < 570u) {
         out = 50.0;
       } else {
@@ -163,14 +169,18 @@ fn main(
     let a = lvl / 160.0; // pseudo-sync depth tracks the pulse level
     if (s >= 70u && s < 110u) {
       out = lvl; // the porch pulse, covering sync_measure's porch sample
+      cWire = 0.0;
     } else if (s >= 110u && s < 140u) {
       out = mix(IRE_BLANK, IRE_SYNC, a);
+      cWire = 0.0;
     } else if (s >= 190u && s < 790u) {
       let t = (s - 190u) % 120u;
       if (t < 30u) {
         out = mix(IRE_BLANK, IRE_SYNC, a);
+        cWire = 0.0;
       } else if (t < 75u) {
         out = lvl;
+        cWire = 0.0;
       }
     }
   }
@@ -189,7 +199,8 @@ fn main(
     if (sel < 2u) {
       let ph = select(P.mvStripe, -P.mvStripe, sel == 1u);
       out = -BURST_AMP * carrierRot(n, P.frame, ph).x;
+      cWire = out;
     }
   }
-  comp[n] = out;
+  comp[n] = chromaPin(out, cWire, P.aChromaPin);
 }

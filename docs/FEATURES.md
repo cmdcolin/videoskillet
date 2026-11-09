@@ -23,7 +23,9 @@ deck.
 
 Each input has its own deck and cable ahead of the mixer. Remove sync from one
 and the receiver locks to the other, and the geometry changes between the two
-pictures.
+pictures. Leave only the chroma pin of one input's S-video lead in its jack and
+that input's colour and burst arrive alone, decoded over the other input's
+picture when the two are summed.
 
 ## Feedback loops
 

@@ -306,6 +306,7 @@ export const DEFAULT_CONTROLS = {
   aTermination: 0, // A's cable termination (<0 double-terminated, >0 open)
   aNoiseIre: 0, // snow on A's feed alone, IRE rms
   aPolarity: 0, // hard polarity flip on A's connector, sync included
+  aChromaPin: 0, // only the chroma pin of A's S-video lead reaches its input
   aHumIre: 0, // ground loop on A's cable alone, IRE (sign = which mains leg)
   aConnector: 0, // A's plug intermittent: bands of bad contact, re-rolled per frame
   aConnectorMode: 0, // which of A's contacts: 0 centre pin, 1 shell, 2 both
@@ -319,6 +320,7 @@ export const DEFAULT_CONTROLS = {
   bTermination: 0, // B's cable termination fault
   bNoiseIre: 0, // snow on B's feed alone, IRE rms
   bPolarity: 0, // hard polarity flip on B's connector, sync included
+  bChromaPin: 0, // only the chroma pin of B's S-video lead reaches its input
   bHumIre: 0, // ground loop on B's cable alone, IRE (sign = which mains leg)
   bConnector: 0, // B's plug intermittent: bands of bad contact, re-rolled per frame
   bConnectorMode: 0, // which of B's contacts: 0 centre pin, 1 shell, 2 both

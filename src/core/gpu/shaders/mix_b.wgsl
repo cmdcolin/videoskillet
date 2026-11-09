@@ -37,6 +37,12 @@ fn lumaBAt(idx: u32) -> f32 {
   return select(0.0, luma(texel), inside);
 }
 
+// B's picture luma scaled by what the chroma pin left of it, before B's
+// video gain and inversion.
+fn wireLumaBAt(idx: u32) -> f32 {
+  return (1.0 - P.bChromaPin) * lumaBAt(idx);
+}
+
 // B re-encoded on the house carrier: chroma at bIdx modulated onto the
 // A-locked subcarrier at output sample houseN (B's proc-amp hue trim only). This
 // is the genlocked path — used by the clean dissolve and the PiP DVE — so B
@@ -46,7 +52,12 @@ fn lumaBAt(idx: u32) -> f32 {
 // storage taps per consumer sample.
 fn encodeBHouse(houseN: u32, bIdx: u32) -> f32 {
   let uv = uvfB[bIdx];
-  return activeComposite(lumaBAt(bIdx), uv.x, uv.y, carrierRot(houseN, P.frame, P.bHue), P.bVidGain, P.bInv);
+  let sc = carrierRot(houseN, P.frame, P.bHue);
+  return chromaPin(
+    activeComposite(lumaBAt(bIdx), uv.x, uv.y, sc, P.bVidGain, P.bInv),
+    activeChroma(uv.x, uv.y, sc, P.bVidGain, P.bInv),
+    P.bChromaPin,
+  );
 }
 
 // A chroma keyer across the mixer: B's backing colour cut away so A shows
@@ -110,7 +121,11 @@ fn feedChroma(i: i32) -> vec2f {
     let idx = clampIdx(i + j);
     let sc = carrierRot(idx, P.frame, delta);
     let uv = uvfB[idx];
-    let clean = activeComposite(lumaBAt(idx), uv.x, uv.y, sc, P.bVidGain, P.bInv);
+    let clean = chromaPin(
+      activeComposite(lumaBAt(idx), uv.x, uv.y, sc, P.bVidGain, P.bInv),
+      activeChroma(uv.x, uv.y, sc, P.bVidGain, P.bInv),
+      P.bChromaPin,
+    );
     acc = acc + (bComp[idx] - clean) * sc;
   }
   return acc / (2.0 * VIDEO_RANGE);
@@ -187,7 +202,7 @@ fn backingShare(k: KeySlice) -> f32 {
 fn subtractBacking(fill: f32, k: KeySlice, at: i32, n: u32) -> f32 {
   let share = backingShare(k) * min(abs(P.bKey), 1.0);
   let kdir = vec2f(cos(P.bKeyHue), sin(P.bKeyHue));
-  let y = min(share * P.bKeyBackY, lumaBAt(clampIdx(at)));
+  let y = min(share * P.bKeyBackY, wireLumaBAt(clampIdx(at)));
   return fill - VIDEO_RANGE * (y + share * P.bKeyLevel * dot(kdir, carrier(n, P.frame)));
 }
 
@@ -661,7 +676,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
       // solid). Negative key inverts which side is kept.
       var kg = 1.0;
       if (P.pipKey != 0.0) {
-        var g = smoothstep(P.pipKeyLevel - P.pipKeySoft, P.pipKeyLevel + P.pipKeySoft, lumaBAt(bnp));
+        var g = smoothstep(P.pipKeyLevel - P.pipKeySoft, P.pipKeyLevel + P.pipKeySoft, wireLumaBAt(bnp));
         if (P.pipKey < 0.0) {
           g = 1.0 - g;
         }

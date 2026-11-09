@@ -865,6 +865,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
+        fine: true,
         help: "A hand working the pot's knob: quick twists either side of where it is set. The twists move the wiper, and a moving wiper is what makes a dirty track crackle. Near zero ohms a twist can bottom the pot out to full level.",
       },
       {
@@ -908,6 +909,17 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         help: "A signal/ground swap on A's own connector, negating A's waveform and its sync before the mixer. B is untouched, so the receiver may latch onto B.",
+      },
+      {
+        key: 'aChromaPin',
+        id: 354,
+        label: 'A chroma pin only',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        fine: true,
+        help: "A's S-video lead pushed into a composite jack with only its chroma pin making contact. A arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. Mixed with B, the receiver can lock to B's sync and decode A's colour over B's picture.",
       },
     ],
   },
@@ -1745,6 +1757,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
+        fine: true,
         help: "A hand working the pot's knob: quick twists either side of where it is set. The twists move the wiper, and a moving wiper is what makes a dirty track crackle. Near zero ohms a twist can bottom the pot out to full level.",
       },
       {
@@ -1788,6 +1801,17 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         help: "A signal/ground swap on B's own connector, negating B's waveform and sync before the summing bus.",
+      },
+      {
+        key: 'bChromaPin',
+        id: 355,
+        label: 'B chroma pin only',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        unit: '',
+        fine: true,
+        help: "B's S-video lead pushed into a composite jack with only its chroma pin making contact. B arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. Summed over A, B's colour rides on A's picture and slips and rolls with B's own raster.",
       },
     ],
   },
@@ -2922,7 +2946,7 @@ export const GROUPS: Group[] = [
         // The one miswiring in the group that is a party trick rather than a
         // fault you would meet: it takes sync and luma away entirely.
         fine: true,
-        help: 'S-video miswired into a composite input, so only the chroma pin arrives. With no luma and no sync the receiver free-runs on a bare subcarrier.',
+        help: "The deck's S-video lead in a composite input with only its chroma pin making contact. With no luma and no sync the receiver free-runs on a bare subcarrier. The deck separates its chroma from the composite with a bandpass, or with colour-under up plays it back off the tape, so fine luma detail near the subcarrier comes through as colour. Each source's own chroma pin, in its feed's cable group, carries the encoder's chroma alone.",
       },
       {
         key: 'connectorGlitch',

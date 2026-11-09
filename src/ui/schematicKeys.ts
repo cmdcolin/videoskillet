@@ -255,14 +255,14 @@ export const FEED_CABLE_OPENS = {
   a: {
     snow: ['aNoiseIre'],
     hum: ['aHumIre'],
-    plug: ['aConnector', 'aConnectorMode'],
+    plug: ['aConnector', 'aConnectorMode', 'aChromaPin'],
     flip: ['aPolarity'],
     load: ['aTermination'],
   },
   b: {
     snow: ['bNoiseIre'],
     hum: ['bHumIre'],
-    plug: ['bConnector', 'bConnectorMode'],
+    plug: ['bConnector', 'bConnectorMode', 'bChromaPin'],
     flip: ['bPolarity'],
     load: ['bTermination'],
   },
