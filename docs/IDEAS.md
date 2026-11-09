@@ -522,15 +522,20 @@ Five smaller items sit next to this:
   are: a ground loop rides the shield whichever pin touches, and RF damage
   reaches the deck before its separator, so its chroma-band part is on C. Moving
   the pin after the tape damage means deciding what each fault does to C.
-- **The termination echo skips most of the cable's faults.** It is rebuilt from
-  the tap through the stages that change sync: the pin, the scrambler, the
-  descrambler box, the line delay and the swapped pair. Every other stage
-  between the tap and the terminator stays off it: head clog, tracking,
-  shuttle, dropouts, the mistrack stripe, the synth's VCA, the dirty pot and
-  the connector. Where one of those removes or shrinks sync, the echo hands a
-  little of it back. The connector's open centre pin is the clearest case,
-  since no signal reaches the terminator to reflect. Rebuilding each stage per
-  tap does not scale. Reading the echo off the pass's own output needs the
+- **The termination echo skips most stages between its tap and the
+  terminator.** Each echo is rebuilt from a tap. On the program bus the tap is
+  the pre-channel signal through the chroma pin, the scrambler, the descrambler
+  box and the swapped pair. On a feed it is the tape where the deck reads it,
+  so it follows the paused deck's resample and the synth's delay line and
+  carries Discret's line delay and the scrambler, then the swapped pair. Every
+  other stage stays off it, including the deck's own playback, snow, hum and
+  impulse noise. Most of those only change what the echo copies, but where one
+  removes or shrinks sync, the echo hands a little sync back. On the bus those
+  are head clog, tracking, shuttle and hum modulation; on a feed, the mistrack
+  stripe, dropouts, the synth's VCA and summed sync, the dirty pot and the
+  connector. The connector's open centre pin is the clearest case, since no
+  signal reaches the terminator to reflect. Rebuilding each stage per tap does
+  not scale. Reading the echo off the pass's own output needs the
   sample five back, which another workgroup computes at a tile's start, so the
   route is a workgroup that computes five extra samples ahead of its tile, or a
   second pass.
