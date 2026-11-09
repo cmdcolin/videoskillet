@@ -514,10 +514,7 @@ Four smaller items sit next to this:
   ahead of the tape damage too. Hum, ingress and `rfSnow` are right where they
   are: a ground loop rides the shield whichever pin touches, and RF damage
   reaches the deck before its separator, so its chroma-band part is on C. Moving
-  the pin after the tape damage means deciding what each fault does to C. The
-  termination echo goes through the pin and the swapped pair, but it taps the
-  input ahead of the scrambler, so with no decoder box the echo puts back a
-  fraction of full-depth sync.
+  the pin after the tape damage means deciding what each fault does to C.
 - **A fractional Y/C delay.** `ycDelayNs` rounds to whole samples, about 70 ns,
   so the LFO on `the colour keeps walking` moves the colour a pixel at a time.
   Rotating the carrier by the fraction does not help: the burst rotates with it

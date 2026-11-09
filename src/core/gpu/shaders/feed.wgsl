@@ -28,6 +28,26 @@
 // channel.wgsl stages away.
 var<workgroup> tileNs: array<f32, TILE_WG + 2u>;
 
+// Line-delay scrambling (prelude `discretDelay`) reads a line's picture from
+// earlier on the tape line; sync, blanking and burst keep their place. The
+// line's start comes out of the delay as the blanking that went in ahead of the
+// picture.
+fn lineDelayed(v: f32, row: u32, s: u32) -> f32 {
+  let inPicture = s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W
+    && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H;
+  var out = v;
+  if (u32(P.scrambleMode + 0.5) == 7u && P.scramble > 0.0 && inPicture) {
+    let at = f32(row * SPL + s) - discretDelay(row, P.srcFrame, P.scramble);
+    let a0 = i32(floor(at));
+    out = select(
+      catmull(src[clampIdx(a0 - 1)], src[clampIdx(a0)], src[clampIdx(a0 + 1)], src[clampIdx(a0 + 2)], at - f32(a0)),
+      IRE_BLANK,
+      at < f32(row * SPL + ACTIVE_START),
+    );
+  }
+  return out;
+}
+
 @compute @workgroup_size(TILE_WG, 1, 1)
 fn main(
   @builtin(global_invocation_id) gid: vec3u,
@@ -136,21 +156,7 @@ fn main(
   }
   let srcN = srcRow * SPL + srcS;
 
-  // Line-delay scrambling (prelude `discretDelay`) reads this line's picture
-  // from earlier on the tape line; sync, blanking and burst keep their place.
-  let inPicture = srcS >= ACTIVE_START && srcS < ACTIVE_START + ACTIVE_W
-    && srcRow >= ACTIVE_TOP && srcRow < ACTIVE_TOP + ACTIVE_H;
-  if (u32(P.scrambleMode + 0.5) == 7u && P.scramble > 0.0 && inPicture) {
-    // The line's start comes out of the delay as the blanking that went in
-    // ahead of the picture.
-    let at = f32(srcN) - discretDelay(srcRow, P.srcFrame, P.scramble);
-    let a0 = i32(floor(at));
-    out = select(
-      catmull(src[clampIdx(a0 - 1)], src[clampIdx(a0)], src[clampIdx(a0 + 1)], src[clampIdx(a0 + 2)], at - f32(a0)),
-      IRE_BLANK,
-      at < f32(srcRow * SPL + ACTIVE_START),
-    );
-  }
+  out = lineDelayed(out, srcRow, srcS);
 
   // Dropouts on this deck's own tape: shed oxide, so for a moment the head
   // reads nothing and the detector hands back snow. Same event model as the
@@ -232,9 +238,13 @@ fn main(
 
   // Cable termination fault on this feed alone (prelude `terminate`). The echo
   // taps the deck's output, so under pause it follows the resampled position
-  // rather than the nominal raster, and it travels the same swapped pair.
+  // rather than the nominal raster. It carries the head-end's scrambling the
+  // deck recorded and travels the same swapped pair.
   if (P.termination != 0.0) {
-    let echo = src[clampIdx(echoBase - 5)];
+    let e = clampIdx(echoBase - 5);
+    let eRow = e / SPL;
+    let eS = e % SPL;
+    let echo = scrambleAt(lineDelayed(src[e], eRow, eS), eRow, eS, P.scramble, P.scrambleMode, P.srcFrame);
     out = terminate(out, P.termination, mix(echo, -echo, P.polarityFlip));
   }
 

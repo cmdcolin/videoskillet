@@ -713,10 +713,15 @@ fn main(
 
   // Cable termination fault on the program bus (prelude `terminate`). The echo
   // is a round trip back down the same cable, so it is tapped off the
-  // pre-channel signal with the missing pin and the swapped pair applied.
+  // pre-channel signal as the cable carries it: through the missing pin, the
+  // head-end's scrambler, the descrambler box and the swapped pair.
   let term = select(0.0, P.termination, toSet);
   if (term != 0.0) {
-    let echo = pinnedIn(i32(n) - 5, pin);
+    let e = clampIdx(i32(n) - 5);
+    let eRow = e / SPL;
+    let eS = e % SPL;
+    let sent = scrambleAt(pinnedIn(i32(e), pin), eRow, eS, scramble, P.scrambleMode, P.frame);
+    let echo = descrambleAt(sent, eRow, eS, scramble, P.scrambleMode, P.frame, P.decoderDb);
     out = terminate(out, term, mix(echo, -echo, flip));
   }
 
