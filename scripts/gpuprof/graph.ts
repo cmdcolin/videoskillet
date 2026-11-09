@@ -463,7 +463,7 @@ export class Graph {
       {
         label: 'timebase',
         shader: 'timebase',
-        variants: one({ lineParams, src: compB, dst: this.compA }),
+        variants: one({ P, lineParams, src: compB, dst: this.compA }),
         dispatch: perLine,
       },
     ]

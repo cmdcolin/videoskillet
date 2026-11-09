@@ -1036,6 +1036,7 @@ export class Engine implements EngineApi {
         'timebase',
         timebasePl,
         [
+          { buffer: this.paramsBuf },
           { buffer: this.lineParamsBuf },
           { buffer: this.compB },
           { buffer: this.compA },

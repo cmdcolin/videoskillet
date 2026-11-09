@@ -522,23 +522,21 @@ Five smaller items sit next to this:
   are: a ground loop rides the shield whichever pin touches, and RF damage
   reaches the deck before its separator, so its chroma-band part is on C. Moving
   the pin after the tape damage means deciding what each fault does to C.
-- **The termination echo skips most stages between its tap and the
-  terminator.** Each echo is rebuilt from a tap. On the program bus the tap is
-  the pre-channel signal through the chroma pin, the scrambler, the descrambler
-  box and the swapped pair. On a feed it is the tape where the deck reads it,
-  so it follows the paused deck's resample and the synth's delay line and
-  carries Discret's line delay and the scrambler, then the swapped pair. Every
-  other stage stays off it, including the deck's own playback, snow, hum and
-  impulse noise. Most of those only change what the echo copies, but where one
-  removes or shrinks sync, the echo hands a little sync back. On the bus those
-  are head clog, tracking, shuttle and hum modulation; on a feed, the mistrack
-  stripe, dropouts, the synth's VCA and summed sync, the dirty pot and the
-  connector. The connector's open centre pin is the clearest case, since no
-  signal reaches the terminator to reflect. Rebuilding each stage per tap does
-  not scale. Reading the echo off the pass's own output needs the
-  sample five back, which another workgroup computes at a tile's start, so the
-  route is a workgroup that computes five extra samples ahead of its tile, or a
-  second pass.
+- **A feed's termination echo skips most of the feed.** The program bus taps
+  its echo off the timebase pass's own output, so it carries everything. A feed
+  has no pass after it, so its echo is rebuilt from the tape where the deck
+  reads it: it follows the paused deck's resample and the synth's delay line
+  and carries Discret's line delay, the scrambler and the swapped pair. The
+  mistrack stripe, dropouts, the synth's VCA and summed sync, the dirty pot and
+  the connector stay off it, and where one of those removes or shrinks sync,
+  the echo hands a little sync back. The connector's open centre pin is the
+  clearest case, since no signal reaches the terminator to reflect. Every stage
+  in the feed depends only on the sample's position, so a workgroup can
+  compute five extra samples ahead of its tile, with its noise staging widened
+  to match, and read the echo off its own output. Splitting the feed into a
+  deck pass and a cable pass, which the source pins' chroma extract above
+  needs anyway, makes that simpler: the cable pass reads the deck's output
+  from a buffer.
 - **A fractional Y/C delay.** `ycDelayNs` rounds to whole samples, about 70 ns,
   so the LFO on `the colour keeps walking` moves the colour a pixel at a time.
   Rotating the carrier by the fraction does not help: the burst rotates with it

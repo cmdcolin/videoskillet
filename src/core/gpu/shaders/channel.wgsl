@@ -144,8 +144,8 @@ fn pinnedIn(i: i32, pin: f32) -> f32 {
   return v;
 }
 
-// The pre-channel signal at i as the head-end sends it down the cable, through
-// the program bus's chroma pin and the scrambler.
+// The pre-channel signal at i as the head-end sends it, through the program
+// bus's chroma pin and the scrambler.
 fn sentAt(i: i32, pin: f32, scramble: f32) -> f32 {
   let ci = clampIdx(i);
   return scrambleAt(pinnedIn(i, pin), ci / SPL, ci % SPL, scramble, P.scrambleMode, P.frame);
@@ -718,17 +718,6 @@ fn main(
   // the wrong level and the picture tears and rolls while the colors invert.
   let flip = select(0.0, P.polarityFlip, toSet);
   out = mix(out, -out, flip);
-
-  // Cable termination fault on the program bus (prelude `terminate`). The echo
-  // is a round trip back down the same cable. It is tapped off the pre-channel
-  // signal and put through the missing pin, the head-end's scrambler, the
-  // descrambler box and the swapped pair.
-  let term = select(0.0, P.termination, toSet);
-  if (term != 0.0) {
-    let e = clampIdx(i32(n) - 5);
-    let echo = descrambleAt(sentAt(i32(e), pin, scramble), e / SPL, e % SPL, scramble, P.scrambleMode, P.frame, P.decoderDb);
-    out = terminate(out, term, mix(echo, -echo, flip));
-  }
 
   outBuf[n] = out;
 }
