@@ -4,7 +4,7 @@
 // same pipeline runs this shader twice (feedA, feedB) against different
 // uniform buffers: pipeline.ts packs the per-source control values into the
 // standard Params fields (scramble, termination, noiseSigma, polarityFlip,
-// humAmp, connectorGlitch), so the mechanisms stay written in exactly one place
+// humAmp, connectorGlitch, chromaPinOnly and the rest packFeed lists), so the mechanisms stay written in exactly one place
 // and `gen` decorrelates this instance's noise from the program-bus channel's.
 //
 // The trap that arrangement sets: every other Params field arrives here still
@@ -13,16 +13,19 @@
 // packFeed does not override will silently apply a program-bus knob to one
 // source, and it will look like it works.
 //
-// Only per-sample damage and three resamples live here: the paused deck's,
-// Discret's line delay and the synth's delay line.
-// Anything needing the FIR bank or the color-under path (luma bandwidth,
-// rainbow instability) stays on the program bus — duplicating that per source
-// would triple the expensive work for effects whose per-source value is low.
+// Only per-sample damage, three resamples and one filter live here. The
+// resamples are the paused deck's, Discret's line delay and the synth's delay
+// line. The filter is the chroma bandpass a chroma pin takes its C from, and it
+// runs only while the pin is in. Anything needing the rest of the FIR bank or
+// the color-under path (luma bandwidth, rainbow instability) stays on the
+// program bus, because duplicating that per source would triple the expensive
+// work for effects whose per-source value is low.
 
 @group(0) @binding(0) var<uniform> P: Params;
 @group(0) @binding(1) var<storage, read> src: array<f32>;
 @group(0) @binding(2) var<storage, read_write> dst: array<f32>;
 @group(0) @binding(3) var<storage, read> synthLine: array<vec2f>;
+@group(0) @binding(4) var<storage, read> filters: array<f32>;
 
 // The termination's echo reaches this many samples back.
 const ECHO_LAG = 5u;
@@ -33,6 +36,14 @@ var<workgroup> tileNs: array<f32, TILE_WG + 2u + ECHO_LAG>;
 // tileOut holds the feed's output for the workgroup's samples and the ECHO_LAG
 // samples before them.
 var<workgroup> tileOut: array<f32, TILE_WG + ECHO_LAG>;
+// The chroma bandpass's half-width, in samples.
+const BP_REACH = (CHROMA_BP_TAPS - 1u) / 2u;
+// tileDeck holds the deck half's output from DECK_PAD samples before the
+// workgroup's first sample to BP_REACH after its last, which covers the
+// termination's echo and the chroma bandpass around every sample the cable
+// half reads.
+const DECK_PAD = ECHO_LAG + BP_REACH;
+var<workgroup> tileDeck: array<f32, TILE_WG + DECK_PAD + BP_REACH>;
 
 // tapeAt gives the tape at sample i as the head-end sent it to be recorded. A
 // premium channel is scrambled per channel, so each feed scrambles its own
@@ -61,9 +72,9 @@ fn tapeAt(i: i32) -> f32 {
   return scrambleAt(v, row, s, P.scramble, P.scrambleMode, P.srcFrame);
 }
 
-// feedAt gives one sample of the feed's output before the termination. `slot`
-// is the sample's place in the workgroup's noise tile.
-fn feedAt(n: u32, slot: u32) -> f32 {
+// deckAt gives one sample of the feed's deck half: the head-end, the deck and
+// the synth's boxes, which all sit ahead of the lead into the mixer.
+fn deckAt(n: u32) -> f32 {
   let row = n / SPL;
   let s = n % SPL;
   // This feed's deck paused (bPause/bPauseBar/bShift0/bRowOff carry whichever
@@ -179,6 +190,38 @@ fn feedAt(n: u32, slot: u32) -> f32 {
   if (P.synthSync > 0.0) {
     out = out - P.synthSync * cv;
   }
+  return out;
+}
+
+// The deck's S-video out, as the feed's lead hands it to the mixer's jack.
+// The synth's boxes count as part of the deck: they sit ahead of its
+// separator, so the bandpass strips the synth's slow sync along with the luma.
+// The deck separates C from its own composite with a chroma bandpass, so C
+// also carries the luma detail near the subcarrier. With the pin in, the
+// sample at tile index i is pinned against the bandpass of the deck half
+// around it.
+fn leadAt(i: u32) -> f32 {
+  let v = tileDeck[i];
+  var out = v;
+  if (P.chromaPinOnly > 0.0) {
+    var c = filters[SEC_CHROMA_BP * FILTER_STRIDE + BP_REACH] * v;
+    for (var k = 0u; k < BP_REACH; k = k + 1u) {
+      c = c + filters[SEC_CHROMA_BP * FILTER_STRIDE + k] * (tileDeck[i + k - BP_REACH] + tileDeck[i + BP_REACH - k]);
+    }
+    out = chromaPin(v, c, P.chromaPinOnly);
+  }
+  return out;
+}
+
+// cableAt carries the lead's sample v at n down the cable and through the
+// plug, up to the termination. `slot` is the sample's place in the
+// workgroup's noise tile. The snow and the hum reach the jack whichever pin
+// touches: the snow is picked up on the C wire too, and the hum rides the
+// shield.
+fn cableAt(v: f32, n: u32, slot: u32) -> f32 {
+  let row = n / SPL;
+  let s = n % SPL;
+  var out = v;
 
   // Additive noise (snow), 1-2-1 band-limited. Deliberately not the program
   // bus's tilted floor: the tilt is an FM discriminator's triangular noise,
@@ -232,8 +275,9 @@ fn feedAt(n: u32, slot: u32) -> f32 {
 // The termination's echo is the feed's own output five samples back. A
 // workgroup's first five samples need the five before its tile, which another
 // workgroup computes, so while the line is open each workgroup computes those
-// five again. Every stage in `feedAt` depends only on the sample's
-// position, so both copies agree.
+// five again. Every stage depends only on the sample's position, so both
+// copies agree. The deck half is staged once per workgroup, wide enough for
+// the echo and, with the pin in, for the chroma bandpass.
 @compute @workgroup_size(TILE_WG, 1, 1)
 fn main(
   @builtin(global_invocation_id) gid: vec3u,
@@ -249,6 +293,14 @@ fn main(
       tileNs[i] = gauss((n0 + i - 1u - ECHO_LAG) ^ ns);
     }
   }
+  // tile index i is global index n0 + i - DECK_PAD
+  let open = P.termination > 0.0;
+  let pinned = P.chromaPinOnly > 0.0;
+  let lo = DECK_PAD - select(0u, ECHO_LAG, open) - select(0u, BP_REACH, pinned);
+  let hi = DECK_PAD + TILE_WG + select(0u, BP_REACH, pinned);
+  for (var i = lo + lid.x; i < hi; i = i + TILE_WG) {
+    tileDeck[i] = deckAt(clampIdx(i32(n0 + i) - i32(DECK_PAD)));
+  }
   workgroupBarrier();
 
   let s = gid.x;
@@ -256,16 +308,16 @@ fn main(
   let live = s < SPL && row < NLINES;
   var out = 0.0;
   if (live) {
-    out = feedAt(n, lid.x + 1u + ECHO_LAG);
+    out = cableAt(leadAt(DECK_PAD + lid.x), n, lid.x + 1u + ECHO_LAG);
   }
 
   // Cable termination fault on this feed alone (prelude `terminate`). Only an
   // open line echoes.
   var echo = 0.0;
-  if (P.termination > 0.0) {
+  if (open) {
     if (lid.x < ECHO_LAG) {
       let e = max(i32(n0) - i32(ECHO_LAG) + i32(lid.x), 0);
-      tileOut[lid.x] = feedAt(u32(e), u32(e - i32(n0) + i32(1u + ECHO_LAG)));
+      tileOut[lid.x] = cableAt(leadAt(DECK_PAD - ECHO_LAG + lid.x), u32(e), u32(e - i32(n0) + i32(1u + ECHO_LAG)));
     }
     tileOut[lid.x + ECHO_LAG] = out;
     workgroupBarrier();

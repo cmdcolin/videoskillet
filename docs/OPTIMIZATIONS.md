@@ -214,12 +214,15 @@ worth knowing which of four things each one is doing, because the reason decides
 what may change.
 
 **Halo tiling, so a FIR reads storage once per sample rather than once per
-tap.** Six passes filter the waveform (`encode_composite`, `encode_chroma_b`,
-`chroma_extract`, `under_down`, `channel`, `decode`), and each stages its own
-64-sample span plus a **32-sample halo per side**, barriers once, and filters
-out of shared memory. The kernels in the bank run 21 to 63 taps, inside the 65 a
-32-sample halo allows. `decode` sizes its own halo: the demod slot's 31-sample
-half-width plus the eight samples `chromaCoarse` interpolates across, so 39.
+tap.** Seven passes filter the waveform (`encode_composite`, `encode_chroma_b`,
+`feed`, `chroma_extract`, `under_down`, `channel`, `decode`), and each stages
+its own 64-sample span plus a **32-sample halo per side**, barriers once, and
+filters out of shared memory. The kernels in the bank run 21 to 63 taps, inside
+the 65 a 32-sample halo allows. `decode` sizes its own halo: the demod slot's
+31-sample half-width plus the eight samples `chromaCoarse` interpolates across,
+so 39. `feed` sizes its halo to the chroma bandpass alone, 27 samples, plus the
+termination's five-sample echo, and stages the halo only on the frames a chroma
+pin or an open line needs it.
 
 The 64-thread width was measured rather than assumed. Staging costs
 `(TILE_WG + 64) / TILE_WG` loads per output, so wider workgroups re-stage less —

@@ -867,6 +867,7 @@ export class Engine implements EngineApi {
           { buffer: this.compB },
           { buffer: this.compA },
           { buffer: this.synthLineBuf },
+          { buffer: this.filterBuf },
         ],
         perLineT,
         this.aFeedOn,
@@ -919,6 +920,7 @@ export class Engine implements EngineApi {
           { buffer: this.compB },
           { buffer: this.bCompBuf },
           { buffer: this.synthLineBuf },
+          { buffer: this.filterBuf },
         ],
         perLineT,
         this.bFeedOn,
@@ -1918,12 +1920,13 @@ export class Engine implements EngineApi {
       termination: c[f.termination],
       noiseSigma: c[f.noise],
       polarityFlip: c[f.polarity],
-      // These two override a program-bus knob that feed.wgsl also reads, so
-      // leaving either out would put the bus's ground loop and the bus's bad
-      // plug onto both feeds as well as the output.
+      // These three override a program-bus knob that feed.wgsl also reads, so
+      // leaving one out would put the bus's ground loop, bad plug or chroma
+      // pin onto both feeds as well as the output.
       humAmp: c[f.hum],
       connectorGlitch: c[f.connector],
       connectorMode: c[f.connectorMode],
+      chromaPinOnly: c[f.chromaPin],
       potOhms: wiper.travel * POT_OHMS,
       potSpeed: wiper.speed,
       dropoutRate: c[f.dropoutRate],

@@ -228,7 +228,7 @@ aPolarity  (A polarity (flips sync))
 
 aChromaPin  (A chroma pin only)
   0..1 step 0.01  default 0
-  A's S-video lead pushed into a composite jack with only its chroma pin making contact. A arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. Mixed with B, the receiver can lock to B's sync and decode A's colour over B's picture.
+  A's S-video lead pushed into the mixer's composite jack with only its chroma pin making contact. A arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. The deck separates its colour from its composite with a bandpass, so fine luma detail near the subcarrier comes through as colour, and snow and hum picked up on the cable arrive in full. Mixed with B, the receiver can lock to B's sync and decode A's colour over B's picture.
 
 ## Camera feedback (optical)
 
@@ -532,7 +532,7 @@ bPolarity  (B polarity (flips sync))
 
 bChromaPin  (B chroma pin only)
   0..1 step 0.01  default 0
-  B's S-video lead pushed into a composite jack with only its chroma pin making contact. B arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. Summed over A, B's colour rides on A's picture and slips and rolls with B's own raster.
+  B's S-video lead pushed into the mixer's composite jack with only its chroma pin making contact. B arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. The deck separates its colour from its composite with a bandpass, so fine luma detail near the subcarrier comes through as colour, and snow and hum picked up on the cable arrive in full. Summed over A, B's colour rides on A's picture and slips and rolls with B's own raster.
 
 ## Character generator (chyron)
 
@@ -944,7 +944,7 @@ termination  (termination (-1 daisy, +1 open))
 
 chromaPinOnly  (chroma-pin only)
   0..1 step 0.01  default 0
-  The deck's S-video lead in a composite input with only its chroma pin making contact. With no luma and no sync the receiver free-runs on a bare subcarrier. The deck separates its chroma from the composite with a bandpass, or with colour-under up plays it back off the tape, so fine luma detail near the subcarrier comes through as colour. Each source's own chroma pin, in its feed's cable group, carries the encoder's chroma alone.
+  The deck's S-video lead in a composite input with only its chroma pin making contact. With no luma and no sync the receiver free-runs on a bare subcarrier. The deck separates its chroma from the composite with a bandpass, or with colour-under up plays it back off the tape, so fine luma detail near the subcarrier comes through as colour. Each source's own chroma pin, in its feed's cable group, works the same way at the mixer's jack.
 
 connectorGlitch  (loose connector)
   0..1 step 0.01  default 0

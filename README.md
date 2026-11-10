@@ -1,7 +1,7 @@
 # videoskillet <img src="public/favicon.svg" alt="videoskillet logo" height="48" />
 
-Tasty WebGPU signal-level analog video emulation. The video effects are a
-consequence of NTSC signal, not an effect drawn on the picture.
+Tasty WebGPU signal-level analog video emulation. It literally emulates and
+glitches NTSC signal data, so the results are quite realistic.
 
 ### Live app!
 
@@ -16,9 +16,6 @@ nearly every control in the app is behind one of its boxes — click a stage and
 that stage's controls open underneath it.
 
 ![The app window with the signal path map boxed in red at the head of the sidebar and enlarged over the picture: SOURCE A and SOURCE B into MIX, then CHANNEL, RECEIVER and SCREEN, with camera and mixer returns arching back over the trunk, and SOUND and VIEW hanging below](docs/img/signal-path-callout.jpg)
-
-Details in [How it works](docs/FAQ.md#how-does-it-actually-work), fault by fault
-in [Features](docs/FEATURES.md).
 
 ## Features
 

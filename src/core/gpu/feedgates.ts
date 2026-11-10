@@ -39,6 +39,7 @@ export const FEEDS = {
     dropoutRate: 'aDropoutRate',
     dropoutLen: 'aDropoutLenUs',
     pause: 'aPause',
+    chromaPin: 'aChromaPin',
   },
   b: {
     gen: 102,
@@ -55,6 +56,7 @@ export const FEEDS = {
     dropoutRate: 'bDropoutRate',
     dropoutLen: 'bDropoutLenUs',
     pause: 'bPause',
+    chromaPin: 'bChromaPin',
   },
 } as const satisfies Record<
   FeedSource,
@@ -71,7 +73,8 @@ export const FEEDS = {
     | 'potFiddle'
     | 'dropoutRate'
     | 'dropoutLen'
-    | 'pause',
+    | 'pause'
+    | 'chromaPin',
     ControlKey
   >
 >
@@ -95,7 +98,8 @@ export function feedFaults(c: Controls, src: FeedSource): boolean {
     c[f.connector] > 0 ||
     c[f.potOhms] > 0 ||
     c[f.potFiddle] > 0 ||
-    c[f.dropoutRate] > 0
+    c[f.dropoutRate] > 0 ||
+    c[f.chromaPin] > 0
   )
 }
 

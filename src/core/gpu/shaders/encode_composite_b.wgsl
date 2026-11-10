@@ -32,13 +32,10 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   }
   let slot = ntscLineSlot(row, s, n, P.frame, delta);
   var b = slot.value;
-  var cWire = slot.chroma;
   if (slot.picture) {
     let uv = uvfB[n];
     let rgb = srcTexelB(inputTex, i32(s - ACTIVE_START), i32(row - ACTIVE_TOP), P.deintB);
-    let sc = carrierRot(n, P.frame, delta);
-    b = activeComposite(luma(rgb), uv.x, uv.y, sc, P.bVidGain, P.bInv);
-    cWire = activeChroma(uv.x, uv.y, sc, P.bVidGain, P.bInv);
+    b = activeComposite(luma(rgb), uv.x, uv.y, carrierRot(n, P.frame, delta), P.bVidGain, P.bInv);
   }
-  outB[n] = chromaPin(b, cWire, P.bChromaPin);
+  outB[n] = b;
 }

@@ -473,14 +473,22 @@ crosses the source layer, which none of the others did.
 
 ## S-video
 
-A true C signal exists only where a source's encoder builds it, because every
-pass after the encoder reads one composite buffer and the mixer sums sources
-into it. `aChromaPin` and `bChromaPin` take the luma pin out at each encoder
-(`chromaPin` in the prelude), so what reaches the mixer is the encoder's own
-chroma and burst. The program bus's `chromaPinOnly` is the deck's S-video out,
-and its C is the deck's bandpass of the composite or its colour-under playback.
-That matches what a deck's own separator outputs, including the luma detail near
-the subcarrier that it lets through.
+Every pass after the encoders reads one composite buffer, and the mixer sums the
+sources into it, so the simulator carries no separate C signal. Each pin takes
+its C from a chroma bandpass of the composite, which is what a deck's S-video
+out sends: a tape recorded from composite holds the recording deck's bandpass as
+its C track. The C therefore carries the luma detail near the subcarrier that
+the bandpass lets through.
+
+- **`aChromaPin` and `bChromaPin`** act in the feed's cable half, at the plug in
+  the mixer's jack. The feed bandpasses its deck half's output (the head-end,
+  the deck and the synth's boxes) and pins against it, and the cable's snow,
+  hum, plug, pot, polarity and termination act after the pin.
+- **The program bus's `chromaPinOnly`** is the last deck's S-video out, with its
+  C from `chroma_extract.wgsl` or the colour-under playback.
+- **B's picture-in-picture inset** re-encodes B from its source instead of
+  reading B's feed, so `mix_b.wgsl` pins it against the encoder's own chroma.
+  The inset shows none of B's other feed faults either.
 
 A two-wire Y/C input into the set was sketched and set aside. It would remove
 dot crawl and cross-colour, give luma its full bandwidth and keep FM noise grey
@@ -492,7 +500,7 @@ on Y, and its faults come out small or already covered:
   corner between 2 and 4.5 MHz. The burst takes the same phase lead, so hue
   holds and the ACC restores the level.
 - **C pin open.** The set trips its colour killer and shows black and white. The
-  encoder-side pin with Y and C swapped would give this, if it is wanted.
+  feed's pin with Y and C swapped would give this, if it is wanted.
 
 The build would double `compA` to hold C, run `timebase` over both halves, route
 every last-generation fault to a wire (FM luma noise to Y, `chromaNoise` to C),
@@ -500,20 +508,7 @@ and change `osd`, `lineAnalyze`, `vir`, `storePrev` and decode's staging.
 `decode` already binds eight storage buffers, the default
 `maxStorageBuffersPerShaderStage`, so C would have to share `compA`.
 
-Five smaller items sit next to this:
-
-- **The source pins run at the encoder, ahead of the feed.** `feed.wgsl` only
-  sees the summed composite, so it cannot separate C. A feed's mistrack snow,
-  tape dropouts, scrambler and the synth's summed sync are added after the pin,
-  and they put luma and sync-like content back on a pinned source, though the
-  panel draws the pin at the plug in the mixer's jack. The route that models it
-  is the program bus's own: a tape recorded from composite carries the recording
-  deck's bandpass as its C track, so `chroma_extract.wgsl`'s bandpass of the
-  feed's damaged output is the C a deck's S-video lead sends. That splits
-  `feed.wgsl` into the deck's stages and the cable's stages, with a gated
-  extract between them that runs only while the pin is in, and the pin moves to
-  the start of the cable half. A pinned source then carries the bandpass's luma
-  near the subcarrier, as the program bus's pin already does.
+Four smaller items sit next to this:
 
 - **The program bus's pin runs ahead of that generation's tape damage.** The
   last generation's FM luma noise and head-switch noise land on the pinned

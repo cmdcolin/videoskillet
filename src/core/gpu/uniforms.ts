@@ -226,7 +226,6 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     polarityFlip: c.polarityFlip,
     termination: c.termination,
     chromaPinOnly: c.chromaPinOnly,
-    aChromaPin: c.aChromaPin,
     bChromaPin: c.bChromaPin,
     connectorGlitch: c.connectorGlitch,
     connectorMode: c.connectorMode,

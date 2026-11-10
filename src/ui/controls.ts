@@ -919,7 +919,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: "A's S-video lead pushed into a composite jack with only its chroma pin making contact. A arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. Mixed with B, the receiver can lock to B's sync and decode A's colour over B's picture.",
+        help: "A's S-video lead pushed into the mixer's composite jack with only its chroma pin making contact. A arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. The deck separates its colour from its composite with a bandpass, so fine luma detail near the subcarrier comes through as colour, and snow and hum picked up on the cable arrive in full. Mixed with B, the receiver can lock to B's sync and decode A's colour over B's picture.",
       },
     ],
   },
@@ -1811,7 +1811,7 @@ export const GROUPS: Group[] = [
         step: 0.01,
         unit: '',
         fine: true,
-        help: "B's S-video lead pushed into a composite jack with only its chroma pin making contact. B arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. Summed over A, B's colour rides on A's picture and slips and rolls with B's own raster.",
+        help: "B's S-video lead pushed into the mixer's composite jack with only its chroma pin making contact. B arrives as its colour and burst, with its luma and sync scaled down by whatever contact the luma pin has left. The deck separates its colour from its composite with a bandpass, so fine luma detail near the subcarrier comes through as colour, and snow and hum picked up on the cable arrive in full. Summed over A, B's colour rides on A's picture and slips and rolls with B's own raster.",
       },
     ],
   },
@@ -2946,7 +2946,7 @@ export const GROUPS: Group[] = [
         // The one miswiring in the group that is a party trick rather than a
         // fault you would meet: it takes sync and luma away entirely.
         fine: true,
-        help: "The deck's S-video lead in a composite input with only its chroma pin making contact. With no luma and no sync the receiver free-runs on a bare subcarrier. The deck separates its chroma from the composite with a bandpass, or with colour-under up plays it back off the tape, so fine luma detail near the subcarrier comes through as colour. Each source's own chroma pin, in its feed's cable group, carries the encoder's chroma alone.",
+        help: "The deck's S-video lead in a composite input with only its chroma pin making contact. With no luma and no sync the receiver free-runs on a bare subcarrier. The deck separates its chroma from the composite with a bandpass, or with colour-under up plays it back off the tape, so fine luma detail near the subcarrier comes through as colour. Each source's own chroma pin, in its feed's cable group, works the same way at the mixer's jack.",
       },
       {
         key: 'connectorGlitch',

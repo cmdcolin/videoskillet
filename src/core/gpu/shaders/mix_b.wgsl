@@ -50,6 +50,9 @@ fn wireLumaBAt(idx: u32) -> f32 {
 // bandlimit is precomputed per B sample by encode_chroma_b — B's raster
 // position is per-sample here, so running the FIR inline read 33 unstaged
 // storage taps per consumer sample.
+//
+// The inset reads B from its source rather than its feed, so B's chroma pin
+// is applied here against the encoder's own chroma.
 fn encodeBHouse(houseN: u32, bIdx: u32) -> f32 {
   let uv = uvfB[bIdx];
   let sc = carrierRot(houseN, P.frame, P.bHue);
@@ -110,7 +113,9 @@ fn busPhase(at: i32, n: u32, frac: f32, delta: f32) -> f32 {
 // wrote it, so B's own luma cancels and its edges do not turn into false
 // chroma, which is what demodulating the whole composite would do. One
 // subcarrier cycle of it is summed against B's own carrier, which is the
-// shortest window that separates U from V.
+// shortest window that separates U from V. B as the encoder wrote it carries
+// B's chroma pin against the encoder's chroma, so the luma the pin takes away
+// cancels too, and what the deck's bandpass lets through as colour remains.
 fn feedChroma(i: i32) -> vec2f {
   var delta = P.bHue;
   if (P.bGenlock < 0.5) {

@@ -304,8 +304,7 @@ export const PARAM_DEFS = [
   ['polarityFlip', 'f32'], // hard signal/ground swap: negate whole composite incl. sync
   ['termination', 'f32'], // cable termination fault: <0 double-terminated (dim), >0 open (hot + ringing)
   ['chromaPinOnly', 'f32'], // only the chroma pin fed to composite: color, no luma, no sync
-  ['aChromaPin', 'f32'], // only the chroma pin of source A's S-video lead reaches its input
-  ['bChromaPin', 'f32'], // the same for source B
+  ['bChromaPin', 'f32'], // B's S-video chroma pin, for mix_b's models of B's wire (a feed reads its own in chromaPinOnly)
   ['connectorGlitch', 'f32'], // loose connector: intermittent contact drops bands to snow
   ['connectorMode', 'f32'], // which contact: 0 centre pin (signal + sync go), 1 shell (ground lifts, hum injects), 2 both
   ['potOhms', 'f32'], // a feed's series pot: the wiper's resistance this frame, ohms (feeds only)
@@ -755,16 +754,13 @@ fn hueGate(uv: vec2f, hue: f32, accept: f32, edge: f32) -> f32 {
 // (Editing the raster, e.g. the progressive->interlaced fix, then touches only
 // this.) delta rotates the burst carrier for a detuned source; picture true
 // means the sample is active video, which the caller fills in with luma + chroma.
-// The chroma field is the part of the value that an S-video source puts on
-// its C pin, which outside active video is the burst.
 struct LineSlot {
   value: f32,
   picture: bool,
-  chroma: f32,
 }
 
 fn ntscLineSlot(row: u32, s: u32, n: u32, frame: u32, delta: f32) -> LineSlot {
-  var slot = LineSlot(IRE_BLANK, false, 0.0);
+  var slot = LineSlot(IRE_BLANK, false);
   if (row < VSYNC_FIRST || (row > VSYNC_LAST && row < FIRST_BURST_LINE)) {
     // equalizing pulses: narrow half-line-rate pulses flanking vsync
     slot.value = select(IRE_BLANK, IRE_SYNC, (s % 455u) < 33u);
@@ -781,7 +777,6 @@ fn ntscLineSlot(row: u32, s: u32, n: u32, frame: u32, delta: f32) -> LineSlot {
     // below line 12 was already claimed by the two branches above, so the
     // first line that can carry burst is the first one with a real sync tip.
     slot.value = -BURST_AMP * carrierRot(n, frame, delta).x;
-    slot.chroma = slot.value;
   } else if (s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H) {
     slot.picture = true;
   }
@@ -798,14 +793,15 @@ fn activeComposite(y: f32, uf: f32, vf: f32, sc: vec2f, vidGain: f32, inv: f32) 
   return mix(v, 2.0 * IRE_BLACK + VIDEO_RANGE - v, inv);
 }
 
-// The chroma term of the same sample: what the source's C pin carries.
+// The chroma term of the same sample: what the source's own C wire carries.
 fn activeChroma(uf: f32, vf: f32, sc: vec2f, vidGain: f32, inv: f32) -> f32 {
   return (1.0 - 2.0 * inv) * VIDEO_RANGE * (uf * sc.x + vf * sc.y) * vidGain;
 }
 
-// A source's S-video lead into a composite jack with only the chroma pin
-// making contact. The Y wire, which holds luma, sync and blanking, arrives
-// scaled by what is left of its contact, and the C wire arrives whole.
+// An S-video lead into a composite jack with only the chroma pin making
+// contact. The Y wire, which holds luma, sync and blanking, arrives scaled by
+// what is left of its contact, and the C wire arrives whole. The chroma argument is what
+// the lead's C wire carries: a deck's bandpass of its own composite.
 fn chromaPin(v: f32, chroma: f32, pin: f32) -> f32 {
   return v - pin * (v - chroma);
 }

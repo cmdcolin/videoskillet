@@ -28,6 +28,7 @@ const KNOBS: Partial<Controls>[] = [
   { aConnector: 0.5 },
   { aDropoutRate: 10 },
   { aPause: 0.8 },
+  { aChromaPin: 0.6 },
   { bScramble: 1 },
   { bTermination: -1 },
   { bNoiseIre: 5 },
@@ -37,6 +38,7 @@ const KNOBS: Partial<Controls>[] = [
   { bConnector: 0.5 },
   { bDropoutRate: 10 },
   { bPause: 0.8 },
+  { bChromaPin: 1 },
   { bGain: 0.5 },
   { bGain: -0.5 },
   { bRing: 0.5 },
@@ -163,6 +165,7 @@ describe('feed gates', () => {
     ['dropoutRate', [10]],
     ['potOhms', [300]],
     ['potFiddle', [0.5]],
+    ['chromaPin', [0.6]],
   ]
 
   it('classifies every field of the feed table', () => {

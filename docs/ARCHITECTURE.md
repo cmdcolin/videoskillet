@@ -119,12 +119,13 @@ measures that line's burst once, and rotates the carrier by it.
 
 **Each input also has its own feed** (`feedA`, `feedB`) — the deck, cable and
 head-end between that one source and the mixer, so a fault there (scramble,
-termination, snow, polarity, a ground loop, a loose plug, the pause button)
-damages one signal alone and everything downstream reacts to the difference. The
-two passes are one shader bound to different uniform buffers: `renderFrame`
-packs each source's fault controls — and its paused deck's servo state — into
-the standard damage fields of a second `Params` block, so each mechanism is
-written once in `feed.wgsl` and reused fields cost no `PARAM_DEFS` growth.
+termination, snow, polarity, a ground loop, a loose plug, an S-video lead with
+only its chroma pin in the jack, the pause button) damages one signal alone and
+everything downstream reacts to the difference. The two passes are one shader
+bound to different uniform buffers: `renderFrame` packs each source's fault
+controls — and its paused deck's servo state — into the standard damage fields
+of a second `Params` block, so each mechanism is written once in `feed.wgsl` and
+reused fields cost no `PARAM_DEFS` growth.
 
 **The trap to know before adding a per-source fault:** `packFeed` spreads the
 program-bus pack and overrides only the fields `FEEDS` names, so every other
