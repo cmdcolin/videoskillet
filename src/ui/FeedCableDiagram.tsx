@@ -60,6 +60,7 @@ function FeedCableDiagram({ feed }: { feed: Feed }) {
   const amount = r.value(OPENS.plug[0])
   const mode = r.value(OPENS.plug[1])
   const pin = r.value(OPENS.plug[2])
+  const cap = r.value(OPENS.plug[3])
   const flip = r.value(OPENS.flip[0])
   const load = r.value(OPENS.load[0])
   const live = ORDER.map(id => r.touched(...OPENS[id]))
@@ -96,7 +97,7 @@ function FeedCableDiagram({ feed }: { feed: Feed }) {
       COL.plug,
       ROW_Y,
       'plug',
-      `The plug at the mixer's ${who} jack making and breaking contact in bands of lines, re-rolled every frame. The centre pin opens the path; the shield loses its ground reference. An S-video plug in the jack with only its chroma pin touching passes ${who}'s colour and burst and loses its luma and sync.`,
+      `The plug at the mixer's ${who} jack making and breaking contact in bands of lines, re-rolled every frame. The centre pin opens the path; the shield loses its ground reference. An S-video lead with one pin out of the jack passes only the other wire: the chroma pin carries ${who}'s colour and burst, and the luma pin its picture and sync. A lead wired as the mirror image of its plug puts the luma through the adapter's capacitor, which passes its edges.`,
     ),
     box(
       'flip',
@@ -138,6 +139,7 @@ function FeedCableDiagram({ feed }: { feed: Feed }) {
                 polarityFlip: flip,
                 termination: load,
                 chromaPinOnly: pin,
+                seriesCapMHz: cap,
                 scramble: 0,
                 scrambleMode: 0,
               })}
@@ -146,7 +148,11 @@ function FeedCableDiagram({ feed }: { feed: Feed }) {
               ends={['0', `${LINE_US.toFixed(1)} µs`]}
               along={alongRange(0, LINE_US, 'µs')}
               band={PICTURE_BAND}
-              look={flip !== 0 || load !== 0 || pin !== 0 ? 'on' : 'plain'}
+              look={
+                flip !== 0 || load !== 0 || pin !== 0 || cap !== 0
+                  ? 'on'
+                  : 'plain'
+              }
             />
 
             <RasterPanel

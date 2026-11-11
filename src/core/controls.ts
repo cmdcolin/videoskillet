@@ -119,7 +119,7 @@ export const DEFAULT_CONTROLS = {
   lumaMHz: 4.2,
   polarityFlip: 0, // hard polarity flip: negate the whole line, sync included
   termination: 0, // cable termination fault (<0 double-terminated, >0 unterminated)
-  chromaPinOnly: 0, // only the chroma pin patched to composite (color, no luma/sync)
+  chromaPinOnly: 0, // which pin of the deck's S-video lead is patched to composite: above 0 the chroma pin alone, below 0 the luma pin alone
   connectorGlitch: 0, // loose/intermittent connector
   connectorMode: 0, // which contact: 0 centre pin (signal + sync), 1 shell (ground lifts), 2 both
   // analog premium-channel scrambling, applied at the head-end
@@ -306,7 +306,8 @@ export const DEFAULT_CONTROLS = {
   aTermination: 0, // A's cable termination (<0 double-terminated, >0 open)
   aNoiseIre: 0, // snow on A's feed alone, IRE rms
   aPolarity: 0, // hard polarity flip on A's connector, sync included
-  aChromaPin: 0, // only the chroma pin of A's S-video lead reaches its input
+  aChromaPin: 0, // which pin of A's S-video lead reaches its input: above 0 the chroma pin alone, below 0 the luma pin alone
+  aSeriesCapMHz: 0, // A's luma and sync through an adapter's chroma capacitor: its corner, 0 a wire
   aHumIre: 0, // ground loop on A's cable alone, IRE (sign = which mains leg)
   aConnector: 0, // A's plug intermittent: bands of bad contact, re-rolled per frame
   aConnectorMode: 0, // which of A's contacts: 0 centre pin, 1 shell, 2 both
@@ -320,7 +321,8 @@ export const DEFAULT_CONTROLS = {
   bTermination: 0, // B's cable termination fault
   bNoiseIre: 0, // snow on B's feed alone, IRE rms
   bPolarity: 0, // hard polarity flip on B's connector, sync included
-  bChromaPin: 0, // only the chroma pin of B's S-video lead reaches its input
+  bChromaPin: 0, // which pin of B's S-video lead reaches its input: above 0 the chroma pin alone, below 0 the luma pin alone
+  bSeriesCapMHz: 0, // B's luma and sync through an adapter's chroma capacitor: its corner, 0 a wire
   bHumIre: 0, // ground loop on B's cable alone, IRE (sign = which mains leg)
   bConnector: 0, // B's plug intermittent: bands of bad contact, re-rolled per frame
   bConnectorMode: 0, // which of B's contacts: 0 centre pin, 1 shell, 2 both

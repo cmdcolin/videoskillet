@@ -40,7 +40,7 @@ fn lumaBAt(idx: u32) -> f32 {
 // B's picture luma scaled by what the chroma pin left of it, before B's
 // video gain and inversion.
 fn wireLumaBAt(idx: u32) -> f32 {
-  return (1.0 - P.bChromaPin) * lumaBAt(idx);
+  return (1.0 - max(P.bChromaPin, 0.0)) * lumaBAt(idx);
 }
 
 // B re-encoded on the house carrier: chroma at bIdx modulated onto the
@@ -75,8 +75,8 @@ fn encodeBHouse(houseN: u32, bIdx: u32) -> f32 {
 //
 // The box demodulates that chroma against the house reference, so it sees B's
 // colour as the bus carries it: turned by B's hue trim and by wherever B's
-// carrier stands against house, scaled by B's video gain and flipped by its
-// inversion. On the dirty path B's subcarrier is detuned, so its chroma phase
+// carrier stands against house, scaled by B's video gain and by what contact
+// the colour wire of B's lead has left, and flipped by its inversion. On the dirty path B's subcarrier is detuned, so its chroma phase
 // walks per line and per frame: the backing drifts out of the acceptance wedge
 // and back, and the key breathes and tears line-wise instead of holding. That
 // is what a keyer fed a non-genlocked source did, and it is why they were
@@ -151,7 +151,7 @@ fn chromaKey(at: i32, phase: f32, damaged: bool) -> KeySlice {
   let c = cos(phase);
   let s = sin(phase);
   var uv = vec2f(enc.x * c - enc.y * s, enc.x * s + enc.y * c)
-    * P.bVidGain * (1.0 - 2.0 * P.bInv);
+    * P.bVidGain * (1.0 - 2.0 * P.bInv) * (1.0 + min(P.bChromaPin, 0.0));
   if (damaged && P.bKeyFeed > 0.5) {
     let dmg = feedChroma(i);
     uv = uv + vec2f(dmg.x * c - dmg.y * s, dmg.x * s + dmg.y * c);

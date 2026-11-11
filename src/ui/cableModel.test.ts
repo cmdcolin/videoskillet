@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import {
   ACTIVE_START,
+  BURST_LEN,
+  BURST_START,
   IRE_BLANK,
   IRE_SYNC,
   IRE_WHITE,
+  SYNC_LEN,
+  usToSamples,
 } from '../core/signal/constants'
 import {
   cableLine,
@@ -13,11 +17,13 @@ import {
   stripeBands,
   type Cable,
 } from './cableModel'
+import { BAR_US } from './testLine'
 
 const STOCK: Cable = {
   polarityFlip: 0,
   termination: 0,
   chromaPinOnly: 0,
+  seriesCapMHz: 0,
   scramble: 0,
   scrambleMode: 0,
 }
@@ -91,6 +97,36 @@ describe('cableLine', () => {
     expect(line[SYNC]).toBe(0)
     expect(line[BAR]).toBe(0)
     expect(line.some(v => v !== 0)).toBe(true)
+  })
+
+  it('keeps the sync and the bar and drops the burst on the luma pin', () => {
+    const line = cableLine({ ...STOCK, chromaPinOnly: -1 })
+    expect(line[SYNC]).toBe(IRE_SYNC)
+    expect(line[BAR]).toBe(IRE_WHITE)
+    expect(line.slice(BURST_START, BURST_START + BURST_LEN)).toEqual(
+      Array.from({ length: BURST_LEN }, () => IRE_BLANK),
+    )
+  })
+
+  it('passes the edges of sync and of the bar through a series capacitor', () => {
+    const line = cableLine({ ...STOCK, seriesCapMHz: 1 })
+    const bar = Math.round(usToSamples(BAR_US[0]))
+    expect(line[0]).toBeLessThan(-10)
+    expect(line[SYNC_LEN - 1]).toBeGreaterThan(line[0]! / 2)
+    expect(line[SYNC_LEN]).toBeGreaterThan(10)
+    expect(line[bar]).toBeGreaterThan(20)
+    expect(Math.abs(line[BAR]!)).toBeLessThan(1)
+  })
+
+  it('carries the burst round a series capacitor on the colour wire', () => {
+    const stock = cableLine(STOCK)
+    const line = cableLine({ ...STOCK, seriesCapMHz: 0.3 })
+    const swing = (of: number[]) => {
+      const at = BURST_START + 8
+      return of[at]! - (of[at - 2]! + of[at + 2]!) / 2
+    }
+    expect(Math.abs(swing(stock))).toBeGreaterThan(30)
+    expect(swing(line)).toBeCloseTo((2 / 3) * swing(stock), 0)
   })
 
   it('echoes only the chroma pin when the line is open', () => {

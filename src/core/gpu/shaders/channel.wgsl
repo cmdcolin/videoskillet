@@ -139,7 +139,7 @@ fn pinnedIn(i: i32, pin: f32) -> f32 {
   let ci = clampIdx(i);
   var v = comp[ci];
   if (pin != 0.0) {
-    v = v - pin * (v - chroma[ci]);
+    v = chromaPin(v, chroma[ci], pin);
   }
   return v;
 }
@@ -378,10 +378,11 @@ fn main(
   let pin = select(0.0, P.chromaPinOnly, toSet);
   let scramble = select(0.0, P.scramble, toSet);
 
-  // C-pin-only feed: only the chroma pin reaches the composite input, so there
-  // is no luma and no sync tips — just burst-locked color that can't hold
-  // vertical or horizontal lock.
-  var out = luma * (1.0 - pin) + chr;
+  // One pin of the deck's S-video lead in a composite input. With only the
+  // chroma pin touching there is no luma and no sync tips, just burst-locked
+  // colour that cannot hold vertical or horizontal lock. With only the luma
+  // pin touching the burst goes with the colour.
+  var out = luma * (1.0 - max(pin, 0.0)) + chr * (1.0 + min(pin, 0.0));
 
   // Analog premium-channel scrambling on the program bus, applied at the
   // head-end so everything below it in this file is damage the cable adds on

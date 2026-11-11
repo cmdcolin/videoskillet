@@ -483,12 +483,21 @@ the bandpass lets through.
 - **`aChromaPin` and `bChromaPin`** act in the feed's cable half, at the plug in
   the mixer's jack. The feed bandpasses its deck half's output (the head-end,
   the deck and the synth's boxes) and pins against it, and the cable's snow,
-  hum, plug, pot, polarity and termination act after the pin.
+  hum, plug, pot, polarity and termination act after the pin. Above zero the
+  luma pin loses its contact, and below zero the chroma pin does. A at -1 with B
+  at +1 is a pair of crossed breakout leads: A's luma and sync with B's colour
+  and burst.
+- **`aSeriesCapMHz` and `bSeriesCapMHz`** put the lead's Y wire through an
+  S-video to composite adapter's chroma capacitor, which is where a lead wired
+  as the mirror image of its plug sends it. The feed sums the capacitor's charge
+  over `SERIES_CAP_REACH` samples of its deck half, so the lowest corner is 0.14
+  MHz.
 - **The program bus's `chromaPinOnly`** is the last deck's S-video out, with its
-  C from `chroma_extract.wgsl` or the colour-under playback.
+  C from `chroma_extract.wgsl` or the colour-under playback, and takes the same
+  two signs.
 - **B's picture-in-picture inset** re-encodes B from its source instead of
   reading B's feed, so `mix_b.wgsl` pins it against the encoder's own chroma.
-  The inset shows none of B's other feed faults either.
+  The inset shows none of B's other feed faults either, the capacitor included.
 
 A two-wire Y/C input into the set was sketched and set aside. It would remove
 dot crawl and cross-colour, give luma its full bandwidth and keep FM noise grey
@@ -496,11 +505,34 @@ on Y, and its faults come out small or already covered:
 
 - **Y/C short.** On an S-video input this is composite with no separation, which
   `combMode` 0 with `svideoBleed` near 0.5 already gives.
-- **A passive S-video to composite adapter.** A capacitor into 75 Ω has its
-  corner between 2 and 4.5 MHz. The burst takes the same phase lead, so hue
-  holds and the ACC restores the level.
-- **C pin open.** The set trips its colour killer and shows black and white. The
-  feed's pin with Y and C swapped would give this, if it is wanted.
+- **A passive S-video to composite adapter, wired correctly.** A capacitor into
+  75 Ω has its corner between 2 and 4.5 MHz. The burst takes the same phase
+  lead, so hue holds and the ACC restores the level.
+- **Y and C swapped into a Y/C input.** The set's Y channel shows the subcarrier
+  as a fine pattern with no sync, and its C channel finds no burst in the luma.
+  The feed's pin at +1 into the composite input is close to this.
+
+Miswires that are not built:
+
+- **A series capacitor with a corner below 0.14 MHz.** A 0.1 µF capacitor has
+  its corner near 14 kHz, which tilts each line and smears to the right of
+  bright areas. The charge then outlasts a workgroup's tile, so the feed needs a
+  pass that carries it along the whole line.
+- **The floating wire's crosstalk.** With one pin out, the open wire runs
+  unterminated beside the other for the length of the lead and couples into it
+  through the cable's capacitance, about 100 pF on a cheap two-metre lead. That
+  adds a few IRE of the lost wire's edges to the pinned signal.
+- **A breakout lead into component jacks.** Y in the green jack and C in the
+  blue or the red one gives a sharp black and white picture with the subcarrier
+  as fine blue and yellow or red and cyan stripes over anything coloured. The
+  set needs a component input that bypasses its decoder.
+- **Audio plugs in the colour-difference jacks.** With composite in the green
+  jack and the two audio plugs in the blue and the red, the picture is black and
+  white with dot crawl and the sound tints the whole screen in bands at its own
+  frequency. It needs the same component input.
+- **A U-matic dub lead.** The deck's dub connector carries its chroma still at
+  688 kHz. Into a 3.58 MHz input the set finds no burst, and the colour-under
+  carrier shows in the luma as coarse diagonal stripes.
 
 The build would double `compA` to hold C, run `timebase` over both halves, route
 every last-generation fault to a wire (FM luma noise to Y, `chromaNoise` to C),

@@ -2336,6 +2336,45 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'crossedLeads',
+    displayName: 'crossed leads',
+    group: 'Cross-wired',
+    blurb:
+      "Two decks on S-video breakout leads with their plugs crossed at the mixer: A's luma plug is in its jack and B's chroma plug is in the other. A's picture and sync arrive in black and white, and the only colour and burst on the bus are B's. The set locks to A and takes its hue from whatever part of B sits in A's back porch, so B's colours lie over A's picture, turn through the wheel in bands as B's raster slips past, and drop to grey on the lines where the gate finds no burst.",
+    patch: {
+      aChromaPin: -1,
+      bChromaPin: 1,
+      bGain: 1.3,
+      bLineHz: 0.04,
+      bDetuneHz: 0,
+      bRollLps: 0.02,
+    },
+  },
+  {
+    name: 'mirroredLead',
+    displayName: 'mirrored lead',
+    group: 'Cross-wired',
+    blurb:
+      "An S-video lead wired as the mirror image of its plug, into an S-video to composite adapter. The adapter's 470 pF capacitor is meant for the chroma wire and is now in series with the luma, so the picture arrives as its edges in relief and each sync pulse as two spikes too shallow to slice. The colour comes round the capacitor whole. The set free-runs, its coupling settles at mid-grey, and the colour drifts over an embossed picture.",
+    patch: {
+      aSeriesCapMHz: 3,
+    },
+  },
+  {
+    name: 'inRelief',
+    displayName: 'in relief',
+    group: 'Cross-wired',
+    blurb:
+      "A's mirrored lead with a larger capacitor in the adapter, summed with B. A reaches the bus as its edges and its colour, and B arrives whole, so the set locks to B and shows B's picture with A pressed into it in relief and tinted with A's colours. A's raster slips against B's, so the relief drifts across the picture.",
+    patch: {
+      aSeriesCapMHz: 0.5,
+      bGain: 1,
+      bLineHz: 0.02,
+      bDetuneHz: 0,
+      bRollLps: 0.02,
+    },
+  },
+  {
     name: 'noTerminator',
     displayName: 'no terminator',
     group: 'Bad cables',

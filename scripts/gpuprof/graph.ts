@@ -46,6 +46,7 @@ import { MixState } from '../../src/core/signal/mixstate'
 import { valueNoise } from '../../src/core/signal/noise'
 import { OSD_IDLE } from '../../src/core/signal/osdstate'
 import { RfState } from '../../src/core/signal/rfstate'
+import { seriesCapHold } from '../../src/core/signal/seriescap'
 import { TrackingServo } from '../../src/core/signal/servo'
 import { StrobeGate } from '../../src/core/signal/strobe'
 import { SynthState } from '../../src/core/signal/synthstate'
@@ -690,6 +691,7 @@ export class Graph {
         connectorGlitch: c[f.connector],
         connectorMode: c[f.connectorMode],
         chromaPinOnly: c[f.chromaPin],
+        seriesCap: seriesCapHold(c[f.seriesCap]),
         dropoutRate: c[f.dropoutRate],
         dropoutLen: c[f.dropoutLen] * 1e-6 * SAMPLE_RATE,
         bPause: deck.pause,

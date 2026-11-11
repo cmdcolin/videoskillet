@@ -35,6 +35,7 @@ import {
 } from '../signal/filters'
 import { DOWN_PER_SAMPLE } from '../signal/linestate'
 import { MIX_POT_OHMS, POT_OHMS } from '../signal/pot'
+import { SERIES_CAP_LOAD, SERIES_CAP_REACH } from '../signal/seriescap'
 import {
   CC_BLOCK,
   CC_CELLS,
@@ -303,12 +304,13 @@ export const PARAM_DEFS = [
   ['fmStreak', 'f32'], // inversion-streak recovery (deemphasis) time constant, samples
   ['polarityFlip', 'f32'], // hard signal/ground swap: negate whole composite incl. sync
   ['termination', 'f32'], // cable termination fault: <0 double-terminated (dim), >0 open (hot + ringing)
-  ['chromaPinOnly', 'f32'], // only the chroma pin fed to composite: color, no luma, no sync
-  ['bChromaPin', 'f32'], // B's S-video chroma pin, for mix_b's models of B's wire (a feed reads its own in chromaPinOnly)
+  ['chromaPinOnly', 'f32'], // which pin of the S-video lead lost its contact: above 0 luma and sync, below 0 colour and burst
+  ['bChromaPin', 'f32'], // B's S-video pin, for mix_b's models of B's wire (a feed reads its own in chromaPinOnly)
   ['connectorGlitch', 'f32'], // loose connector: intermittent contact drops bands to snow
   ['connectorMode', 'f32'], // which contact: 0 centre pin (signal + sync go), 1 shell (ground lifts, hum injects), 2 both
   ['potOhms', 'f32'], // a feed's series pot: the wiper's resistance this frame, ohms (feeds only)
   ['potSpeed', 'f32'], // how fast the wiper is moving, travel per second (feeds only)
+  ['seriesCap', 'f32'], // a capacitor in series with a feed's lead: what its charge holds per sample, 0 a wire (feeds only)
   ['mixPot', 'f32'], // dirty sum through a passive pot crossfader: 0 the bus faders, 1 the pot
   ['mixPotTravel', 'f32'], // the crossfader wiper this frame, 0 all A .. 1 all B
   ['mixPotSpeed', 'f32'], // how fast that wiper is moving, travel per second
@@ -663,6 +665,8 @@ const CHROMA_BP_TAPS = ${TAPS.chromaBp}u;
 const UNDER_TAPS = ${TAPS.under}u;
 const TAKEOFF_TAPS = ${TAPS.takeoff}u;
 const DOWN_PER_SAMPLE = ${DOWN_PER_SAMPLE}; // (fsc - f_under) / sample_rate
+const CAP_REACH = ${SERIES_CAP_REACH}u; // samples a feed sums a series capacitor's charge over
+const CAP_LOAD = ${SERIES_CAP_LOAD}; // what an S-video adapter's joint leaves of each wire
 const PI = 3.14159265359;
 // FIR tiling: each TILE_WG-thread workgroup stages its input span plus a
 // 32-sample halo per side in shared memory, so symmetric kernels up to
@@ -798,12 +802,14 @@ fn activeChroma(uf: f32, vf: f32, sc: vec2f, vidGain: f32, inv: f32) -> f32 {
   return (1.0 - 2.0 * inv) * VIDEO_RANGE * (uf * sc.x + vf * sc.y) * vidGain;
 }
 
-// An S-video lead into a composite jack with only the chroma pin making
-// contact. The Y wire, which holds luma, sync and blanking, arrives scaled by
-// what is left of its contact, and the C wire arrives whole. The chroma argument is what
-// the lead's C wire carries: a deck's bandpass of its own composite.
+// An S-video lead into a composite jack with one pin making poor contact.
+// Above zero the Y wire, which holds luma, sync and blanking, arrives scaled
+// by what is left of its contact, and the C wire arrives whole. Below zero the
+// C wire, which holds the colour and the burst, is the one scaled, and the Y
+// wire arrives whole. The chroma argument is what the lead's C wire carries:
+// a deck's bandpass of its own composite.
 fn chromaPin(v: f32, chroma: f32, pin: f32) -> f32 {
-  return v - pin * (v - chroma);
+  return v - max(pin, 0.0) * (v - chroma) + min(pin, 0.0) * chroma;
 }
 
 // Analog premium-channel scrambling, applied at a head-end. The scrambler lifts

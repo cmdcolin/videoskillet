@@ -28,6 +28,7 @@ import { valueNoise } from '../signal/noise'
 import { OSD_IDLE, OsdState } from '../signal/osdstate'
 import { MIX_POT_HAND_REACH, POT_OHMS, PotHand } from '../signal/pot'
 import { RfState } from '../signal/rfstate'
+import { seriesCapHold } from '../signal/seriescap'
 import { TrackingServo } from '../signal/servo'
 import { StabGate } from '../signal/stab'
 import { StrobeGate } from '../signal/strobe'
@@ -1929,6 +1930,7 @@ export class Engine implements EngineApi {
       chromaPinOnly: c[f.chromaPin],
       potOhms: wiper.travel * POT_OHMS,
       potSpeed: wiper.speed,
+      seriesCap: seriesCapHold(c[f.seriesCap]),
       dropoutRate: c[f.dropoutRate],
       dropoutLen: c[f.dropoutLen] * 1e-6 * SAMPLE_RATE,
       bPause: deck.pause,

@@ -38,11 +38,13 @@ var<workgroup> tileNs: array<f32, TILE_WG + 2u + ECHO_LAG>;
 var<workgroup> tileOut: array<f32, TILE_WG + ECHO_LAG>;
 // The chroma bandpass's half-width, in samples.
 const BP_REACH = (CHROMA_BP_TAPS - 1u) / 2u;
+// The capacitor's sum reads each sample beside the one two before it.
+const CAP_PAD = CAP_REACH + 1u;
 // tileDeck holds the deck half's output from DECK_PAD samples before the
 // workgroup's first sample to BP_REACH after its last, which covers the
-// termination's echo and the chroma bandpass around every sample the cable
-// half reads.
-const DECK_PAD = ECHO_LAG + BP_REACH;
+// termination's echo, the capacitor's charge and the chroma bandpass around
+// every sample the cable half reads.
+const DECK_PAD = ECHO_LAG + CAP_PAD;
 var<workgroup> tileDeck: array<f32, TILE_WG + DECK_PAD + BP_REACH>;
 
 // tapeAt gives the tape at sample i as the head-end sent it to be recorded. A
@@ -200,15 +202,31 @@ fn deckAt(n: u32) -> f32 {
 // also carries the luma detail near the subcarrier. With the pin in, the
 // sample at tile index i is pinned against the bandpass of the deck half
 // around it.
+//
+// A lead wired as the mirror image of its plug puts an adapter's chroma
+// capacitor in series with Y, so luma and sync arrive as their edges and C
+// arrives direct. The capacitor's charge is a one-pole lowpass of Y, and
+// averaging samples half a subcarrier cycle apart keeps C out of it.
 fn leadAt(i: u32) -> f32 {
   let v = tileDeck[i];
   var out = v;
-  if (P.chromaPinOnly > 0.0) {
+  var load = 1.0;
+  if (P.seriesCap > 0.0) {
+    var w = 0.5 * (1.0 - P.seriesCap) / (1.0 - pow(P.seriesCap, f32(CAP_REACH)));
+    var charge = 0.0;
+    for (var k = 0u; k < CAP_REACH; k = k + 1u) {
+      charge = charge + w * (tileDeck[i - k] + tileDeck[i - k - 2u]);
+      w = w * P.seriesCap;
+    }
+    load = CAP_LOAD;
+    out = load * (v - charge);
+  }
+  if (P.chromaPinOnly != 0.0) {
     var c = filters[SEC_CHROMA_BP * FILTER_STRIDE + BP_REACH] * v;
     for (var k = 0u; k < BP_REACH; k = k + 1u) {
       c = c + filters[SEC_CHROMA_BP * FILTER_STRIDE + k] * (tileDeck[i + k - BP_REACH] + tileDeck[i + BP_REACH - k]);
     }
-    out = chromaPin(v, c, P.chromaPinOnly);
+    out = chromaPin(out, load * c, P.chromaPinOnly);
   }
   return out;
 }
@@ -295,16 +313,21 @@ fn main(
   }
   // tile index i is global index n0 + i - DECK_PAD
   let open = P.termination > 0.0;
-  let pinned = P.chromaPinOnly > 0.0;
-  let lo = DECK_PAD - select(0u, ECHO_LAG, open) - select(0u, BP_REACH, pinned);
+  let pinned = P.chromaPinOnly != 0.0;
+  let back = select(select(0u, BP_REACH, pinned), CAP_PAD, P.seriesCap > 0.0);
+  let lo = DECK_PAD - select(0u, ECHO_LAG, open) - back;
   let hi = DECK_PAD + TILE_WG + select(0u, BP_REACH, pinned);
   let first = lo + lid.x;
   let second = first + TILE_WG;
+  let third = second + TILE_WG;
   if (first < hi) {
     tileDeck[first] = deckAt(clampIdx(i32(n0 + first) - i32(DECK_PAD)));
   }
   if (second < hi) {
     tileDeck[second] = deckAt(clampIdx(i32(n0 + second) - i32(DECK_PAD)));
+  }
+  if (third < hi) {
+    tileDeck[third] = deckAt(clampIdx(i32(n0 + third) - i32(DECK_PAD)));
   }
   workgroupBarrier();
 

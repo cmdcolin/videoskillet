@@ -231,6 +231,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     connectorMode: c.connectorMode,
     potOhms: 0,
     potSpeed: 0,
+    seriesCap: 0,
     mixPot: c.mixPot,
     mixPotTravel: 0,
     mixPotSpeed: 0,

@@ -25,7 +25,10 @@ Each input has its own deck and cable ahead of the mixer. Remove sync from one
 and the receiver locks to the other, and the geometry changes between the two
 pictures. Leave only the chroma pin of one input's S-video lead in its jack and
 that input's colour and burst arrive alone, decoded over the other input's
-picture when the two are summed.
+picture when the two are summed. Leave only the luma pin of the other lead in as
+well and the leads are crossed: one deck's picture arrives in the other deck's
+colours. A lead wired as the mirror image of its plug sends its luma through an
+adapter's capacitor, and that input arrives as its edges in relief.
 
 ## Feedback loops
 

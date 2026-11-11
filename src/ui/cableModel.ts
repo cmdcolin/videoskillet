@@ -13,6 +13,11 @@ import {
   SYNC_LEN,
   usToSamples,
 } from '../core/signal/constants'
+import {
+  SERIES_CAP_LOAD,
+  SERIES_CAP_REACH,
+  seriesCapHold,
+} from '../core/signal/seriescap'
 import { TEST_LINE } from './testLine'
 
 const BAND_ROWS = 12
@@ -24,6 +29,7 @@ export interface Cable {
   polarityFlip: number
   termination: number
   chromaPinOnly: number
+  seriesCapMHz: number
   scramble: number
   scrambleMode: number
 }
@@ -54,19 +60,38 @@ const carrierScaled = (ire: number, db: number) => {
   return (1 - 10 ** (-db / 20) * carrier) / 0.00625 - 40
 }
 
-const pinned = (v: number, s: number, pin: number) => {
-  const chroma = inBurst(s) ? v - IRE_BLANK : 0
-  return (v - chroma) * (1 - pin) + chroma
+const pinned = (v: number, chroma: number, pin: number) =>
+  (v - chroma) * (1 - Math.max(pin, 0)) + chroma * (1 + Math.min(pin, 0))
+
+// feed.wgsl's leadAt, with the line before this one taken as the same line.
+const throughCap = (line: readonly number[], cornerMHz: number) => {
+  const hold = seriesCapHold(cornerMHz)
+  const first = (0.5 * (1 - hold)) / (1 - hold ** SERIES_CAP_REACH)
+  const at = (i: number) => line[(i + line.length) % line.length]!
+  return hold > 0
+    ? line.map((v, s) => {
+        let charge = 0
+        let weight = first
+        for (let k = 0; k < SERIES_CAP_REACH; k++) {
+          charge += weight * (at(s - k) + at(s - k - 2))
+          weight *= hold
+        }
+        return SERIES_CAP_LOAD * (v - charge)
+      })
+    : [...line]
 }
 
-// An even line through the program bus's cable stages, in the shaders' order:
-// the chroma pin and the head-end scrambler in channel.wgsl, then the polarity
-// swap and the termination in timebase.wgsl. The echo is the line the cable
-// carries, five samples back.
+// An even line through the cable stages, in the shaders' order. A feed's lead
+// comes first, with its series capacitor (feed.wgsl). The program bus's chroma
+// pin and head-end scrambler are channel.wgsl's, and the polarity swap and the
+// termination are timebase.wgsl's. The echo is the line the cable carries,
+// five samples back.
 export function cableLine(c: Cable, line = TEST_LINE): number[] {
   const flip = 1 - 2 * c.polarityFlip
-  const carried = line.map((v, s) => {
-    let out = pinned(v, s, c.chromaPinOnly)
+  const load = c.seriesCapMHz > 0 ? SERIES_CAP_LOAD : 1
+  const carried = throughCap(line, c.seriesCapMHz).map((v, s) => {
+    const chroma = inBurst(s) ? load * (line[s]! - IRE_BLANK) : 0
+    let out = pinned(v, chroma, c.chromaPinOnly)
     if (c.scramble > 0) {
       const system = Math.round(c.scrambleMode)
       if (system === 3 || system === 4) {

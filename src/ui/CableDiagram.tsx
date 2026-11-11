@@ -51,6 +51,7 @@ export function CableDiagram() {
     polarityFlip: v('polarityFlip'),
     termination: v('termination'),
     chromaPinOnly: v('chromaPinOnly'),
+    seriesCapMHz: 0,
     scramble: v('scramble'),
     scrambleMode: v('scrambleMode'),
   }
@@ -86,7 +87,7 @@ export function CableDiagram() {
       COL.chroma,
       ROW_Y,
       'chroma',
-      "Only the chroma pin of the deck's S-video lead reaches the composite input: burst-locked colour with no luma and no sync tips, separated from the composite by the deck's own bandpass.",
+      "One pin of the deck's S-video lead reaches the composite input. The chroma pin alone is burst-locked colour with no luma and no sync tips, separated from the composite by the deck's own bandpass. The luma pin alone is the picture and its sync in black and white.",
     ),
     box(
       'plug',

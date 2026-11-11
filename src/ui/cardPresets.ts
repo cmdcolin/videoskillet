@@ -225,6 +225,20 @@ export const CARD_PRESETS: CardPreset[] = [
     patch: { aChromaPin: 0.6 },
   },
   {
+    group: FEED_A_CABLE_GROUP,
+    name: 'luma pin',
+    blurb:
+      'only the luma pin of A’s S-video lead touching, so A arrives in black and white with its sync whole',
+    patch: { aChromaPin: -1 },
+  },
+  {
+    group: FEED_A_CABLE_GROUP,
+    name: 'mirrored lead',
+    blurb:
+      'A’s luma through an adapter’s chroma capacitor, so A arrives as its edges in relief under its own colour, with no sync to lock to',
+    patch: { aSeriesCapMHz: 3 },
+  },
+  {
     group: FEED_B_CABLE_GROUP,
     name: 'ground loop, other leg',
     blurb:
@@ -251,6 +265,13 @@ export const CARD_PRESETS: CardPreset[] = [
     blurb:
       'only the chroma pin of B’s S-video lead touching, so with B summed in, B’s colour rides over A’s picture and slips with B’s own raster',
     patch: { bChromaPin: 1 },
+  },
+  {
+    group: FEED_B_CABLE_GROUP,
+    name: 'mirrored lead',
+    blurb:
+      'B’s luma through a capacitor in its lead, so with B summed in, B’s edges are pressed into A’s picture in relief',
+    patch: { bSeriesCapMHz: 0.4 },
   },
   {
     group: 'Crosspoint',

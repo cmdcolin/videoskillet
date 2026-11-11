@@ -29,6 +29,8 @@ const KNOBS: Partial<Controls>[] = [
   { aDropoutRate: 10 },
   { aPause: 0.8 },
   { aChromaPin: 0.6 },
+  { aChromaPin: -1 },
+  { aSeriesCapMHz: 1 },
   { bScramble: 1 },
   { bTermination: -1 },
   { bNoiseIre: 5 },
@@ -39,6 +41,8 @@ const KNOBS: Partial<Controls>[] = [
   { bDropoutRate: 10 },
   { bPause: 0.8 },
   { bChromaPin: 1 },
+  { bChromaPin: -1 },
+  { bSeriesCapMHz: 1 },
   { bGain: 0.5 },
   { bGain: -0.5 },
   { bRing: 0.5 },
@@ -153,8 +157,9 @@ describe('feed gates', () => {
     'pause',
   ]
   // One value off default per trigger, in each direction the control travels:
-  // the two signed ones only open the gate on !== 0, so a > 0 test would let a
-  // daisy-chained terminator or the opposite mains leg through silently.
+  // the three signed ones only open the gate on !== 0, so a > 0 test would let
+  // a daisy-chained terminator, the opposite mains leg or a lead on its luma
+  // pin through silently.
   const OPENS: [Exclude<FeedFault, 'gen'>, number[]][] = [
     ['scramble', [1]],
     ['termination', [-1, 1]],
@@ -165,7 +170,8 @@ describe('feed gates', () => {
     ['dropoutRate', [10]],
     ['potOhms', [300]],
     ['potFiddle', [0.5]],
-    ['chromaPin', [0.6]],
+    ['chromaPin', [0.6, -1]],
+    ['seriesCap', [1]],
   ]
 
   it('classifies every field of the feed table', () => {

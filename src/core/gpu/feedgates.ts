@@ -40,6 +40,7 @@ export const FEEDS = {
     dropoutLen: 'aDropoutLenUs',
     pause: 'aPause',
     chromaPin: 'aChromaPin',
+    seriesCap: 'aSeriesCapMHz',
   },
   b: {
     gen: 102,
@@ -57,6 +58,7 @@ export const FEEDS = {
     dropoutLen: 'bDropoutLenUs',
     pause: 'bPause',
     chromaPin: 'bChromaPin',
+    seriesCap: 'bSeriesCapMHz',
   },
 } as const satisfies Record<
   FeedSource,
@@ -74,7 +76,8 @@ export const FEEDS = {
     | 'dropoutRate'
     | 'dropoutLen'
     | 'pause'
-    | 'chromaPin',
+    | 'chromaPin'
+    | 'seriesCap',
     ControlKey
   >
 >
@@ -84,9 +87,10 @@ export const FEEDS = {
 // feed outright, B's only on the dirty path, and those two conditions are the
 // whole difference between the gates below.
 //
-// The two signed entries have to test `!== 0`, not `> 0`: a daisy-chained
-// terminator is negative, and a ground loop on the opposite mains leg is a
-// hum bar 180 degrees round, which is a fault whichever way it points.
+// The three signed entries have to test `!== 0`, not `> 0`: a daisy-chained
+// terminator is negative, a ground loop on the opposite mains leg is a hum bar
+// 180 degrees round, and a negative pin is the lead's colour wire out of the
+// jack, each a fault whichever way it points.
 export function feedFaults(c: Controls, src: FeedSource): boolean {
   const f = FEEDS[src]
   return (
@@ -99,7 +103,8 @@ export function feedFaults(c: Controls, src: FeedSource): boolean {
     c[f.potOhms] > 0 ||
     c[f.potFiddle] > 0 ||
     c[f.dropoutRate] > 0 ||
-    c[f.chromaPin] > 0
+    c[f.chromaPin] !== 0 ||
+    c[f.seriesCap] > 0
   )
 }
 
