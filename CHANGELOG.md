@@ -2,6 +2,36 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.5](https://github.com/cmdcolin/videoskillet/compare/v2.25.4...v2.25.5) - 2026-11-11
+
+### Features
+- *(signal)* [`443cfb4`](https://github.com/cmdcolin/videoskillet/commit/443cfb441bc613a9c7bca7c935a9c6cf02cb6cb7) the keyer takes B's alpha on an external key input
+- *(ui)* [`f370b67`](https://github.com/cmdcolin/videoskillet/commit/f370b67b9b610c8ae5b7b0709854287583d63fb6) the chroma key schematic shows the key coming off B's alpha
+- *(gpu)* [`90a6d2f`](https://github.com/cmdcolin/videoskillet/commit/90a6d2f347bfc1d64aa08f1441dc91aa288a298c) the renderer takes a deck B file and renders loop-bus trails
+- *(signal)* [`60751e2`](https://github.com/cmdcolin/videoskillet/commit/60751e259fe93093dcf83db0d2dcb5553f60c74b) the inset keeps B's alpha, and clip and gain shape the alpha key
+- *(gpu)* [`db8eef8`](https://github.com/cmdcolin/videoskillet/commit/db8eef88de7f9b919ee63e375119364e45ec79fb) the renderer fetches the stills and clips a look names
+
+### Fixes
+- *(signal)* [`1df5a31`](https://github.com/cmdcolin/videoskillet/commit/1df5a3120bafa0168a9c7346e4697641675210e5) the external key's blanking, alpha conventions and dead rows
+- *(gpu)* [`0882bf0`](https://github.com/cmdcolin/videoskillet/commit/0882bf0c361acfbdf72eabdeac128f1a3a683372) the renderer's decks match the app's staging and settle at once
+- *(signal)* [`23be80c`](https://github.com/cmdcolin/videoskillet/commit/23be80c0944efe418cb3d14515f53f9e56364459) gain above rest thins the alpha key's edge and keeps the subject
+
+### Documentation
+- [`a1e82d0`](https://github.com/cmdcolin/videoskillet/commit/a1e82d0e63bbae26936f9607dfedb015bfa0895f) give Oak Sigma and VideoCipher II their own post
+- [`3b27bf6`](https://github.com/cmdcolin/videoskillet/commit/3b27bf65ed1400ad03b80c3fe9ec6b5a1044d291) trim wordy prose in the blog posts
+- [`bf4d5b7`](https://github.com/cmdcolin/videoskillet/commit/bf4d5b71323dce4b01ba4977d89d62f3314bdf20) let the blog figures do the explaining
+- [`0ea6c6a`](https://github.com/cmdcolin/videoskillet/commit/0ea6c6a3d60f68bf2e7e011d0290eba131a79027) state the blog's signal mechanisms in technical terms
+- [`62d1844`](https://github.com/cmdcolin/videoskillet/commit/62d1844d1b9d4a88d333f7a9327d4c068ecd8b9b) the keyer ghosts post drops the skeleton
+- [`15cd87d`](https://github.com/cmdcolin/videoskillet/commit/15cd87db001a191c7ae201935dfffe0d3fe1afb6) the keyer ghosts post's freeze still, committed under public/blog
+- [`92376aa`](https://github.com/cmdcolin/videoskillet/commit/92376aae84480d8d25e0276f6f3aea5d8e302949) the keyer ghosts post leaves key source out
+- [`1bdac95`](https://github.com/cmdcolin/videoskillet/commit/1bdac95c595a5e48890432f2647c9bfce30bf375) a post on keying by alpha
+- [`76a194f`](https://github.com/cmdcolin/videoskillet/commit/76a194fe5a216bdc6489587ff7ff38aed395ffa9) the alpha keying post gets a moving cutout
+- [`b6ca878`](https://github.com/cmdcolin/videoskillet/commit/b6ca8783db014b2a20e23d3c9dcbd72f0b62cd3b) the alpha keying post's spacecraft figures move
+- [`df529fb`](https://github.com/cmdcolin/videoskillet/commit/df529fbe5caa99c8e22debffb31f8bfb32dbfa1f) the keyer ghosts post's freeze figure moves
+
+### Tests
+- [`56e80e0`](https://github.com/cmdcolin/videoskillet/commit/56e80e0485ad7d213c08120972592e2cab10b632) render goldens for the alpha key, its inset, clip and gain
+
 ## [2.25.4](https://github.com/cmdcolin/videoskillet/compare/v2.25.3...v2.25.4) - 2026-11-11
 
 ### Features
