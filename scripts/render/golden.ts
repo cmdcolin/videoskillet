@@ -78,6 +78,11 @@ const CASES: Case[] = [
     },
   },
   {
+    name: 'alphaInvertDelay',
+    cutout: true,
+    set: { bGain: 1, bGenlock: 1, bKey: -1, bKeySource: 1, bKeyDelayUs: 1 },
+  },
+  {
     name: 'alphaUnlocked',
     cutout: true,
     set: { bGain: 0.6, bKey: 1, bKeySource: 1 },

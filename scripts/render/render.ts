@@ -222,20 +222,53 @@ const patternName = flag('pattern')
 // A link's own still or clip URL stands in for a missing input file, and
 // ffmpeg reads it over https, so a look copied from the app renders over the
 // picture it was built on.
+const NOISE: Record<string, number> = {
+  'tv static': 1,
+  'vhs static': 2,
+  synth: 3,
+}
+
+// A link's relative URL is resolved against the look's own origin, and only
+// http and https are fetched, so a shared link cannot render a local file.
+const lookOrigin = (() => {
+  try {
+    return new URL(flag('look') ?? '').origin
+  } catch {
+    return 'https://videoskillet.com'
+  }
+})()
+const remote = (url: string | null): string | null => {
+  if (url === null) return null
+  const resolved = new URL(url, lookOrigin)
+  if (resolved.protocol !== 'https:' && resolved.protocol !== 'http:') {
+    console.error(`the link names ${url}, which is not an http(s) URL`)
+    Deno.exit(2)
+  }
+  return resolved.href
+}
+const generatorA = link.src !== null && link.src in NOISE
 const input =
   positional.length > 1
     ? positional[0]
-    : patternName === undefined
-      ? (link.iurl ?? link.vurl)
+    : patternName === undefined && !generatorA
+      ? remote(link.iurl ?? link.vurl)
       : null
+const stillA =
+  positional.length > 1 ? isStill(input ?? '') : input === remote(link.iurl)
 if (positional.length < 2 && input !== null) {
   console.error(`note: deck A is the link's ${input}`)
 }
-for (const [yt, deck] of [
-  [link.yt, 'A'],
-  [link.ytb, 'B'],
+const bFile = flag('b')
+const bPath = bFile ?? remote(link.iurlb ?? link.vurlb)
+const stillB = bFile === undefined ? link.iurlb !== null : isStill(bFile)
+if (bFile === undefined && bPath !== null) {
+  console.error(`note: deck B is the link's ${bPath}`)
+}
+for (const [yt, deck, given] of [
+  [link.yt, 'A', positional.length > 1],
+  [link.ytb, 'B', bFile !== undefined],
 ] as const) {
-  if (yt !== null) {
+  if (yt !== null && !given) {
     console.error(
       `note: the link's video-URL source on deck ${deck} is not fetched; download it and pass the file`,
     )
@@ -266,8 +299,7 @@ if (seconds !== null) frames = Math.round(seconds * fps)
 // rather than being asked how long it is.
 // A pipe has no length to ask for, so a raw stdin runs until it ends.
 else if (rawIn) frames = Infinity
-else if (input !== null && !isStill(input))
-  frames = await probeFrames(input, fps)
+else if (input !== null && !stillA) frames = await probeFrames(input, fps)
 else frames = 10 * fps
 
 const audioMode = (flag('audio') ?? 'auto') as AudioMode
@@ -322,24 +354,19 @@ if (routings.length > 0) {
 // What the link put on the deck, for the sources that need nothing fetched.
 // The rest — a clip, a still, a pool pick — is what the positional input is
 // for, and a link naming one renders over whatever file was given instead.
-const NOISE: Record<string, number> = {
-  'tv static': 1,
-  'vhs static': 2,
-  synth: 3,
-}
 const linkPattern =
   link.src === 'bars' ? 'bars' : link.src === 'sweep' ? 'sweep' : null
 const generator = link.src !== null && link.src in NOISE ? NOISE[link.src] : 0
 if (generator !== 0) engine.setNoiseSource(generator)
-if (link.srcb !== null) {
+if (bPath !== null) engine.setSourceBEnabled(true)
+else if (link.srcb !== null) {
   if (link.srcb === 'none') engine.setSourceBEnabled(false)
   else if (link.srcb in NOISE) engine.setNoiseSourceB(NOISE[link.srcb])
 }
 if (link.caption !== '') engine.setCaption(link.caption)
-// Everything a link names is in place before the first frame, so the link has
-// loaded as far as the frame store knows. Without this the loop bus and freeze
-// track program A for the whole file and a look built on trails renders none.
-engine.settleFreeze()
+// Everything a link names is in place before the first frame, so the loop bus
+// and freeze start from it rather than tracking program A.
+engine.settleFreezeNow()
 
 // The buzz, if anyone is listening. `buzzDrive` gates the tap pass, the
 // readback and the push alike on this switch, so leaving it off is what makes
@@ -383,29 +410,18 @@ const source = rawIn
         smpteBarsPixels,
         sweepPixels,
       )
-    : await ffmpegDecode(input, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps)
+    : await ffmpegDecode(input, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps, {
+        still: stillA,
+      })
 
-const bPath = flag('b') ?? link.iurlb ?? link.vurlb ?? null
-if (flag('b') === undefined && bPath !== null) {
-  console.error(`note: deck B is the link's ${bPath}`)
-}
-const openB = () =>
+// Deck B loops, as the app's player does.
+const sourceB =
   bPath === null
     ? null
-    : ffmpegDecode(bPath, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps, { cover: true })
-let sourceB = await openB()
-
-// Deck B loops, as the app's player does, so a short clip under a long
-// render starts again instead of freezing on its last frame.
-const nextB = async (): Promise<Uint8Array | null> => {
-  let frame = (await sourceB?.next()) ?? null
-  if (frame === null && sourceB !== null) {
-    await sourceB.close()
-    sourceB = await openB()
-    frame = (await sourceB?.next()) ?? null
-  }
-  return frame
-}
+    : await ffmpegDecode(bPath, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps, {
+        still: stillB,
+        loop: true,
+      })
 
 // With audio the picture goes to a scratch file first and is copied into the
 // finished one alongside the sound — see `mux`, which does not re-encode it.
@@ -441,7 +457,7 @@ try {
     // rather than padding it: the last frame repeated is a still nobody asked
     // for, and the loops would keep eating it. A still is the exception — it is
     // *meant* to repeat, and `-loop 1` keeps handing the same frame over.
-    if (frame === null && input !== null && !isStill(input)) {
+    if (frame === null && input !== null && !stillA) {
       frames = i
       break
     }
@@ -449,7 +465,7 @@ try {
       engine.setImagePixels(frame, ACTIVE_WIDTH, ACTIVE_HEIGHT)
       if (generator !== 0) engine.setNoiseSource(generator)
     }
-    const frameB = await nextB()
+    const frameB = (await sourceB?.next()) ?? null
     if (frameB !== null) engine.setImagePixelsB(frameB)
     // Before the step, because the step is what reads it. The window the
     // analyser hands over ends at this frame's position in the track, so the

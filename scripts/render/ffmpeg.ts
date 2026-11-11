@@ -125,42 +125,51 @@ async function decoderFor(path: string): Promise<string[]> {
       '-select_streams',
       'v:0',
       '-show_entries',
-      'stream=codec_name',
+      'stream=codec_name:stream_tags=alpha_mode',
       '-of',
-      'csv=p=0',
+      'json',
       path,
     ],
     stdout: 'piped',
     stderr: 'null',
   }).output()
-  const codec = new TextDecoder().decode(out.stdout).trim()
-  const decoder = ALPHA_DECODERS[codec]
+  const stream = JSON.parse(new TextDecoder().decode(out.stdout) || '{}')
+    .streams?.[0]
+  const decoder =
+    stream?.tags?.alpha_mode === '1'
+      ? ALPHA_DECODERS[stream.codec_name]
+      : undefined
   return decoder === undefined ? [] : ['-c:v', decoder]
 }
 
-// Deck B is cover-fit: the centre 4:3 of the source fills the raster, as
-// `coverFit43` stages it in the app.
-const COVER_43 = "crop='min(iw,ih*4/3)':'min(ih,iw*3/4)',"
+// Both decks are cover-fit: the centre 4:3 of the source fills the raster, as
+// `coverFit43` stages B and compose crops A in the app. The scale runs
+// premultiplied, so a cutout's soft edge keeps its colour.
+const COVER_43 = "crop='min(iw,ih*4/3)':'min(ih,iw*3/4)'"
+const scaled = (w: number, h: number) =>
+  `${COVER_43},format=rgba,premultiply=inplace=1,scale=${w}:${h}:flags=lanczos,unpremultiply=inplace=1,setsar=1`
 
 export async function ffmpegDecode(
   path: string,
   w: number,
   h: number,
   fps: number,
-  { cover = false } = {},
+  { still = isStill(path), loop = false } = {},
 ): Promise<Source> {
   const cmd = new Deno.Command('ffmpeg', {
     args: [
       '-v',
       'error',
-      ...(isStill(path) ? ['-loop', '1'] : await decoderFor(path)),
+      ...(still
+        ? ['-loop', '1']
+        : [
+            ...(loop ? ['-stream_loop', '-1'] : []),
+            ...(await decoderFor(path)),
+          ]),
       '-i',
       path,
-      // The raster is 754x480 with non-square pixels, and the source is
-      // whatever it is. `scale` then `setsar` puts the picture on the raster
-      // the way the app's own staging does.
       '-vf',
-      `${cover ? COVER_43 : ''}scale=${w}:${h}:flags=lanczos,setsar=1`,
+      scaled(w, h),
       '-r',
       String(fps),
       '-pix_fmt',

@@ -1795,6 +1795,10 @@ export class Engine implements EngineApi {
     this.frameStore.settle()
   }
 
+  settleFreezeNow(): void {
+    this.frameStore.settleNow()
+  }
+
   setSoundOut(on: boolean): void {
     this.soundOut = on
   }

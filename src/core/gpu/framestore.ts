@@ -95,6 +95,14 @@ export class FrameStore {
     this.settling = true
   }
 
+  // An offline render has every source in place before its first frame and
+  // nothing seeking, so the store records that one frame of program and holds
+  // from the next, and the loop bus builds its trails over it.
+  settleNow(): void {
+    this.settling = true
+    this.quiet = QUIET_FRAMES - 2
+  }
+
   // A fresh store for a reset, which keeps whether the link has loaded and a
   // settle still counting down. Dropping the second left a reset in that window
   // tracking the program until the page reloaded.

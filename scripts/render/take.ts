@@ -33,7 +33,8 @@ export interface Case {
 
 // A cutout with every kind of alpha the keyer meets: a green disc, which a
 // chroma key would cut and the alpha key keeps, with a soft edge, and below it
-// a white band at half alpha, on a fully transparent field.
+// a white band at half alpha, on a transparent black field as the app's
+// canvas staging leaves it.
 export const cutoutPixels = (): Uint8Array => {
   const out = new Uint8Array(ACTIVE_WIDTH * ACTIVE_HEIGHT * 4)
   const cx = ACTIVE_WIDTH * 0.45
@@ -47,9 +48,10 @@ export const cutoutPixels = (): Uint8Array => {
       const disc = Math.min(Math.max((r - d) / ramp, 0), 1)
       const band = y > ACTIVE_HEIGHT * 0.78 && y < ACTIVE_HEIGHT * 0.9 ? 0.5 : 0
       const alpha = Math.max(disc, band)
-      out[i] = disc > 0 ? 40 : 255
-      out[i + 1] = disc > 0 ? 200 : 255
-      out[i + 2] = disc > 0 ? 60 : 255
+      const white = alpha > 0 ? 255 : 0
+      out[i] = disc > 0 ? 40 : white
+      out[i + 1] = disc > 0 ? 200 : white
+      out[i + 2] = disc > 0 ? 60 : white
       out[i + 3] = Math.round(alpha * 255)
     }
   }

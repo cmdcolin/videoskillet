@@ -118,6 +118,21 @@ describe('FrameStore', () => {
     expect(run(store, c, 3)).toEqual([false, false, false])
   })
 
+  it('holds the first frame when settled before it', () => {
+    const store = new FrameStore()
+    store.settleNow()
+    const c = keyed({ bKeyFill: 3 })
+    expect(run(store, c, 3)).toEqual([true, false, false])
+  })
+
+  it('builds the loop bus over the first frame of program when settled before it', () => {
+    const store = new FrameStore()
+    store.settleNow()
+    const c = keyed({ bKeyFill: 2 })
+    expect(store.step(c, true, 0)).toMatchObject({ records: true, fill: 0 })
+    expect(store.step(c, true, 1)).toMatchObject({ fill: 2 })
+  })
+
   it('keeps a pending settle through a reset', () => {
     const store = new FrameStore()
     store.settle()
