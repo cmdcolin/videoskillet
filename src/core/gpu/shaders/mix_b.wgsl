@@ -37,14 +37,20 @@ fn lumaBAt(idx: u32) -> f32 {
   return select(0.0, luma(texel), inside);
 }
 
-// B's alpha at a raster index: the key output a source with transparency
-// sends beside its picture. It is 1 outside the active picture, so the
-// external key never takes B's sync and burst off the bus.
-fn alphaBAt(idx: u32) -> f32 {
+fn inActiveB(idx: u32) -> bool {
   let x = i32(idx % SPL) - i32(ACTIVE_START);
   let y = i32(idx / SPL) - i32(ACTIVE_TOP);
-  let inside = x >= 0 && x < i32(ACTIVE_W) && y >= 0 && y < i32(ACTIVE_H);
-  return select(1.0, srcTexelAlphaB(inputTexB, clamp(x, 0, i32(ACTIVE_W) - 1), clamp(y, 0, i32(ACTIVE_H) - 1), P.deintB).a, inside);
+  return x >= 0 && x < i32(ACTIVE_W) && y >= 0 && y < i32(ACTIVE_H);
+}
+
+// B's alpha at a raster index: the key output a source with transparency
+// sends beside its picture. The keyer blanks its key outside the active
+// picture, so a delayed read or an edge tap that lands in blanking reads it as
+// transparent.
+fn alphaBAt(idx: u32) -> f32 {
+  let x = clamp(i32(idx % SPL) - i32(ACTIVE_START), 0, i32(ACTIVE_W) - 1);
+  let y = clamp(i32(idx / SPL) - i32(ACTIVE_TOP), 0, i32(ACTIVE_H) - 1);
+  return select(0.0, srcTexelAlphaB(inputTexB, x, y, P.deintB).a, inActiveB(idx));
 }
 
 // B's picture luma scaled by what the chroma pin left of it, before B's
@@ -190,7 +196,8 @@ fn chromaKey(at: i32, phase: f32, damaged: bool) -> KeySlice {
 // It runs through the same registration trim as the chroma slice, and the
 // invert button works on it the same way. With nothing to subtract, the
 // additive keyer is out of circuit, and the spill canceller has no backing to
-// null.
+// null. The keyer only switches the active picture, so B's sync and burst
+// pass whichever way the key is inverted, and the dirty sum keeps its fight.
 fn alphaKey(at: i32) -> KeySlice {
   let d = floor(P.bKeyDelay);
   let i = at + i32(d);
@@ -198,7 +205,8 @@ fn alphaKey(at: i32) -> KeySlice {
   if (P.bKey < 0.0) {
     g = 1.0 - g;
   }
-  return KeySlice(mix(1.0, g, min(abs(P.bKey), 1.0)), vec2f(0.0), 0.0);
+  let gate = select(1.0, mix(1.0, g, min(abs(P.bKey), 1.0)), inActiveB(clampIdx(at)));
+  return KeySlice(gate, vec2f(0.0), 0.0);
 }
 
 // The key on whichever input the source switch selects.

@@ -748,7 +748,7 @@ pipKeySoft  (key soft)
 
 bKey  (key (- inverts))
   -1..1 step 0.01  default 0
-  A chroma keyer across the mixer with B as the foreground: B's backing colour is cut away so A shows through. It slices the chroma the encoder made, so the matte comes out soft across and sharp down, the lopsided edge every composite key had.
+  A chroma keyer across the mixer with B as the foreground: B's backing colour is cut away so A shows through. It slices the chroma the encoder made, so the matte comes out soft across and sharp down, the lopsided edge every composite key had. With key source on B alpha it cuts by B's transparency instead.
 
 bKeyHueDeg  (backing hue)
   0..360 step 1 deg  default 241
@@ -776,7 +776,7 @@ bKeyDelayUs  (key delay)
 
 bKeySource  (key source)
   0=chroma 1=B alpha  default 0
-  What the keyer cuts by. Chroma slices B's backing colour off the bus. B alpha patches a transparent source's alpha into the key input, the way a character generator sends a key beside its picture, so a cutout PNG, WebP or WebM keys with nothing to set and keeps any green it holds. The hue, clip, gain, spill kill and additive controls only act on chroma.
+  What the keyer cuts by. Chroma slices B's backing colour off the bus. B alpha patches a transparent source's alpha into the key input, the way a character generator sends a key beside its picture, so a cutout PNG, WebP or WebM keys with nothing to calibrate and keeps any green it holds. The hue, clip, gain, spill kill and additive controls only act on chroma.
 
 bKeyAdditive  (keyer)
   0=comparator 1=additive  default 0

@@ -3,6 +3,7 @@
 // function of the controls and the engine's per-frame state so the headless
 // profiler (scripts/gpuprof) packs exactly what the app packs.
 
+import { additiveKeyerOn, type Controls } from '../controls'
 import { clamp, clamp01 } from '../math'
 import {
   ACTIVE_HEIGHT,
@@ -16,7 +17,6 @@ import {
 import { demodReach } from '../signal/filters'
 import { valueNoise } from '../signal/noise'
 
-import type { Controls } from '../controls'
 import type { OsdStep } from '../signal/osdstate'
 
 // Lines down the picture that match one microsecond across it on a 4:3 screen,
@@ -377,7 +377,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     bKeySpill: c.bKeySpill,
     bKeyDelay: c.bKeyDelayUs * 1e-6 * SAMPLE_RATE,
     bKeySource: c.bKeySource,
-    bKeyAdditive: c.bKeySource > 0.5 ? 0 : c.bKeyAdditive,
+    bKeyAdditive: additiveKeyerOn(c.bKeySource, c.bKeyAdditive) ? 1 : 0,
     bKeyLevel: c.bKeyLevel,
     bKeyBackY: c.bKeyBackY,
     bKeyFeed: 0,

@@ -17,6 +17,13 @@
 @group(0) @binding(1) var vsamp: sampler;
 @group(0) @binding(2) var dstTex: texture_storage_2d<rgba8unorm, write>;
 
+// The decoder's frame arrives premultiplied (measured in Chrome with a VP9
+// alpha WebM: no edge sample's colour exceeds its alpha), and the bitmap path
+// stores straight alpha, so the colour is divided back out here.
+fn straight(c: vec4f) -> vec4f {
+  return vec4f(select(vec3f(0.0), c.rgb / c.a, c.a > 0.0), c.a);
+}
+
 fn blit(gid: vec3u, crop43: bool) {
   let dims = textureDimensions(dstTex);
   if (gid.x >= dims.x || gid.y >= dims.y) {
@@ -30,7 +37,7 @@ fn blit(gid: vec3u, crop43: bool) {
     let ch = select(s.x * (3.0 / 4.0), s.y, wide);
     uv = ((s - vec2f(cw, ch)) * 0.5 + uv * vec2f(cw, ch)) / s;
   }
-  textureStore(dstTex, vec2i(gid.xy), textureSampleBaseClampToEdge(srcVideo, vsamp, uv));
+  textureStore(dstTex, vec2i(gid.xy), straight(textureSampleBaseClampToEdge(srcVideo, vsamp, uv)));
 }
 
 @compute @workgroup_size(8, 8, 1)

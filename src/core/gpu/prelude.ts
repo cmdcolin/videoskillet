@@ -1531,14 +1531,23 @@ fn srcTexelB(tex: texture_2d<f32>, x: i32, y: i32, deint: f32) -> vec3f {
   return srcTexelAlphaB(tex, x, y, deint).rgb;
 }
 
-// B's texel with its alpha, which leaves the source on a wire of its own, the
-// key output beside the fill, and goes through the same deinterlacer.
+// B's texel with its alpha. The alpha leaves the source as a key output beside
+// the fill, and both go through the same deinterlacer, which blends the two
+// lines premultiplied so a cutout's edge does not average its colour with the
+// transparent black beside it.
 fn srcTexelAlphaB(tex: texture_2d<f32>, x: i32, y: i32, deint: f32) -> vec4f {
-  var texel = textureLoad(tex, vec2i(x, y), 0);
-  if (deint > 0.5) {
+  var texel: vec4f;
+  if (deint < 0.5) {
+    texel = textureLoad(tex, vec2i(x, y), 0);
+  } else {
     let e = y - (y & 1);
     let n = min(e + 2, i32(ACTIVE_H) - 1);
-    texel = mix(textureLoad(tex, vec2i(x, e), 0), textureLoad(tex, vec2i(x, n), 0), f32(y - e) * 0.5);
+    let a = textureLoad(tex, vec2i(x, e), 0);
+    let b = textureLoad(tex, vec2i(x, n), 0);
+    let t = f32(y - e) * 0.5;
+    let alpha = mix(a.a, b.a, t);
+    let rgb = mix(a.rgb * a.a, b.rgb * b.a, t);
+    texel = vec4f(select(mix(a.rgb, b.rgb, t), rgb / alpha, alpha > 0.0), alpha);
   }
   return texel;
 }

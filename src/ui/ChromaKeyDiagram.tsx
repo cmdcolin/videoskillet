@@ -1,3 +1,4 @@
+import { additiveKeyerOn } from '../core/controls'
 import { openBox, useReadings, useSelectedBox, stageBoxes } from './diagram'
 import {
   BoxRows,
@@ -51,7 +52,7 @@ export function ChromaKeyDiagram() {
   const on = key !== 0
   const fill = Math.round(v('bKeyFill'))
   const external = v('bKeySource') > 0.5
-  const additive = !external && v('bKeyAdditive') > 0.5
+  const additive = additiveKeyerOn(v('bKeySource'), v('bKeyAdditive'))
   const keyLook: WireLook = on ? 'on' : 'dash'
   const slice = mixerSlice({
     bKeyHueDeg: v('bKeyHueDeg'),
@@ -108,8 +109,8 @@ export function ChromaKeyDiagram() {
       TOP_Y,
       genlock ? 'A/B mix' : 'A + B',
       genlock
-        ? 'The genlocked crossfade: the gate cuts B and the fill shows through the hole. A negative key cuts the subject and keeps the backing.'
-        : 'The dirty sum: the gate cuts B, and program A stays on the bus everywhere. A negative key cuts the subject and keeps the backing.',
+        ? `The genlocked crossfade: the gate cuts B and the fill shows through the hole. A negative key cuts the subject and keeps the ${external ? 'transparent part' : 'backing'}.`
+        : `The dirty sum: the gate cuts B, and program A stays on the bus everywhere. A negative key cuts the subject and keeps the ${external ? 'transparent part' : 'backing'}.`,
     ),
   ]
   const up = (x: number) => `M${x} ${BOT_Y - H / 2} V${TOP_Y + H / 2}`

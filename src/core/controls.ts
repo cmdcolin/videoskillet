@@ -441,6 +441,9 @@ export const DEFAULT_CONTROLS = {
 export type Controls = typeof DEFAULT_CONTROLS
 export type ControlKey = keyof Controls
 
+export const additiveKeyerOn = (bKeySource: number, bKeyAdditive: number) =>
+  bKeySource < 0.5 && bKeyAdditive > 0.5
+
 // Every control key, for the code that has to walk the whole record (uniform
 // packing, the URL mirror, MIDI takeover, preset comparison). Lives here beside
 // the schema so those callers share one list instead of each re-deriving it —

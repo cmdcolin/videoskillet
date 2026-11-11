@@ -83,10 +83,14 @@ export function mutateAmountFor(e: {
 // look very good ... i dont recommend using it, and even making it shy from the
 // randomizer settings so it doesnt get triggered from random". The chips that
 // carry it still click through whole.
+//
+// `bKeySource` on B alpha keys nothing on an opaque B, so a roll that flipped
+// it would quietly switch a chroma look's key off.
 export const ROLL_NEVER_STARTS = new Set<ControlKey>([
   'strobeHz',
   'clipHz',
   'phosphor',
+  'bKeySource',
 ])
 
 // Values a roll may not land a control on, and what it lands on instead.

@@ -2383,7 +2383,7 @@ export const GROUPS: Group[] = [
         max: 1,
         step: 0.01,
         unit: '',
-        help: "A chroma keyer across the mixer with B as the foreground: B's backing colour is cut away so A shows through. It slices the chroma the encoder made, so the matte comes out soft across and sharp down, the lopsided edge every composite key had.",
+        help: "A chroma keyer across the mixer with B as the foreground: B's backing colour is cut away so A shows through. It slices the chroma the encoder made, so the matte comes out soft across and sharp down, the lopsided edge every composite key had. With key source on B alpha it cuts by B's transparency instead.",
       },
       {
         key: 'bKeyHueDeg',
@@ -2456,7 +2456,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['chroma', 'B alpha'],
-        help: "What the keyer cuts by. Chroma slices B's backing colour off the bus. B alpha patches a transparent source's alpha into the key input, the way a character generator sends a key beside its picture, so a cutout PNG, WebP or WebM keys with nothing to set and keeps any green it holds. The hue, clip, gain, spill kill and additive controls only act on chroma.",
+        help: "What the keyer cuts by. Chroma slices B's backing colour off the bus. B alpha patches a transparent source's alpha into the key input, the way a character generator sends a key beside its picture, so a cutout PNG, WebP or WebM keys with nothing to calibrate and keeps any green it holds. The hue, clip, gain, spill kill and additive controls only act on chroma.",
       },
       {
         key: 'bKeyAdditive',
@@ -4727,6 +4727,12 @@ const keyed: SliderNeed = {
   fix: 1,
   hint: 'the chroma key nonzero',
 }
+const chromaKeyed: SliderNeed = {
+  key: 'bKeySource',
+  ok: (v: number) => v < 0.5,
+  fix: 0,
+  hint: 'key source on "chroma"',
+}
 const additive: SliderNeed = {
   key: 'bKeyAdditive',
   ok: above0,
@@ -4921,14 +4927,14 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   pipKey: pip,
   pipKeyLevel: pipKeyed,
   pipKeySoft: pipKeyed,
-  bKeyHueDeg: keyed,
-  bKeyAcceptDeg: keyed,
-  bKeyClip: keyed,
-  bKeySoft: keyed,
-  bKeySpill: keyed,
+  bKeyHueDeg: chromaKeyed,
+  bKeyAcceptDeg: chromaKeyed,
+  bKeyClip: chromaKeyed,
+  bKeySoft: chromaKeyed,
+  bKeySpill: chromaKeyed,
   bKeyDelayUs: keyed,
   bKeySource: keyed,
-  bKeyAdditive: keyed,
+  bKeyAdditive: chromaKeyed,
   bKeyLevel: additive,
   bKeyBackY: additive,
   // Genlocked as well as keyed: on the dirty sum there is no layer behind the
