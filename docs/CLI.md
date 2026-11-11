@@ -179,6 +179,7 @@ bandwidth.
 | `--codec=<name>`   | `prores`, `dnxhr`, `ffv1`, `h264` or `preview`      |
 | `--audio=<mode>`   | `auto`, `buzz`, `source` or `none`                  |
 | `--audio-file=<p>` | the track driving the artifacts, when not the input |
+| `--b=<path>`       | a clip or still on deck B, looped                   |
 | `--quiet`          | no progress line                                    |
 
 `--look` reads the link with the parser the app uses, so one link sets the

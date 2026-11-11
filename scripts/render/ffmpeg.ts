@@ -109,24 +109,57 @@ async function readFull(
 const STILL = /\.(jpe?g|png|webp|gif|bmp|avif|tiff?)$/i
 export const isStill = (path: string): boolean => STILL.test(path)
 
-export function ffmpegDecode(
+// ffmpeg's own VP8 and VP9 decoders drop a WebM's alpha channel, and libvpx
+// keeps it, so a cutout reaches the keyer with its transparency.
+const ALPHA_DECODERS: Record<string, string> = {
+  vp8: 'libvpx',
+  vp9: 'libvpx-vp9',
+}
+
+async function decoderFor(path: string): Promise<string[]> {
+  const out = await new Deno.Command('ffprobe', {
+    args: [
+      '-v',
+      'error',
+      '-select_streams',
+      'v:0',
+      '-show_entries',
+      'stream=codec_name',
+      '-of',
+      'csv=p=0',
+      path,
+    ],
+    stdout: 'piped',
+    stderr: 'null',
+  }).output()
+  const codec = new TextDecoder().decode(out.stdout).trim()
+  const decoder = ALPHA_DECODERS[codec]
+  return decoder === undefined ? [] : ['-c:v', decoder]
+}
+
+// Deck B is cover-fit: the centre 4:3 of the source fills the raster, as
+// `coverFit43` stages it in the app.
+const COVER_43 = "crop='min(iw,ih*4/3)':'min(ih,iw*3/4)',"
+
+export async function ffmpegDecode(
   path: string,
   w: number,
   h: number,
   fps: number,
-): Source {
+  { cover = false } = {},
+): Promise<Source> {
   const cmd = new Deno.Command('ffmpeg', {
     args: [
       '-v',
       'error',
-      ...(isStill(path) ? ['-loop', '1'] : []),
+      ...(isStill(path) ? ['-loop', '1'] : await decoderFor(path)),
       '-i',
       path,
       // The raster is 754x480 with non-square pixels, and the source is
       // whatever it is. `scale` then `setsar` puts the picture on the raster
       // the way the app's own staging does.
       '-vf',
-      `scale=${w}:${h}:flags=lanczos,setsar=1`,
+      `${cover ? COVER_43 : ''}scale=${w}:${h}:flags=lanczos,setsar=1`,
       '-r',
       String(fps),
       '-pix_fmt',

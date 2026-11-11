@@ -1638,6 +1638,11 @@ export class Engine implements EngineApi {
     this.sources.setImageSourceB(source)
   }
 
+  setImagePixelsB(rgba: Uint8Array): void {
+    this.pump.setB(null)
+    this.sources.setImagePixelsB(rgba)
+  }
+
   setVideoSourceB(el: HTMLVideoElement | null): void {
     if (el !== null) {
       this.sources.setNoiseSourceB(0)

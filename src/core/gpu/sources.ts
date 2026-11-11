@@ -286,6 +286,19 @@ export class Sources {
     this.uploadB(source, source.width, source.height)
   }
 
+  // Slot B from bytes already at the raster's size and cropped to its 4:3,
+  // with straight alpha like the staged path, for an offline render.
+  setImagePixelsB(rgba: Uint8Array): void {
+    this.noiseB = 0
+    this.awaitB = false
+    this.host.device.queue.writeTexture(
+      { texture: this.texB },
+      rgba,
+      { bytesPerRow: ACTIVE_WIDTH * 4, rowsPerImage: ACTIVE_HEIGHT },
+      [ACTIVE_WIDTH, ACTIVE_HEIGHT],
+    )
+  }
+
   setNoiseSourceB(kind: number): void {
     this.noiseB = kind
     if (kind > 0) this.awaitB = false

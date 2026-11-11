@@ -77,6 +77,8 @@ if (has('help') || positional.length === 0) {
   --audio=<auto|buzz|source|none>
   --audio-file=<path>           the track that drives the artifacts, when it
                                 is not the input (required with a raw stdin)
+  --b=<path>                    a clip or still on deck B, looped; a WebM's
+                                alpha reaches the keyer
   --quiet                       no progress line
 
 --look takes the link whole and reads it with the app's own parser, so the
@@ -311,6 +313,10 @@ if (link.srcb !== null) {
   else if (link.srcb in NOISE) engine.setNoiseSourceB(NOISE[link.srcb])
 }
 if (link.caption !== '') engine.setCaption(link.caption)
+// Everything a link names is in place before the first frame, so the link has
+// loaded as far as the frame store knows. Without this the loop bus and freeze
+// track program A for the whole file and a look built on trails renders none.
+engine.settleFreeze()
 
 // The buzz, if anyone is listening. `buzzDrive` gates the tap pass, the
 // readback and the push alike on this switch, so leaving it off is what makes
@@ -354,7 +360,26 @@ const source = rawIn
         smpteBarsPixels,
         sweepPixels,
       )
-    : ffmpegDecode(input, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps)
+    : await ffmpegDecode(input, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps)
+
+const bPath = flag('b') ?? null
+const openB = () =>
+  bPath === null
+    ? null
+    : ffmpegDecode(bPath, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps, { cover: true })
+let sourceB = await openB()
+
+// Deck B loops, as the app's player does, so a short clip under a long
+// render starts again instead of freezing on its last frame.
+const nextB = async (): Promise<Uint8Array | null> => {
+  let frame = (await sourceB?.next()) ?? null
+  if (frame === null && sourceB !== null) {
+    await sourceB.close()
+    sourceB = await openB()
+    frame = (await sourceB?.next()) ?? null
+  }
+  return frame
+}
 
 // With audio the picture goes to a scratch file first and is copied into the
 // finished one alongside the sound — see `mux`, which does not re-encode it.
@@ -398,6 +423,8 @@ try {
       engine.setImagePixels(frame, ACTIVE_WIDTH, ACTIVE_HEIGHT)
       if (generator !== 0) engine.setNoiseSource(generator)
     }
+    const frameB = await nextB()
+    if (frameB !== null) engine.setImagePixelsB(frameB)
     // Before the step, because the step is what reads it. The window the
     // analyser hands over ends at this frame's position in the track, so the
     // bass that lands on frame N bends frame N.
@@ -426,6 +453,11 @@ try {
   // diagnosis.
   try {
     await source.close()
+  } catch (e) {
+    fail(e)
+  }
+  try {
+    await sourceB?.close()
   } catch (e) {
     fail(e)
   }
