@@ -50,7 +50,8 @@ export function ChromaKeyDiagram() {
   const key = v('bKey')
   const on = key !== 0
   const fill = Math.round(v('bKeyFill'))
-  const additive = v('bKeyAdditive') > 0.5
+  const external = v('bKeySource') > 0.5
+  const additive = !external && v('bKeyAdditive') > 0.5
   const keyLook: WireLook = on ? 'on' : 'dash'
   const slice = mixerSlice({
     bKeyHueDeg: v('bKeyHueDeg'),
@@ -72,10 +73,12 @@ export function ChromaKeyDiagram() {
       'spill',
       TOP_Y,
       'spill',
-      additive
-        ? 'The additive keyer subtracts spill along with the backing, so the canceller is out of the path.'
-        : "The spill canceller reinjects B's own subcarrier in antiphase along the backing's phase, so backing colour reflected off the subject cancels.",
-      !on || additive,
+      external
+        ? "With B's alpha as the key there is no backing colour, so the canceller is out of the path."
+        : additive
+          ? 'The additive keyer subtracts spill along with the backing, so the canceller is out of the path.'
+          : "The spill canceller reinjects B's own subcarrier in antiphase along the backing's phase, so backing colour reflected off the subject cancels.",
+      !on || additive || external,
     ),
     box(
       'delay',
@@ -86,10 +89,12 @@ export function ChromaKeyDiagram() {
     box(
       'keyer',
       BOT_Y,
-      additive ? 'additive' : 'keyer',
-      additive
-        ? "Measures how much backing each sample holds: B's chroma along the backing hue, less its chroma across it, against the backing level. That share of the backing comes off B and the same share of the fill goes under it."
-        : "Slices B's chroma by hue and saturation: a wedge either side of the backing hue, above the clip, eased by the gain knob.",
+      external ? 'alpha' : additive ? 'additive' : 'keyer',
+      external
+        ? "Passes B's alpha through as the key, so the source's own transparency sets how much of B the mix keeps. Hue, clip, gain and spill kill do nothing here."
+        : additive
+          ? "Measures how much backing each sample holds: B's chroma along the backing hue, less its chroma across it, against the backing level. That share of the backing comes off B and the same share of the fill goes under it."
+          : "Slices B's chroma by hue and saturation: a wedge either side of the backing hue, above the clip, eased by the gain knob.",
     ),
     box(
       'fill',
@@ -127,12 +132,16 @@ export function ChromaKeyDiagram() {
               look={keyLook}
             />
             <Label x={TRUNK_X + 4} y={(TOP_Y + BOT_Y) / 2 + 3}>
-              chroma
+              {external ? 'alpha' : 'chroma'}
             </Label>
             <Wire
               arrow={arrow}
               d={`M${COL.spill.x + COL.spill.w} ${TOP_Y} H${COL.mix.x}`}
-              look={on && !additive && v('bKeySpill') > 0 ? 'on' : 'plain'}
+              look={
+                on && !additive && !external && v('bKeySpill') > 0
+                  ? 'on'
+                  : 'plain'
+              }
             />
             <Wire
               arrow={arrow}
@@ -177,7 +186,7 @@ export function ChromaKeyDiagram() {
                   : undefined
               }
               invert={key < 0}
-              on={on}
+              on={on && !external}
               strength={Math.min(Math.abs(key), 1)}
               dot={
                 fill === 1
