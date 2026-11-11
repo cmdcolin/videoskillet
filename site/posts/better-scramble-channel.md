@@ -61,6 +61,12 @@ interval, so the blanking shows as a grey bar and the colour floods to match the
 weakened burst. The links above open the version this post describes.
 [Open the new one](/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
+## Update, 11 November 2026
+
+[A scrambled channel in a feedback loop](/blog/scrambled-channel-in-a-loop/)
+covers two more scrambling systems and three presets that put the scrambler in a
+camera loop or on a tape.
+
 _Photos from Wikimedia Commons under CC BY-SA 3.0, and the stills here are under
 the same licence: LIZ fashion's
 [1984 catalogue cover](https://commons.wikimedia.org/wiki/File:%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
