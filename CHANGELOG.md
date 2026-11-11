@@ -2,6 +2,53 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.3](https://github.com/cmdcolin/videoskillet/compare/v2.25.2...v2.25.3) - 2026-11-11
+
+### Features
+- *(signal)* [`1dfb965`](https://github.com/cmdcolin/videoskillet/commit/1dfb965ed6cfeea971195f9fa1ec82d0f06130c3) a chroma pin on each source's S-video lead
+
+### Fixes
+- [`9ba7f23`](https://github.com/cmdcolin/videoskillet/commit/9ba7f235eb962398c35c7f2f73628fb6feec89fb) the footer sits at the bottom of a short page and lines up with the bar
+- *(ui)* [`b680431`](https://github.com/cmdcolin/videoskillet/commit/b680431a035669835ae2a9005a97a8c0dd2ea73c) a held Enter or Space presses a drawing box once
+- *(ui)* [`c785733`](https://github.com/cmdcolin/videoskillet/commit/c78573320c798ff7ac1654ac823923b3c5214bcc) the MIDI card fits under a phone's toolbar and its close button uses the panel font
+- *(signal)* [`a66c6fc`](https://github.com/cmdcolin/videoskillet/commit/a66c6fcba13c60f0e27e014abe1ebf22896a25e5) cable faults act once, on the copy the set plays back
+- *(signal)* [`d2040ce`](https://github.com/cmdcolin/videoskillet/commit/d2040ced17f69f1c0c841bc0a54bc98d77e17a90) centre the loop return's Y/C split on the sample it reads
+- *(signal)* [`0cfb396`](https://github.com/cmdcolin/videoskillet/commit/0cfb396ddab1c4c75fa5acaf7a1cd6cd7915aefa) the dropout compensator and the ghost read the pinned input
+- *(signal)* [`ba5d9b2`](https://github.com/cmdcolin/videoskillet/commit/ba5d9b2fbd4c66248596666b5613d52b8381bf79) the termination echo carries the scrambling on the cable
+- *(signal)* [`22e5030`](https://github.com/cmdcolin/videoskillet/commit/22e5030873e8e6d387afece2169772249a1a8853) the multipath ghost carries the head-end's scrambling
+- *(signal)* [`9b4a781`](https://github.com/cmdcolin/videoskillet/commit/9b4a7814a26c4d4a8c5e3cdf69174a2a3b75559e) a feed's deck reads a tape the head-end already scrambled
+- *(signal)* [`20e99a2`](https://github.com/cmdcolin/videoskillet/commit/20e99a2d937237ca158a78a01cc53b13573da368) the synth's delay line runs under a paused deck and carries its dropouts
+- *(signal)* [`ebd66e4`](https://github.com/cmdcolin/videoskillet/commit/ebd66e4a9686632e8fe55c00bb25f8d3f47e4a01) the program bus's termination echo is the cable's own output
+- *(signal)* [`13be548`](https://github.com/cmdcolin/videoskillet/commit/13be5488d59e18485d63873c3d5c6dd119fd6ec8) the program bus's plug and swapped pair sit after the deck's time-base error
+- *(signal)* [`a40e740`](https://github.com/cmdcolin/videoskillet/commit/a40e740ab28ae770d6c3a2fc65d767a4cac894d7) a feed's termination echo is the feed's own output
+- *(signal)* [`8c7606e`](https://github.com/cmdcolin/videoskillet/commit/8c7606e6ddcbb0049cad3d49b92fc18783339fa9) only an open line taps the termination's echo
+- *(signal)* [`26b6876`](https://github.com/cmdcolin/videoskillet/commit/26b6876bd962c6d23f32a9fe876ff204363b2022) a source's chroma pin acts at the plug, after its deck
+- *(gpu)* [`69ba65f`](https://github.com/cmdcolin/videoskillet/commit/69ba65fae5469a16e9da11370f484d6e0058eb5c) stage the feed's deck half without a loop, and drop a stale README test
+
+### Refactor
+- *(ui)* [`951439c`](https://github.com/cmdcolin/videoskillet/commit/951439c369586c405801251b8794b4ef4f9f7efd) element defaults and depth tokens come from skillet-shared 0.7.0
+- *(ui)* [`cfae5de`](https://github.com/cmdcolin/videoskillet/commit/cfae5de76b336d0cb0fb4330ba9eb77e8f5307f8) the outline button is bender's and videoskillet's one shared kind
+- *(ui)* [`eb0e909`](https://github.com/cmdcolin/videoskillet/commit/eb0e9090edb69110721c94581892a805b2ee2e91) 9px labels read --fs-2xs from skillet-shared 0.7.1
+- [`0d6e8cf`](https://github.com/cmdcolin/videoskillet/commit/0d6e8cf964b2b576923ec9a3340b04768600063d) type the any sources behind the unsafe-value findings
+- [`e687042`](https://github.com/cmdcolin/videoskillet/commit/e6870427bd680b9feabc3d5fa31f342187cbcaef) functions that never await stop being async
+- [`d4aa728`](https://github.com/cmdcolin/videoskillet/commit/d4aa728d88a7d1c6ee94eb98bf02c96497d67054) optional chains, nullish fallbacks and conditions the types settle
+
+### Documentation
+- [`8441dd0`](https://github.com/cmdcolin/videoskillet/commit/8441dd0692eb4c77bd2b14994409aa7310e66fe8) cut CLAUDE.md to the silent traps and file the rest under agent-docs
+- [`284228e`](https://github.com/cmdcolin/videoskillet/commit/284228e8650b20f5259ddda5257864624430ae4c) file harness, pacing and preset facts that lived only in agent memory
+- *(ui)* [`ce928ee`](https://github.com/cmdcolin/videoskillet/commit/ce928ee7ffced41222f31615bc80fded192d5b41) describe the takeoff fault and the Y/C delay's burst gate
+- [`c52e78a`](https://github.com/cmdcolin/videoskillet/commit/c52e78ad9b9a4d25e0ce9f688aeba18fd1dbd337) S-video as a per-source chroma pin, and the two-wire input set aside
+- [`d0076dc`](https://github.com/cmdcolin/videoskillet/commit/d0076dc0cb70f82dc3e09478067852757e380941) route the source pins through the feed's own chroma extract
+- [`9ac765a`](https://github.com/cmdcolin/videoskillet/commit/9ac765a7dc716c4f45b2866d78fe90a2bc58a2d6) what the termination echo carries on the bus and on a feed
+
+### Chores
+- [`2ddcf60`](https://github.com/cmdcolin/videoskillet/commit/2ddcf603623e5af9a1ea8b429d27b5fbf6858045) typecheck with tsrs, and type-aware lint runs tsrs-lint
+- [`5813d88`](https://github.com/cmdcolin/videoskillet/commit/5813d88a65b2cefda6298070771d460ace0e0cfd) oxlint 1.92, which runs tsrs-lint for type-aware rules
+- [`e8b7d25`](https://github.com/cmdcolin/videoskillet/commit/e8b7d253c097081f23d95ee8ec835f1fc9fe28fd) lint with the strict type-aware rule set shared with bender
+
+### Other Changes
+- [`f61b86a`](https://github.com/cmdcolin/videoskillet/commit/f61b86a2f96a5d7368e5610eb2e9841943670186) README
+
 ## [2.25.2](https://github.com/cmdcolin/videoskillet/compare/v2.25.1...v2.25.2) - 2026-11-05
 
 ### Features
