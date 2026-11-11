@@ -298,8 +298,13 @@ fn main(
   let pinned = P.chromaPinOnly > 0.0;
   let lo = DECK_PAD - select(0u, ECHO_LAG, open) - select(0u, BP_REACH, pinned);
   let hi = DECK_PAD + TILE_WG + select(0u, BP_REACH, pinned);
-  for (var i = lo + lid.x; i < hi; i = i + TILE_WG) {
-    tileDeck[i] = deckAt(clampIdx(i32(n0 + i) - i32(DECK_PAD)));
+  let first = lo + lid.x;
+  let second = first + TILE_WG;
+  if (first < hi) {
+    tileDeck[first] = deckAt(clampIdx(i32(n0 + first) - i32(DECK_PAD)));
+  }
+  if (second < hi) {
+    tileDeck[second] = deckAt(clampIdx(i32(n0 + second) - i32(DECK_PAD)));
   }
   workgroupBarrier();
 

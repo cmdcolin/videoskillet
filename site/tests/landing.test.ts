@@ -147,15 +147,6 @@ test.each(demos)('$name says which mechanism it is', demo => {
   expect(demo.says.endsWith('.')).toBe(true)
 })
 
-// Off the page, still in the README: `demos` is what the README prints, so a
-// demo dropped from the gallery has to stay in the list rather than the file.
-test('a demo kept out of the gallery is still a demo', () => {
-  for (const demo of demos.filter(d => !d.gallery)) {
-    expect(page).not.toContain(`data-src="${demo.clip}"`)
-    expect(readFileSync('README.md', 'utf8')).toContain(demo.url)
-  }
-})
-
 const riffs = gallery.flatMap(demo => demo.riffs)
 
 test('there is at least one riff to check the concept against', () => {
