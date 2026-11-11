@@ -19,9 +19,8 @@ look: '#set=capLumaMHz:4.2,demodMHz:3.43,chromaGain:13.62,vir:0.86,lumaMHz:6,noi
 </div>
 
 Ask Claude Code or Claude in Chrome for a look in plain words, and the agent
-sets the controls in the running app, reads the board back and gives you the
-link. In the recording, Claude Sonnet rebuilds the Purplady demo one stage at a
-time.
+sets the controls, reads the board back and gives you the link. Here Claude
+Sonnet rebuilds the Purplady demo.
 
 `window.vfBoard.apply(link)` applies a whole look at once, and
 `window.vfBoard.read()` returns the board as text.

@@ -16,44 +16,32 @@ Try it:
 [paper dolls](/app/#preset=paperDolls&vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/0/02/ARTIFACTS_-_Fashion_Film.webm/ARTIFACTS_-_Fashion_Film.webm.480p.vp9.webm).
 The two faces in the picture above are about 35 seconds into the film.
 
-Two presets here point a camera at a TV showing the
-[scrambled channel](/blog/better-scramble-channel/) and send the camera's
-picture back down the channel. A third plays the channel from a copied tape.
-[Oak Sigma and VideoCipher II](/blog/oak-sigma-and-videocipher/) covers the two
-scrambling systems added in the same release.
+These presets point a camera at the
+[scrambled channel](/blog/better-scramble-channel/) and feed it back in, or play
+the channel from a copied tape.
 
 ## Paper dolls
 
-Zenith's scrambler turned the picture negative at intervals, on a schedule sent
-to its decoders. In the paper dolls preset a camera films the TV, and the
-camera's picture is mixed back into the channel ahead of the scrambler. Each
-trip round the loop puts a copy a step to the side of the one before it, and
-while the scrambler is inverting, each copy is the negative of the one before.
+Zenith's scrambler inverted the picture on a schedule, so each trip round the
+loop adds a copy a step to the side, negative while the scrambler inverts.
 
 ![The model from a 1984 swimwear catalogue repeated across the frame as overlapping copies, some blue and some orange, beside the grid of swimsuit photos in the same two colours. A white band and a black bar run down the right edge.](/blog/scramble-paper-dolls.webp)
 
 The picture above is the same preset over
 [a still photo](/app/#preset=paperDolls&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
-The scrambling is turned down far enough that the TV keeps its timing marks, so
-the copies hold still in a row that changes each time the scrambler changes
-mode.
-
 ## Marbled channel
 
 [Marbled channel](/app/#preset=marbledChannel&vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/0/02/ARTIFACTS_-_Fashion_Film.webm/ARTIFACTS_-_Fashion_Film.webm.480p.vp9.webm)
-runs the scrambled channel preset through the same loop, with about a quarter of
-the camera's picture mixed in. That TV has lost its timing marks and tears the
-picture around its shadows, and the tears from each trip round the loop build up
-into ribbons.
+runs the full scramble through the same loop, so the tears from each trip build
+up into ribbons.
 
 ![Two faces at the top right of a picture torn into flowing ribbons of green, violet, blue and orange. Black, grey and white bands wind down the left of the frame.](/blog/scramble-marbled-film.webp)
 
 ## A taped copy
 
 [Bootleg fight](/app/#preset=bootlegFight&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
-is a second-generation VHS copy of the scrambled channel. The tape's noise,
-dropouts and colour jitter sit on top of the tearing.
+is a second-generation VHS copy of the scrambled channel.
 
 _The film is
 [ARTIFACTS – Fashion Film](https://commons.wikimedia.org/wiki/File:ARTIFACTS_-_Fashion_Film.webm)
