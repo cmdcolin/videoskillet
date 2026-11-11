@@ -24,9 +24,7 @@
   background: var(--ctl-bg-hover);
 }
 .tabOn {
-  color: var(--fg);
-  border-color: var(--fg4);
-  background: var(--ctl-bg-hover);
+  composes: filledChosen from './ui.module.css';
 }
 
 .search {

@@ -9,21 +9,31 @@
 .dense {
   margin: 0;
 }
+/* A choice at rest is a quiet outline, the chosen one takes the grey fill, and
+   only a switch's `on` lights in the accent, so a chosen `off` never reads as
+   running. */
 .button {
   composes: filled from './ui.module.css';
   flex: 1;
   padding: 4px 5px;
   font-size: var(--fs-xs);
-  color: var(--fg2);
+  color: var(--fg3);
+  background: none;
+  border-color: var(--border-quiet);
 }
 .button:hover:not(:disabled) {
-  color: var(--accent);
+  color: var(--fg);
+  border-color: var(--border-hover);
 }
 .on {
+  composes: filledChosen from './ui.module.css';
+}
+.lit {
   composes: filledOn from './ui.module.css';
 }
-.on:hover:not(:disabled) {
+.lit:hover:not(:disabled) {
   color: var(--ctl-on-fg);
+  border-color: var(--ctl-on-bg);
 }
 
 /* Touch: 23px tall is a segment for a cursor. Grown rather than reached into

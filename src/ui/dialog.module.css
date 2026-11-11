@@ -58,7 +58,7 @@
   color: var(--fg2);
 }
 .tabOn {
-  composes: filledOn from './ui.module.css';
+  composes: filledChosen from './ui.module.css';
 }
 .cardRow {
   display: flex;

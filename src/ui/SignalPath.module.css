@@ -182,15 +182,8 @@
    Gold at rest and lit while it is down: it belongs to the edited board rather
    than to the chrome, and the amber is the panel's one colour for that. */
 .stageStock {
-  composes: bare tap from './ui.module.css';
+  composes: chip from './ui.module.css';
   margin-left: auto;
-  flex-shrink: 0;
-  padding: 1px var(--space-sm);
-  border: 1px solid var(--border-quiet);
-  border-radius: var(--ctl-radius);
-  font-size: var(--fs-xs);
-  line-height: 1.4;
-  color: var(--fg3);
 }
 .stageStock:hover {
   border-color: var(--edit);
@@ -247,42 +240,24 @@
 /* The way back to the map alone, at the far end of the stage's own heading row
    so it reads as "close this" rather than as another control of the stage.
    margin-left: auto is what puts it there — the name and its count stay
-   together on the left. Boxed, like the search box's clear button
-   (FilterBox.module.css .clear) and for the same reason: a bare glyph in the
-   panel's dim prose colour is a mark on the heading, not a thing to press, and
-   at hint size it was also a target you had to aim at. The border is what
-   makes it a button; the fixed square is what makes it hittable without
-   aiming. Bigger than .clear's because that one sits inside a field that
-   already draws its own box, while this one stands alone on a heading row with
-   nothing around it to say where it ends. */
+   together on the left. A square chip, the same close bender's stage panels
+   wear: it takes the stage off screen and changes nothing, so it carries no
+   colour of its own. */
 .stageClose {
-  composes: bare tap from './ui.module.css';
+  composes: chip from './ui.module.css';
   margin-left: auto;
-  flex-shrink: 0;
-  /* square, and the row centres it — a glyph sitting on the name's baseline is
-     not a button you can aim at */
   display: flex;
   align-items: center;
   justify-content: center;
   width: 22px;
   height: 22px;
-  /* Red, and the only red in the panel's chrome. The panel is otherwise green
-     for accent and gold for edited, so the hue itself is the signal here: this
-     is the one button that takes something off screen rather than changing it.
-     Tinted rather than filled — a solid red block on a heading row would outrank
-     the stage it closes — so the edge and a wash carry it at rest and the fill
-     arrives under the pointer, where the press is about to happen. */
-  border: 1px solid color-mix(in srgb, var(--danger) 55%, transparent);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
-  color: var(--danger);
+  padding: 0;
   font-size: var(--fs-lg);
   line-height: 1;
 }
 .stageClose:hover {
-  border-color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 24%, transparent);
-  color: #fff;
+  border-color: var(--border-hover);
+  color: var(--fg);
 }
 
 /* The bench: every stage mounted, its groups paired off into two columns once

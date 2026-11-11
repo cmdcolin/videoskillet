@@ -16,6 +16,7 @@ export function ToggleButtonGroup(props: {
   // of its three items, so which area it lands in is the row's to say — see
   // Slider.module.css, where the narrow panel moves that area under the label.
   className?: string
+  lit?: number
   onChange: (v: number) => void
 }) {
   return (
@@ -34,7 +35,10 @@ export function ToggleButtonGroup(props: {
           type="button"
           role="radio"
           aria-checked={props.value === i}
-          className={cx(styles.button, props.value === i && styles.on)}
+          className={cx(
+            styles.button,
+            props.value === i && (props.lit === i ? styles.lit : styles.on),
+          )}
           disabled={props.disabled}
           onClick={() => props.onChange(i)}
         >

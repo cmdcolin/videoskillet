@@ -20,7 +20,7 @@
   line-height: 1;
 }
 .on {
-  composes: filledOn from './ui.module.css';
+  composes: filledChosen from './ui.module.css';
 }
 .clear {
   margin-left: auto;

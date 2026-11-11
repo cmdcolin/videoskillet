@@ -179,6 +179,19 @@
     }
   }
 
+  /* A small bordered verb on a heading: a stage's `all`, a group's randomize
+     and drift. bender's chip is the same kind. */
+  .chip {
+    composes: bare tap;
+    flex-shrink: 0;
+    padding: 1px var(--space-sm);
+    border: 1px solid var(--border-quiet);
+    border-radius: var(--ctl-radius);
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+    color: var(--fg3);
+  }
+
   /* The filled button: segments, deck keys, dialog tabs. Its lit state,
      `button.filledOn`, stays unlayered so it beats a composer's own colours. */
   .filled {
@@ -243,6 +256,14 @@ button.filledOn {
   color: var(--ctl-on-fg);
   background: var(--ctl-on-bg);
   border-color: var(--ctl-on-bg);
+}
+/* One chosen among several (a segment, a tab, a brush). The accent fill is for
+   something running, such as a switch's `on`. */
+button.filledChosen,
+button.filledChosen:hover:not(:disabled) {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 14%, transparent);
+  border-color: var(--fg4);
 }
 .btn {
   composes: filled;

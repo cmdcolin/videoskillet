@@ -873,6 +873,7 @@ export function Slider(props: {
       label={props.label}
       options={choices}
       value={props.value}
+      lit={choices.indexOf('on')}
       disabled={locked}
       dense={inline}
       className={styles.trackCell}

@@ -59,12 +59,10 @@
    board at stock; a stage you have touched carries "reset defaults" as well).
    A row of panel height, spent to say twice what one button already says. */
 .dice {
-  composes: bare tap from './ui.module.css';
-  padding: 0 var(--space-2xs);
-  line-height: 1;
-  color: var(--fg3);
+  composes: chip from './ui.module.css';
 }
 .dice:hover {
+  border-color: var(--edit);
   color: var(--edit-hi);
 }
 
@@ -73,17 +71,17 @@
    same "moved off stock" amber a touched row wears, because that is what a
    drifting stage is — something is moving its controls and it was not you. */
 .drift {
-  composes: bare tap from './ui.module.css';
-  padding: 0 var(--space-2xs);
-  line-height: 1;
-  color: var(--fg3);
+  composes: chip from './ui.module.css';
 }
 .drift:hover {
+  border-color: var(--edit);
   color: var(--edit-hi);
 }
 .driftOn,
 .driftOn:hover {
-  color: var(--edit);
+  border-color: var(--edit);
+  background: color-mix(in srgb, var(--edit) 24%, transparent);
+  color: var(--edit-hi);
 }
 
 /* The same fact on a folded door, where the button itself is out of sight
