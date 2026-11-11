@@ -63,9 +63,9 @@ weakened burst. The links above open the version this post describes.
 
 ## Update, 11 November 2026
 
-[Even more scramble channel effects](/blog/scrambled-channel-in-a-loop/)
-covers two more scrambling systems and three presets that put the scrambler in a
-camera loop or on a tape.
+[Even more scramble channel effects](/blog/scrambled-channel-in-a-loop/) covers
+two more scrambling systems and three presets that put the scrambler in a camera
+loop or on a tape.
 
 _Photos from Wikimedia Commons under CC BY-SA 3.0, and the stills here are under
 the same licence: LIZ fashion's

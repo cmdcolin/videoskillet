@@ -734,9 +734,9 @@ them. Not built:
   rate. With the AC-coupled separator a wide shadow would trigger it, and the
   frame would hitch on dark scenes.
 - A positive-trap jamming carrier (US 4,074,311): a carrier 2.257 MHz above the
-  picture carrier at the same level, modulated 80% at 15 Hz and 1 kHz. The
-  1 kHz tone draws about seventeen bars down each field and they move every
-  field, which is a regular pattern laid over the picture.
+  picture carrier at the same level, modulated 80% at 15 Hz and 1 kHz. The 1 kHz
+  tone draws about seventeen bars down each field and they move every field,
+  which is a regular pattern laid over the picture.
 - Interdiction (US 5,014,309): jamming oscillators on the pole that hop between
   channels at about 4 kHz and sit on each for at least a fifth of the time. It
   draws bands a few lines tall at a fixed spacing.
