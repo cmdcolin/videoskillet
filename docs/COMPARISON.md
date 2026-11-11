@@ -13,6 +13,9 @@ the path rather than drawing the look. It ships standalone, in a browser, and as
 AE / Premiere / OpenFX plugins, and its multithreaded SIMD Rust runs in real
 time well above NTSC resolution.
 
+ntsc-rs is licensed under MIT, Apache-2.0 or ISC, at the user's choice, except
+for the standalone GUI, which is GPL-3.0.
+
 ### Yurenaki
 
 [Yurenaki](https://oopsyte.com/) shares the most of videoskillet's model. It is
@@ -29,6 +32,8 @@ videoskillet has each of those four stages, together with tape, the tuner, a
 second source and a signal-level mixer loop, and runs them live in a browser.
 Yurenaki has the timeline and the editor integration that videoskillet lacks.
 
+Yurenaki is proprietary and paid, and its source is not public.
+
 ### BENDR
 
 [BENDR](https://github.com/clickysteve/bendr) is the closest browser neighbour:
@@ -37,6 +42,8 @@ buses, keys and wipes, all in one HTML file a phone will run. Each fault —
 chroma bleed, rainbow fringing, dot crawl, ringing, line-by-line sync tears — is
 a slider drawn onto the picture, independent of the others, so the stages
 reorder freely.
+
+BENDR is licensed under MIT.
 
 videoskillet builds the signal: a picture becomes a composite waveform, the
 model damages that waveform, and a model of a TV decodes it back. Dot crawl and
@@ -53,14 +60,16 @@ loss, and decodes it through deck electronics whose parts age with years, heat
 and humidity. Head clogs, mistracking and capacitor hum all come from those
 parameters. It also models PAL, the linear audio track, a camera pickup tube and
 outside interference, and its tests check each part against the physical law
-behind it. It is a Rust command-line tool with a desktop front end, renders
-offline at about 12 frames per second, and is licensed for noncommercial use
-only.
+behind it. It is a Rust command-line tool with a desktop front end and renders
+offline at about 12 frames per second.
 
 videoskillet's tape stage works on the composite signal at 4 × F_SC, a whole
 frame at a time, with no field or track geometry, so vhs-phys models tape in
 much more depth. videoskillet runs live, and it has a receiver that can lose
 lock, the mixer and the feedback loops, none of which vhs-phys models.
+
+vhs-phys is licensed under PolyForm Noncommercial 1.0.0. Its source is public,
+and commercial use needs a separate licence from its author.
 
 ### vhs-decode / ld-decode
 
@@ -70,6 +79,8 @@ Duplicator and decoded in software — VHS, SVHS, U-Matic, Betamax, Video8 — o
 to timebase-corrected luma and chroma. It supplies real signals, so a claim made
 here can be checked against one.
 
+vhs-decode and ld-decode are licensed under GPL-3.0.
+
 ### Blargg's filters and the RetroArch CRT shaders
 
 Blargg's filters and the RetroArch shaders solve the console-on-a-period-TV
@@ -78,6 +89,9 @@ output, fast and accurate for that case; the RetroArch shaders (`crt-royale`,
 `crt-guest-advanced`) model the display — mask, scanlines, phosphor, geometry,
 glow.
 
+Blargg's filters are licensed under LGPL-2.1 or later, and both shaders under
+GPL-2.0 or later.
+
 ## What videoskillet does
 
 videoskillet runs live. Every stage of the path has controls, any of them can be
@@ -85,6 +99,8 @@ driven by an LFO, live audio or a MIDI knob, and two feedback loops run inside
 the model: a camera aimed at the monitor it feeds, and a mixer patched into
 itself at signal level. The app records a take to an MP4, and `pnpm render`
 writes ProRes 4444. [The features](FEATURES.md) list the rest.
+
+videoskillet is licensed under MIT.
 
 ### Limitations
 
@@ -100,7 +116,6 @@ writes ProRes 4444. [The features](FEATURES.md) list the rest.
 - **The model is progressive** 525/60 rather than interlaced at field rate, the
   largest remaining authenticity gap ([the architecture](ARCHITECTURE.md)).
 
-<sub>All free and open source except Yurenaki, which is paid, and vhs-phys,
-whose source is public under a noncommercial licence. Written from the other
-projects' own documentation, source and product pages, not from benchmarks run
-here. If something is out of date or unfair, please open an issue.</sub>
+<sub>Written from the other projects' own documentation, source and product
+pages, not from benchmarks run here. If something is out of date or unfair,
+please open an issue.</sub>
