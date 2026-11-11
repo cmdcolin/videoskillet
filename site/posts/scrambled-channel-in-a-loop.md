@@ -1,5 +1,5 @@
 ---
-title: A scrambled channel in a feedback loop
+title: Even more scramble channel effects
 date: 2026-11-11
 summary:
   A camera pointed at a scrambled channel lays the picture down as a row of

@@ -63,7 +63,7 @@ weakened burst. The links above open the version this post describes.
 
 ## Update, 11 November 2026
 
-[A scrambled channel in a feedback loop](/blog/scrambled-channel-in-a-loop/)
+[Even more scramble channel effects](/blog/scrambled-channel-in-a-loop/)
 covers two more scrambling systems and three presets that put the scrambler in a
 camera loop or on a tape.
 
