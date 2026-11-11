@@ -24,6 +24,18 @@ import {
   usToSamples,
 } from '../signal/constants'
 import {
+  CIPHER_AXIS_IRE,
+  CIPHER_DATA_IRE,
+  CIPHER_GAIN,
+  CIPHER_PORCH_BIAS_IRE,
+  HBI_DATA_CELL,
+  SIGMA_CLOCK_CELLS,
+  SIGMA_DATA_CELLS,
+  SIGMA_DATA_IRE,
+  SIGMA_DATA_SWING_IRE,
+  SIGMA_PORCH_BIAS_IRE,
+} from '../signal/datasync'
+import {
   FILTER_STRIDE,
   SEC_CHROMA_BP,
   SEC_DEMOD,
@@ -317,7 +329,7 @@ export const PARAM_DEFS = [
   ['mixPotSpeed', 'f32'], // how fast that wiper is moving, travel per second
   ['scramble', 'f32'], // head-end sync suppression depth: sync tip lifted toward blanking
   ['decoderDb', 'f32'], // descrambler box gain inside the carrier gate, dB
-  ['scrambleMode', 'f32'], // 0 gated, 1 line-alternate, 2 SSAVI (suppression + video inversion), 3 carrier (RF attenuation over H blanking + VBI), 4 tri-mode, 5 sine, 6 keyed SSAVI
+  ['scrambleMode', 'f32'], // 0 gated, 1 line-alternate, 2 SSAVI (suppression + video inversion), 3 carrier (RF attenuation over H blanking + VBI), 4 tri-mode, 5 sine, 6 keyed SSAVI, 7 line delay (feeds), 8 Oak Sigma, 9 VideoCipher II
   // copy protection authored onto the source tape's vertical interval
   ['mvAgcIre', 'f32'], // Macrovision AGC-pulse level at full cycle, IRE (0 = unprotected)
   ['mvStripe', 'f32'], // colorstripe burst rotation on walking line bands, radians
@@ -870,6 +882,21 @@ fn chromaPin(v: f32, chroma: f32, pin: f32) -> f32 {
 // inside the vertical interval is never suppressed, because the decoder's PLL
 // rebuilds the missing pulses from it.
 //
+// mode 8 is Oak Sigma (US 4,336,553 and 4,340,906): every sync pulse is gone,
+// line and field. Three bytes on a 250 ns grid sit where the line sync was, a
+// clock byte and two of encrypted sound, and their level swings on a
+// free-running sine near 15 Hz. The burst is kept on a DC bias, a binary
+// reference pattern stands in for the field pulses, and whole fields are
+// inverted on a key that holds for at least three seconds. The patents give no
+// data levels or bias, so those are this file's choice.
+//
+// mode 9 is VideoCipher II (Communications Technology, June 1986): the front
+// porch and sync of every line carry encrypted sound and addressing, the back
+// porch and burst are lifted to the middle of the video range, the picture is
+// inverted at 1.4 times the gain, and the vertical interval carries a
+// full-amplitude pattern in place of its pulses. The article names no axis for
+// the inversion, so the lifted porch is this file's choice.
+//
 // One definition for the program bus (channel) and the per-source feeds, which
 // scramble one input alone — a premium channel is scrambled per channel, not
 // per set, so the two differ only in what they are handed. frame is the field
@@ -879,6 +906,23 @@ const SCRAMBLE_GATE_END = 151u;
 const SCRAMBLE_KEY_FIELDS = 16u;
 const SCRAMBLE_KEY_REACH = 8u;
 const SINE_SUPPRESSION_DB = 6.5;
+const HBI_DATA_CELL = ${HBI_DATA_CELL};
+const SIGMA_DATA_CELLS = ${SIGMA_DATA_CELLS}u;
+const SIGMA_CLOCK_CELLS = ${SIGMA_CLOCK_CELLS}u;
+const SIGMA_DATA_IRE = ${SIGMA_DATA_IRE}.0;
+const SIGMA_DATA_SWING_IRE = ${SIGMA_DATA_SWING_IRE}.0;
+const SIGMA_SWING_PER_FIELD = 0.2503;
+const SIGMA_PORCH_BIAS_IRE = ${SIGMA_PORCH_BIAS_IRE}.0;
+const SIGMA_KEY_STRETCH = 12u;
+const CIPHER_DATA_IRE = ${CIPHER_DATA_IRE}.0;
+const CIPHER_PORCH_BIAS_IRE = ${CIPHER_PORCH_BIAS_IRE}.0;
+const CIPHER_AXIS_IRE = ${CIPHER_AXIS_IRE}.0;
+const CIPHER_GAIN = ${CIPHER_GAIN};
+const VBI_REFERENCE_CELL = ${Math.round(usToSamples(1))}u;
+
+fn cipherBit(row: u32, cell: u32, frame: u32) -> f32 {
+  return f32(pcg(row * 2246822519u + frame * 3266489917u + cell * 668265263u) & 1u);
+}
 
 // The head-end's mode key. A mode can change only on a 16-field boundary, and
 // it changes on about a third of them, with a change forced every eighth so the
@@ -946,6 +990,31 @@ fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f3
       let tipCentre = f32(SYNC_LEN) * 0.5;
       let toTip = 0.5 + 0.5 * cos(2.0 * PI * (f32(s) - tipCentre) / f32(SPL));
       out = carrierScaled(v, SINE_SUPPRESSION_DB * depth * toTip);
+    } else if (system == 8u || system == 9u) {
+      let cipher = system == 9u;
+      let dataStart = select(0u, ACTIVE_START + ACTIVE_W, cipher);
+      let dataLen = select(u32(f32(SIGMA_DATA_CELLS) * HBI_DATA_CELL), SPL - dataStart + SYNC_LEN, cipher);
+      let into = (s + SPL - dataStart) % SPL;
+      let swing = 2.0 * PI * SIGMA_SWING_PER_FIELD * (f32(frame % 4000u) + f32(row) / f32(NLINES));
+      let dataHigh = select(SIGMA_DATA_IRE + SIGMA_DATA_SWING_IRE * sin(swing), CIPHER_DATA_IRE, cipher);
+      if (into < dataLen) {
+        let cell = u32(f32(into) / HBI_DATA_CELL);
+        let clock = !cipher && cell < SIGMA_CLOCK_CELLS;
+        let bit = select(cipherBit(row, cell, frame), f32(cell & 1u), clock);
+        out = mix(out, dataHigh * bit, depth);
+      } else if (s < ACTIVE_START) {
+        out = max(out, mix(out, IRE_BLANK, depth)) + depth * select(SIGMA_PORCH_BIAS_IRE, CIPHER_PORCH_BIAS_IRE, cipher);
+      } else if (picture) {
+        if (cipher) {
+          out = mix(out, CIPHER_AXIS_IRE - CIPHER_GAIN * (out - CIPHER_AXIS_IRE), depth);
+        } else if (fract(scrambleKey(frame / SIGMA_KEY_STRETCH, 0x51a3u) * 2.0) < 0.5) {
+          out = 2.0 * IRE_BLACK + VIDEO_RANGE - out;
+        }
+      } else if (row >= VSYNC_FIRST && row <= VSYNC_LAST) {
+        out = mix(out, dataHigh * f32((s / VBI_REFERENCE_CELL) & 1u), depth);
+      } else {
+        out = max(out, mix(out, IRE_BLANK, depth));
+      }
     } else {
       var suppress = true;
       var invert = system == 2u;

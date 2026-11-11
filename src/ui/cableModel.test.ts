@@ -92,6 +92,21 @@ describe('cableLine', () => {
     expect(line[455]).toBeCloseTo(cableLine(STOCK)[455]!, 0)
   })
 
+  it('sends data where the sync was on Oak Sigma, and a negative picture', () => {
+    const line = cableLine({ ...STOCK, scramble: 1, scrambleMode: 7 })
+    expect(Math.min(...line.slice(0, SYNC_LEN))).toBe(IRE_BLANK)
+    expect(Math.max(...line.slice(0, SYNC_LEN))).toBeGreaterThan(50)
+    expect(line[BAR]).toBeLessThan(IRE_WHITE / 2)
+  })
+
+  it('lifts the burst to mid grey on VideoCipher II and sends a hot negative', () => {
+    const stock = cableLine(STOCK)
+    const line = cableLine({ ...STOCK, scramble: 1, scrambleMode: 8 })
+    expect(line[SYNC_LEN + 2]).toBe(50)
+    expect(line[BAR]).toBe(50 - 1.4 * (stock[BAR]! - 50))
+    expect(Math.max(...line.slice(0, SYNC_LEN))).toBe(IRE_WHITE)
+  })
+
   it('keeps only the burst on the chroma pin', () => {
     const line = cableLine({ ...STOCK, chromaPinOnly: 1 })
     expect(line[SYNC]).toBe(0)

@@ -125,7 +125,7 @@ export const DEFAULT_CONTROLS = {
   connectorMode: 0, // which contact: 0 centre pin (signal + sync), 1 shell (ground lifts), 2 both
   // analog premium-channel scrambling, applied at the head-end
   scramble: 0, // sync-tip suppression depth (0 = in the clear)
-  scrambleMode: 0, // 0 gated (every line), 1 line-alternate, 2 SSAVI (+ video inversion), 3 carrier (RF attenuation), 4 tri-mode, 5 sine, 6 keyed SSAVI
+  scrambleMode: 0, // 0 gated (every line), 1 line-alternate, 2 SSAVI (+ video inversion), 3 carrier (RF attenuation), 4 tri-mode, 5 sine, 6 keyed SSAVI, 7 Oak Sigma, 8 VideoCipher II
   decoderDb: 0, // descrambler box at the set: gain inside the carrier gate, dB
   // copy protection authored onto the source's vertical interval
   macrovision: 0, // Macrovision pseudo-sync/AGC pulse depth on VBI lines 12-19
@@ -305,7 +305,7 @@ export const DEFAULT_CONTROLS = {
   // a fault here damages one signal alone, unlike the program-bus channel
   // controls above which damage the mixed output
   aScramble: 0, // sync suppression on A's feed alone
-  aScrambleMode: 0, // 0 gated, 1 line-alternate, 2 SSAVI (+ video inversion), 3 carrier, 4 tri-mode, 5 sine, 6 keyed SSAVI, 7 line delay
+  aScrambleMode: 0, // 0 gated, 1 line-alternate, 2 SSAVI (+ video inversion), 3 carrier, 4 tri-mode, 5 sine, 6 keyed SSAVI, 7 line delay, 8 Oak Sigma, 9 VideoCipher II
   aTermination: 0, // A's cable termination (<0 double-terminated, >0 open)
   aNoiseIre: 0, // snow on A's feed alone, IRE rms
   aPolarity: 0, // hard polarity flip on A's connector, sync included

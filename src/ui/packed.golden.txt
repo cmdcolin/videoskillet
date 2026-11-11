@@ -65,7 +65,7 @@
 63 connectorGlitch step=0.01 default=0
 64 connectorMode step=1 default=0 choices=pin|shield|both
 65 scramble step=0.01 default=0
-66 scrambleMode step=1 default=0 choices=gated|alternate|ssavi|carrier|tri-mode|sine|keyed ssavi
+66 scrambleMode step=1 default=0 choices=gated|alternate|ssavi|carrier|tri-mode|sine|keyed ssavi|oak sigma|videocipher
 67 macrovision step=0.01 default=0
 68 mvStripeDeg step=1 default=0
 69 vbi step=1 default=1 choices=off|on
@@ -155,7 +155,7 @@
 153 cfbServoUs step=0.01 default=0
 154 cfbRing step=0.01 default=0
 169 aScramble step=0.01 default=0
-170 aScrambleMode step=1 default=0 choices=gated|alternate|ssavi|carrier|tri-mode|sine|keyed ssavi|line delay
+170 aScrambleMode step=1 default=0 choices=gated|alternate|ssavi|carrier|tri-mode|sine|keyed ssavi|line delay|oak sigma|videocipher
 171 aTermination step=0.01 default=0
 172 aNoiseIre step=0.1 default=0
 173 aPolarity step=0.01 default=0
@@ -166,7 +166,7 @@
 178 aDropoutRate step=1 default=0
 179 aDropoutLenUs step=0.5 default=5
 180 bScramble step=0.01 default=0
-181 bScrambleMode step=1 default=0 choices=gated|alternate|ssavi|carrier|tri-mode|sine|keyed ssavi|line delay
+181 bScrambleMode step=1 default=0 choices=gated|alternate|ssavi|carrier|tri-mode|sine|keyed ssavi|line delay|oak sigma|videocipher
 182 bTermination step=0.01 default=0
 183 bNoiseIre step=0.1 default=0
 184 bPolarity step=0.01 default=0

@@ -709,16 +709,39 @@ from further away, which on fine horizontal detail is a different artifact.
 
 ## Scrambler follow-ons
 
-The eight systems in `scrambleMode` follow the sources: the GI timing at
+The ten systems in the shader follow the sources: the GI timing at
 https://www.philpem.me.uk/hacktv/analogcable/gi_scrambling, the Oak sine look
-from the rec.video.cable-tv FAQ, and tri-mode's frame holds from
-Radio-Electronics (February 1987) and Grossblatt's _Unscrambling Descrambling_
-(the worldradiohistory Gernsback bookshelf). Not built:
+from the rec.video.cable-tv FAQ, tri-mode's frame holds from Radio-Electronics
+(February 1987) and Grossblatt's _Unscrambling Descrambling_ (the
+worldradiohistory Gernsback bookshelf), Oak Sigma from US patents 4,336,553 and
+4,340,906, and VideoCipher II from Communications Technology (June 1986, page
+70). The Sigma patents give no data levels and the VideoCipher article names no
+inversion axis, so `src/core/signal/datasync.ts` holds the values chosen for
+them. Not built:
 
-- VideoCrypt's cut-and-rotate.
-- A misaligned decoder box.
-- Scrambling inside a feedback loop.
-- Oak Sigma's inversion at scene cuts.
+- VideoCrypt's cut-and-rotate. No NTSC system used it.
+- A misaligned decoder box. Radio-Electronics (February 1984, page 47) says
+  video leaking into the pulse detector streaks the picture, and US 5,014,309
+  says the restore steps show as light bars at the picture's sides.
+- Scrambling inside the mixer loop. The camera loop passes through the head-end
+  on every lap, which `paperDolls` and `marbledChannel` use.
+- Scene-cut detection. Sigma inverted at scene changes, at most once in three
+  seconds, and the key here holds for a random 3 to 25 seconds.
+- Sigma's boosted byte, one of the three on each line, and the 15.75 kHz
+  modulation on its sound carrier.
+- A vertical integrator that fires on picture content. It scores the field-sync
+  rows alone, so a channel with no field pulses rolls at the oscillator's own
+  rate. With the AC-coupled separator a wide shadow would trigger it, and the
+  frame would hitch on dark scenes.
+- A positive-trap jamming carrier (US 4,074,311): a carrier 2.257 MHz above the
+  picture carrier at the same level, modulated 80% at 15 Hz and 1 kHz. The
+  1 kHz tone draws about seventeen bars down each field and they move every
+  field, which is a regular pattern laid over the picture.
+- Interdiction (US 5,014,309): jamming oscillators on the pole that hop between
+  channels at about 4 kHz and sit on each for at least a fifth of the time. It
+  draws bands a few lines tall at a fixed spacing.
+- Tocom's burst inversion, and the random clear fields of US 4,222,068, which
+  sent about one field in sixty in the clear.
 - Pixel checks for the scrambler.
 - For the AC-coupled separator (ADR 0015): a per-line charging slice, sawtooth
   harmonics in the phase comparator, and a fast loop on lost lock.

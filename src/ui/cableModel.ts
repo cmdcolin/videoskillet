@@ -14,6 +14,17 @@ import {
   usToSamples,
 } from '../core/signal/constants'
 import {
+  CIPHER_AXIS_IRE,
+  CIPHER_DATA_IRE,
+  CIPHER_GAIN,
+  CIPHER_PORCH_BIAS_IRE,
+  HBI_DATA_CELL,
+  SIGMA_CLOCK_CELLS,
+  SIGMA_DATA_CELLS,
+  SIGMA_DATA_IRE,
+  SIGMA_PORCH_BIAS_IRE,
+} from '../core/signal/datasync'
+import {
   SERIES_CAP_LOAD,
   SERIES_CAP_REACH,
   seriesCapHold,
@@ -53,6 +64,35 @@ const inCarrierGate = (s: number) =>
 // The sine-wave scrambler's shape: 1 on the sync tip, 0 mid-line.
 const towardTip = (s: number) =>
   0.5 + 0.5 * Math.cos((2 * Math.PI * (s - SYNC_LEN / 2)) / SAMPLES_PER_LINE)
+
+// The program bus's own numbers for the two systems that send data in place of
+// sync. The data is drawn as a fixed word after Sigma's clock byte, at the
+// middle of Sigma's level swing, and a Sigma line is drawn inverted.
+const OAK_SIGMA = 7
+const VIDEOCIPHER = 8
+const dataBit = (cell: number) => (Math.imul(cell + 1, 0x9e3779b1) >>> 16) & 1
+
+const dataSynced = (v: number, s: number, cipher: boolean, depth: number) => {
+  const from = cipher ? ACTIVE_START + ACTIVE_WIDTH : 0
+  const length = cipher
+    ? SAMPLES_PER_LINE - from + SYNC_LEN
+    : Math.floor(SIGMA_DATA_CELLS * HBI_DATA_CELL)
+  const into = (s + SAMPLES_PER_LINE - from) % SAMPLES_PER_LINE
+  const cell = Math.floor(into / HBI_DATA_CELL)
+  const bit = !cipher && cell < SIGMA_CLOCK_CELLS ? cell & 1 : dataBit(cell)
+  const high = cipher ? CIPHER_DATA_IRE : SIGMA_DATA_IRE
+  const bias = cipher ? CIPHER_PORCH_BIAS_IRE : SIGMA_PORCH_BIAS_IRE
+  const negative = cipher
+    ? v + (CIPHER_AXIS_IRE - CIPHER_GAIN * (v - CIPHER_AXIS_IRE) - v) * depth
+    : 2 * IRE_BLACK + IRE_VIDEO_RANGE - v
+  return into < length
+    ? v + (high * bit - v) * depth
+    : s < ACTIVE_START
+      ? Math.max(v, v + (IRE_BLANK - v) * depth) + bias * depth
+      : inPicture(s)
+        ? negative
+        : v
+}
 
 // The carrier map is channel.wgsl's, sync -40 to white 100 onto 1 to 0.125.
 const carrierScaled = (ire: number, db: number) => {
@@ -98,6 +138,8 @@ export function cableLine(c: Cable, line = TEST_LINE): number[] {
         if (inCarrierGate(s)) out = carrierScaled(out, 10 * c.scramble)
       } else if (system === 5) {
         out = carrierScaled(out, 6.5 * c.scramble * towardTip(s))
+      } else if (system === OAK_SIGMA || system === VIDEOCIPHER) {
+        out = dataSynced(out, s, system === VIDEOCIPHER, c.scramble)
       } else {
         if (s < SYNC_LEN) out += (IRE_BLANK - out) * c.scramble
         if ((system === 2 || system === 6) && inPicture(s)) {

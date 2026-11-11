@@ -29,6 +29,12 @@ export const MAX_GENS = 4
 export const dubGenerations = (dubGens: number) =>
   clamp(Math.round(dubGens), 1, MAX_GENS)
 
+// The program bus has no line delay, which is the shader's system 7, so the
+// bus's systems past keyed SSAVI sit one below the shader's.
+const LINE_DELAY_SYSTEM = 7
+export const busScrambleSystem = (mode: number) =>
+  mode + (mode >= LINE_DELAY_SYSTEM ? 1 : 0)
+
 // Bent-crystal demod LO: how fast a detuned 3.58 MHz oscillator's phase error
 // grows, per composite sample.
 export const loRadPerSample = (detuneKHz: number): number =>
@@ -237,7 +243,7 @@ export function uniformValues(c: Controls, env: UniformEnv) {
     mixPotTravel: 0,
     mixPotSpeed: 0,
     scramble: c.scramble,
-    scrambleMode: c.scrambleMode,
+    scrambleMode: busScrambleSystem(c.scrambleMode),
     decoderDb: c.decoderDb,
     mvAgcIre: 160 * c.macrovision,
     mvStripe: (c.mvStripeDeg * Math.PI) / 180,
