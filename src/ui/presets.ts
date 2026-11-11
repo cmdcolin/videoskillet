@@ -2351,6 +2351,23 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'halfSeatedPlugs',
+    displayName: 'half-seated plugs',
+    group: 'Cross-wired',
+    blurb:
+      "Both decks on S-video leads with the plugs half out of the mixer's jacks, each making and breaking in bands of lines that are rolled again every frame. A's chroma pin is the loose one, so bands of A go black and white. B's luma pin is the loose one, so bands of B fall to colour alone, and in those bands the set has only A's sync to hold and B's colour lies over A's picture.",
+    patch: {
+      aConnector: 0.8,
+      aConnectorMode: 4,
+      bConnector: 0.8,
+      bConnectorMode: 3,
+      bGain: 1,
+      bLineHz: 0.02,
+      bDetuneHz: 0,
+      bRollLps: 0.02,
+    },
+  },
+  {
     name: 'mirroredLead',
     displayName: 'mirrored lead',
     group: 'Cross-wired',

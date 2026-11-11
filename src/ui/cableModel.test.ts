@@ -156,6 +156,14 @@ describe('contactBands', () => {
     expect(pin).not.toEqual(shield)
   })
 
+  it('breaks a signal pin and not the shield on an S-video plug', () => {
+    for (const mode of [3, 4]) {
+      const { pin, shield } = contactBands(1, mode)
+      expect(pin.length).toBeGreaterThan(0)
+      expect(shield).toEqual([])
+    }
+  })
+
   it('draws no bands with a good plug', () => {
     expect(contactBands(0, 2)).toEqual({ pin: [], shield: [] })
   })

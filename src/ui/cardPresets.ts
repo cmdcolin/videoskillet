@@ -239,6 +239,13 @@ export const CARD_PRESETS: CardPreset[] = [
     patch: { aSeriesCapMHz: 3 },
   },
   {
+    group: FEED_A_CABLE_GROUP,
+    name: 'half-seated plug',
+    blurb:
+      'A’s S-video plug half out of its jack with the chroma pin making and breaking, so bands of A drop to black and white',
+    patch: { aConnector: 0.6, aConnectorMode: 4 },
+  },
+  {
     group: FEED_B_CABLE_GROUP,
     name: 'ground loop, other leg',
     blurb:
@@ -272,6 +279,13 @@ export const CARD_PRESETS: CardPreset[] = [
     blurb:
       'B’s luma through a capacitor in its lead, so with B summed in, B’s edges are pressed into A’s picture in relief',
     patch: { bSeriesCapMHz: 0.4 },
+  },
+  {
+    group: FEED_B_CABLE_GROUP,
+    name: 'half-seated plug',
+    blurb:
+      'B’s S-video plug half out of its jack with the luma pin making and breaking, so bands of B fall to its colour alone and stop pushing sync',
+    patch: { bConnector: 0.7, bConnectorMode: 3 },
   },
   {
     group: 'Crosspoint',

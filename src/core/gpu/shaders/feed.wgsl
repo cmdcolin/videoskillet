@@ -207,7 +207,10 @@ fn deckAt(n: u32) -> f32 {
 // capacitor in series with Y, so luma and sync arrive as their edges and C
 // arrives direct. The capacitor's charge is a one-pole lowpass of Y, and
 // averaging samples half a subcarrier cycle apart keeps C out of it.
-fn leadAt(i: u32) -> f32 {
+//
+// A half-seated plug opens one signal pin in bands of lines (connector modes 3
+// and 4), and an open pin there is that pin fully out.
+fn leadAt(i: u32, row: u32) -> f32 {
   let v = tileDeck[i];
   var out = v;
   var load = 1.0;
@@ -221,12 +224,16 @@ fn leadAt(i: u32) -> f32 {
     load = CAP_LOAD;
     out = load * (v - charge);
   }
-  if (P.chromaPinOnly != 0.0) {
+  var pin = P.chromaPinOnly;
+  if (P.connectorMode > 2.5 && signalPinOpen(row, P.frame, P.gen, P.connectorGlitch)) {
+    pin = select(1.0, -1.0, P.connectorMode > 3.5);
+  }
+  if (pin != 0.0) {
     var c = filters[SEC_CHROMA_BP * FILTER_STRIDE + BP_REACH] * v;
     for (var k = 0u; k < BP_REACH; k = k + 1u) {
       c = c + filters[SEC_CHROMA_BP * FILTER_STRIDE + k] * (tileDeck[i + k - BP_REACH] + tileDeck[i + BP_REACH - k]);
     }
-    out = chromaPin(out, load * c, P.chromaPinOnly);
+    out = chromaPin(out, load * c, pin);
   }
   return out;
 }
@@ -313,7 +320,7 @@ fn main(
   }
   // tile index i is global index n0 + i - DECK_PAD
   let open = P.termination > 0.0;
-  let pinned = P.chromaPinOnly != 0.0;
+  let pinned = P.chromaPinOnly != 0.0 || (P.connectorMode > 2.5 && P.connectorGlitch > 0.0);
   let back = select(select(0u, BP_REACH, pinned), CAP_PAD, P.seriesCap > 0.0);
   let lo = DECK_PAD - select(0u, ECHO_LAG, open) - back;
   let hi = DECK_PAD + TILE_WG + select(0u, BP_REACH, pinned);
@@ -336,7 +343,7 @@ fn main(
   let live = s < SPL && row < NLINES;
   var out = 0.0;
   if (live) {
-    out = cableAt(leadAt(DECK_PAD + lid.x), n, lid.x + 1u + ECHO_LAG);
+    out = cableAt(leadAt(DECK_PAD + lid.x, row), n, lid.x + 1u + ECHO_LAG);
   }
 
   // Cable termination fault on this feed alone (prelude `terminate`). Only an
@@ -345,7 +352,7 @@ fn main(
   if (open) {
     if (lid.x < ECHO_LAG) {
       let e = max(i32(n0) - i32(ECHO_LAG) + i32(lid.x), 0);
-      tileOut[lid.x] = cableAt(leadAt(DECK_PAD - ECHO_LAG + lid.x), u32(e), u32(e - i32(n0) + i32(1u + ECHO_LAG)));
+      tileOut[lid.x] = cableAt(leadAt(DECK_PAD - ECHO_LAG + lid.x, u32(e) / SPL), u32(e), u32(e - i32(n0) + i32(1u + ECHO_LAG)));
     }
     tileOut[lid.x + ECHO_LAG] = out;
     workgroupBarrier();

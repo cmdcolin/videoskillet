@@ -307,7 +307,7 @@ export const PARAM_DEFS = [
   ['chromaPinOnly', 'f32'], // which pin of the S-video lead lost its contact: above 0 luma and sync, below 0 colour and burst
   ['bChromaPin', 'f32'], // B's S-video pin, for mix_b's models of B's wire (a feed reads its own in chromaPinOnly)
   ['connectorGlitch', 'f32'], // loose connector: intermittent contact drops bands to snow
-  ['connectorMode', 'f32'], // which contact: 0 centre pin (signal + sync go), 1 shell (ground lifts, hum injects), 2 both
+  ['connectorMode', 'f32'], // which contact: 0 centre pin (signal + sync go), 1 shell (ground lifts, hum injects), 2 both, and on a feed 3 an S-video lead's luma pin, 4 its chroma pin
   ['potOhms', 'f32'], // a feed's series pot: the wiper's resistance this frame, ohms (feeds only)
   ['potSpeed', 'f32'], // how fast the wiper is moving, travel per second (feeds only)
   ['seriesCap', 'f32'], // a capacitor in series with a feed's lead: what its charge holds per sample, 0 a wire (feeds only)
@@ -1033,15 +1033,21 @@ fn humPhase(row: f32, frame: u32) -> f32 {
 // hanging on its own cable weight makes and breaks. The two contacts carry
 // independent band maps, so mode 2 interleaves two faults rather than doubling
 // one, and the gen seed decorrelates one input's bad plug from the other's.
+//
+// Modes 3 and 4 are an S-video plug with one signal pin intermittent, which a
+// feed's lead applies with signalPinOpen.
+fn signalPinOpen(row: u32, frame: u32, gen: u32, amt: f32) -> bool {
+  return rand01(pcg(frame * 2246822519u + (row / 12u) * 40503u + gen * 7u)) < amt * 0.5;
+}
+
 fn connectorAt(v: f32, row: u32, n: u32, frame: u32, gen: u32, amt: f32, mode: f32) -> f32 {
-  if (amt <= 0.0) {
+  if (amt <= 0.0 || mode > 2.5) {
     return v;
   }
   var out = v;
   let band = row / 12u;
   if (mode < 0.5 || mode > 1.5) {
-    let r = rand01(pcg(frame * 2246822519u + band * 40503u + gen * 7u));
-    if (r < amt * 0.5) {
+    if (signalPinOpen(row, frame, gen, amt)) {
       let snow = 20.0 * gauss(n ^ pcg(frame * 131u + n));
       out = mix(out, snow, 0.9) - 35.0 * amt;
     }

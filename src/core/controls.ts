@@ -310,7 +310,7 @@ export const DEFAULT_CONTROLS = {
   aSeriesCapMHz: 0, // A's luma and sync through an adapter's chroma capacitor: its corner, 0 a wire
   aHumIre: 0, // ground loop on A's cable alone, IRE (sign = which mains leg)
   aConnector: 0, // A's plug intermittent: bands of bad contact, re-rolled per frame
-  aConnectorMode: 0, // which of A's contacts: 0 centre pin, 1 shell, 2 both
+  aConnectorMode: 0, // which of A's contacts: 0 centre pin, 1 shell, 2 both, 3 an S-video lead's luma pin, 4 its chroma pin
   aPotOhms: 0, // a dirty pot in series with A's cable, ohms
   aPotFiddle: 0, // a hand working that pot's knob
   aPause: 0, // A deck's pause button: held frame, defeated servo, mistrack stripe
@@ -325,7 +325,7 @@ export const DEFAULT_CONTROLS = {
   bSeriesCapMHz: 0, // B's luma and sync through an adapter's chroma capacitor: its corner, 0 a wire
   bHumIre: 0, // ground loop on B's cable alone, IRE (sign = which mains leg)
   bConnector: 0, // B's plug intermittent: bands of bad contact, re-rolled per frame
-  bConnectorMode: 0, // which of B's contacts: 0 centre pin, 1 shell, 2 both
+  bConnectorMode: 0, // which of B's contacts: 0 centre pin, 1 shell, 2 both, 3 an S-video lead's luma pin, 4 its chroma pin
   bPotOhms: 0, // a dirty pot in series with B's cable, ohms
   bPotFiddle: 0, // a hand working that pot's knob
   bDropoutRate: 0, // dropout events per frame on B's own tape

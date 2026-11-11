@@ -161,7 +161,7 @@
 173 aPolarity step=0.01 default=0
 174 aHumIre step=0.5 default=0
 175 aConnector step=0.01 default=0
-176 aConnectorMode step=1 default=0 choices=pin|shield|both
+176 aConnectorMode step=1 default=0 choices=pin|shield|both|luma|chroma
 177 aPause step=0.01 default=0
 178 aDropoutRate step=1 default=0
 179 aDropoutLenUs step=0.5 default=5
@@ -172,7 +172,7 @@
 184 bPolarity step=0.01 default=0
 185 bHumIre step=0.5 default=0
 186 bConnector step=0.01 default=0
-187 bConnectorMode step=1 default=0 choices=pin|shield|both
+187 bConnectorMode step=1 default=0 choices=pin|shield|both|luma|chroma
 188 bDropoutRate step=1 default=0
 189 bDropoutLenUs step=0.5 default=5
 190 aGain step=0.01 default=1

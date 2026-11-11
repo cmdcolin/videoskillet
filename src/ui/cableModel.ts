@@ -128,7 +128,7 @@ const bands = (chance: number, seed: number): Band[] => {
 export function contactBands(amount: number, mode: number) {
   return {
     pin: mode < 0.5 || mode > 1.5 ? bands(amount, SEED) : [],
-    shield: mode > 0.5 ? bands(amount, SEED ^ 0x5eed) : [],
+    shield: mode > 0.5 && mode < 2.5 ? bands(amount, SEED ^ 0x5eed) : [],
   }
 }
 

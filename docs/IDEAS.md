@@ -487,6 +487,9 @@ the bandpass lets through.
   luma pin loses its contact, and below zero the chroma pin does. A at -1 with B
   at +1 is a pair of crossed breakout leads: A's luma and sync with B's colour
   and burst.
+- **`aConnectorMode` and `bConnectorMode`** 3 and 4 are the same lead's plug
+  half out of the jack. The luma pin or the chroma pin opens in the bands of
+  lines the loose centre pin uses, and an open band is that pin fully out.
 - **`aSeriesCapMHz` and `bSeriesCapMHz`** put the lead's Y wire through an
   S-video to composite adapter's chroma capacitor, which is where a lead wired
   as the mirror image of its plug sends it. The feed sums the capacitor's charge
