@@ -27,6 +27,33 @@ export interface Case {
   caption?: string
   // The preset's own routings in the modulation bay, at full motion.
   motion?: boolean
+  // A cutout on deck B: `cutoutPixels`, a green disc on transparency.
+  cutout?: boolean
+}
+
+// A cutout with every kind of alpha the keyer meets: a green disc, which a
+// chroma key would cut and the alpha key keeps, with a soft edge, and below it
+// a white band at half alpha, on a fully transparent field.
+export const cutoutPixels = (): Uint8Array => {
+  const out = new Uint8Array(ACTIVE_WIDTH * ACTIVE_HEIGHT * 4)
+  const cx = ACTIVE_WIDTH * 0.45
+  const cy = ACTIVE_HEIGHT * 0.42
+  const r = ACTIVE_HEIGHT * 0.28
+  const ramp = 12
+  for (let y = 0; y < ACTIVE_HEIGHT; y++) {
+    for (let x = 0; x < ACTIVE_WIDTH; x++) {
+      const i = (y * ACTIVE_WIDTH + x) * 4
+      const d = Math.hypot(x - cx, y - cy)
+      const disc = Math.min(Math.max((r - d) / ramp, 0), 1)
+      const band = y > ACTIVE_HEIGHT * 0.78 && y < ACTIVE_HEIGHT * 0.9 ? 0.5 : 0
+      const alpha = Math.max(disc, band)
+      out[i] = disc > 0 ? 40 : 255
+      out[i + 1] = disc > 0 ? 200 : 255
+      out[i + 2] = disc > 0 ? 60 : 255
+      out[i + 3] = Math.round(alpha * 255)
+    }
+  }
+  return out
 }
 
 const SEED = 1
@@ -60,6 +87,8 @@ export async function openStage() {
   const engine = await Engine.create(canvas as never)
   engine.pauseLoop()
   const bars = new Uint8Array(smpteBarsPixels().buffer.slice(0))
+  const cutout = cutoutPixels()
+  const clear = new Uint8Array(ACTIVE_WIDTH * ACTIVE_HEIGHT * 4)
 
   return async (c: Case, at: readonly number[]) => {
     const def =
@@ -70,6 +99,7 @@ export async function openStage() {
     const base =
       def === undefined ? { ...DEFAULT_CONTROLS } : presetControls(def.patch)
     engine.setImagePixels(bars, ACTIVE_WIDTH, ACTIVE_HEIGHT)
+    engine.setImagePixelsB(c.cutout === true ? cutout : clear)
     engine.setNoiseSource(c.noise ?? 0)
     engine.setCaption(c.caption ?? '')
     engine.setModSlots(c.motion === true ? bayFor(def?.mod ?? []) : [])

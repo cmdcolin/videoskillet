@@ -34,6 +34,54 @@ const CASES: Case[] = [
     caption: 'HELLO WORLD',
   },
   { name: 'bentFontRom', preset: 'bentFontRom', caption: 'HELLO WORLD' },
+  {
+    name: 'alphaKey',
+    cutout: true,
+    set: { bGain: 1, bGenlock: 1, bKey: 1, bKeySource: 1 },
+  },
+  {
+    name: 'alphaClipGain',
+    cutout: true,
+    set: {
+      bGain: 1,
+      bGenlock: 1,
+      bKey: 1,
+      bKeySource: 1,
+      bKeyClip: 0.3,
+      bKeySoft: 0.15,
+    },
+  },
+  {
+    name: 'alphaDropShadow',
+    cutout: true,
+    set: {
+      bGain: 1,
+      bGenlock: 1,
+      bKey: 1,
+      bKeySource: 1,
+      bKeyEdge: 2,
+      bKeyEdgeUs: 2,
+      bKeyEdgeY: 0.05,
+    },
+  },
+  {
+    name: 'alphaInset',
+    cutout: true,
+    set: {
+      bGenlock: 1,
+      pipMix: 1,
+      pipX: 0.72,
+      pipY: 0.68,
+      pipW: 0.4,
+      pipH: 0.4,
+      pipBorder: 0,
+    },
+  },
+  {
+    name: 'alphaUnlocked',
+    cutout: true,
+    set: { bGain: 0.6, bKey: 1, bKeySource: 1 },
+  },
 ]
 
 const FRAMES = 30
