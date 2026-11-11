@@ -13,8 +13,9 @@ A note stays while an ADR, a doc or the code cites it. Once its work is done and
 nothing cites it, its open items move to `IDEAS.md`, its traps move to
 `DEVELOPMENT.md`, and the note is deleted; git history keeps it.
 
-| date       | note                                                                                                     |
-| ---------- | -------------------------------------------------------------------------------------------------------- |
-| 2026-08-05 | [Freezes on Firefox/Linux, and a worker that is parked](2026-08-05-freezes-and-the-worker.md)            |
-| 2026-08-21 | [The headless profiler, and the frame time it has not yet taken](2026-08-21-gpuprof-and-what-is-left.md) |
-| 2026-09-04 | [The reel on the edge of chaos](2026-09-04-the-reel-on-the-edge-of-chaos.md)                             |
+| date       | note                                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-08-05 | [Freezes on Firefox/Linux, and a worker that is parked](2026-08-05-freezes-and-the-worker.md)                                  |
+| 2026-08-21 | [The headless profiler, and the frame time it has not yet taken](2026-08-21-gpuprof-and-what-is-left.md)                       |
+| 2026-09-04 | [The reel on the edge of chaos](2026-09-04-the-reel-on-the-edge-of-chaos.md)                                                   |
+| 2026-11-11 | [A picture on A's boxes, and tube registration in the loop camera](2026-11-11-a-picture-on-the-boxes-and-tube-registration.md) |
