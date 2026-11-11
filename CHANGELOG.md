@@ -2,6 +2,26 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.4](https://github.com/cmdcolin/videoskillet/compare/v2.25.3...v2.25.4) - 2026-11-11
+
+### Features
+- *(ui)* [`e7fa997`](https://github.com/cmdcolin/videoskillet/commit/e7fa997dc60b050493acce83ce3e37ee46b7e998) a chosen segment is grey and only a switch's on lights green
+- *(ui)* [`48e89ec`](https://github.com/cmdcolin/videoskillet/commit/48e89ecfdca3f78ddf80040c803803f428e4dd41) an open view lights grey, and green stays for running
+- *(ui)* [`27adc40`](https://github.com/cmdcolin/videoskillet/commit/27adc4023a6bd2292cca4e1e7d9f868dc5d2be3e) the chosen wash is skillet-shared's --chosen-bg
+- *(signal)* [`1c55172`](https://github.com/cmdcolin/videoskillet/commit/1c551725b2add668ffbce3c5659e5cf296c8d6d8) a luma pin and a mirrored lead on each S-video lead
+- *(signal)* [`4a38046`](https://github.com/cmdcolin/videoskillet/commit/4a380463ae49d176b715ef8b10d311a28c368ed8) a half-seated S-video plug on each feed
+- *(signal)* [`b6153b2`](https://github.com/cmdcolin/videoskillet/commit/b6153b2306aac9e422488a380e5d1ff103619338) a picture on the control input of A's boxes, and tube registration in the loop camera
+- *(signal)* [`7d99314`](https://github.com/cmdcolin/videoskillet/commit/7d99314b7ed5378e73df8ae8607b35e232013809) Oak Sigma and VideoCipher II on the scrambler
+- *(ui)* [`6196d9b`](https://github.com/cmdcolin/videoskillet/commit/6196d9b352846928a23cf7c69c0a92c2e22603be) three presets that put the scrambler in a loop or on tape
+
+### Documentation
+- [`bee0bb6`](https://github.com/cmdcolin/videoskillet/commit/bee0bb6abde73a1560c1f78b2c8d6b9d958f03e0) hand off the picture control input and tube registration
+- [`876c60a`](https://github.com/cmdcolin/videoskillet/commit/876c60a25d62acbe2b701e463c3c116e96f8b87b) a post on the scrambler in a camera loop, Oak Sigma and VideoCipher II
+- [`d374d56`](https://github.com/cmdcolin/videoskillet/commit/d374d568715a62dbfd164afc4066e28a600c6264) compare against vhs-phys
+- [`7b3255c`](https://github.com/cmdcolin/videoskillet/commit/7b3255c3f61495081c21ef79a2e4729e78a4c1e9) state each compared project's licence
+- [`c603cec`](https://github.com/cmdcolin/videoskillet/commit/c603cecd52e01e1794f1724388bc5e8eb0914573) the new scramble post is titled Even more scramble channel effects
+- [`df2dd90`](https://github.com/cmdcolin/videoskillet/commit/df2dd905c7d74a4eb185353573f432025a441c9c) rewrap the scramble post's pointer
+
 ## [2.25.3](https://github.com/cmdcolin/videoskillet/compare/v2.25.2...v2.25.3) - 2026-11-11
 
 ### Features
