@@ -52,6 +52,23 @@ B's picture. Try
 
 ![The fox washed pale and summed over the misty forest, with a coloured stripe and a dark bar where its sync rolls through the picture.](/blog/alpha-fox-unlocked.webp)
 
+## A moving cutout
+
+A WebM with an alpha channel keys the same way, frame by frame. With the fill on
+the loop bus, the spacecraft leaves copies of itself where it has been, as the
+chroma keyer does in [Chroma keying with ghosts](/blog/keyer-ghosts/).
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
+<figure style="margin: 0;">
+<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Beech_forest_M%C3%A1tra_in_winter.jpg/1280px-Beech_forest_M%C3%A1tra_in_winter.jpg&vurlb=https://myloveydove.com/videoskillet/sources/swift-alpha.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1,bKeyFill:2,cfbHold:5,bKeyFillHueDeg:30"><img style="aspect-ratio: 4 / 3; object-fit: cover; margin: 0;" loading="lazy" src="/blog/alpha-swift-hue.webp" alt="A gold-foiled spacecraft turning over a winter beech forest tinted violet. A stepped stack of its copies trails behind it, edged in green, blue and magenta."></a>
+<figcaption>Fill to loop bus, store hue at 30°</figcaption>
+</figure>
+<figure style="margin: 0;">
+<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg/1280px-Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg&vurlb=https://myloveydove.com/videoskillet/sources/swift-alpha.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1,bKeyFill:2,cfbHold:4,bKeyFillMixA:0.1"><img style="aspect-ratio: 4 / 3; object-fit: cover; margin: 0;" loading="lazy" src="/blog/alpha-swift-fade.webp" alt="The spacecraft over the misty forest, trailed by a stepped stack of fainter copies of its solar panels."></a>
+<figcaption>Fill to loop bus, program A in fill at 0.1</figcaption>
+</figure>
+</div>
+
 _Footage: the fox is
 [Yawning red fox (transparent background)](<https://commons.wikimedia.org/wiki/File:Yawning_red_fox_(transparent_background).png>)
 by Peter G Trimming, under CC BY 2.0. The clover is
@@ -62,4 +79,7 @@ by Kuhnmi, under CC BY-SA 4.0. The vineyard is
 [Vignes près du Pic de Vissou - October 2020](https://commons.wikimedia.org/wiki/File:Vignes_pr%C3%A8s_du_Pic_de_Vissou_-_October_2020.jpg)
 by Christian Ferrer, under CC BY 4.0. The beech forest is
 [Beech forest Mátra in winter](https://commons.wikimedia.org/wiki/File:Beech_forest_M%C3%A1tra_in_winter.jpg)
-by Susulyka, under CC BY-SA 4.0._
+by Susulyka, under CC BY-SA 4.0. The spacecraft is from
+[Swift Spacecraft Animations: 2025](https://svs.gsfc.nasa.gov/14786) by NASA's
+Scientific Visualization Studio, in the public domain, cut to four seconds at
+twice its speed and encoded as a WebM with alpha._
