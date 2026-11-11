@@ -44,6 +44,24 @@ rainbow fringing are then leftovers of a decoder that could not separate colour
 from brightness cleanly, so every fault on the signal interacts with every other
 one.
 
+### vhs-phys
+
+[vhs-phys](https://github.com/allthemalware/vhs-phys) models a VHS deck at the
+RF level. It records luma as an FM signal onto a simulated tape with helical
+track geometry, reads it back through a head whose spacing and azimuth set the
+loss, and decodes it through deck electronics whose parts age with years, heat
+and humidity. Head clogs, mistracking and capacitor hum all come from those
+parameters. It also models PAL, the linear audio track, a camera pickup tube and
+outside interference, and its tests check each part against the physical law
+behind it. It is a Rust command-line tool with a desktop front end, renders
+offline at about 12 frames per second, and is licensed for noncommercial use
+only.
+
+videoskillet's tape stage works on the composite signal at 4 × F_SC, a whole
+frame at a time, with no field or track geometry, so vhs-phys models tape in
+much more depth. videoskillet runs live, and it has a receiver that can lose
+lock, the mixer and the feedback loops, none of which vhs-phys models.
+
 ### vhs-decode / ld-decode
 
 [vhs-decode](https://github.com/oyvindln/vhs-decode) runs the other way: RF
@@ -82,6 +100,7 @@ writes ProRes 4444. [The features](FEATURES.md) list the rest.
 - **The model is progressive** 525/60 rather than interlaced at field rate, the
   largest remaining authenticity gap ([the architecture](ARCHITECTURE.md)).
 
-<sub>All free and open source except Yurenaki. Written from the other projects'
-own documentation, source and product pages, not from benchmarks run here. If
-something is out of date or unfair, please open an issue.</sub>
+<sub>All free and open source except Yurenaki, which is paid, and vhs-phys,
+whose source is public under a noncommercial licence. Written from the other
+projects' own documentation, source and product pages, not from benchmarks run
+here. If something is out of date or unfair, please open an issue.</sub>
