@@ -183,8 +183,10 @@ bandwidth.
 | `--quiet`          | no progress line                                    |
 
 `--look` reads the link with the parser the app uses, so one link sets the
-board, the modulation bay, the source mode, the caption and the seed. Every
-control name is in [Effects](EFFECTS.md).
+board, the modulation bay, the source mode, the caption and the seed. A still or
+clip the link names by URL (`iurl`, `vurl`, `iurlb`, `vurlb`) is fetched when no
+file is given for that deck, and the render says which URL each deck took. A
+`yt` source is not fetched. Every control name is in [Effects](EFFECTS.md).
 
 `prores` is the default and the codec to cut with. `h264` writes High 4:4:4
 Predictive, which x264 encodes and no browser does, so the file stays small and

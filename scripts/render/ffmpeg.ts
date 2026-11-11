@@ -107,7 +107,8 @@ async function readFull(
 // left alone it decodes one frame and stops, where `-loop 1` holds the picture
 // open for as long as the render keeps reading.
 const STILL = /\.(jpe?g|png|webp|gif|bmp|avif|tiff?)$/i
-export const isStill = (path: string): boolean => STILL.test(path)
+export const isStill = (path: string): boolean =>
+  STILL.test(path.split(/[?#]/)[0])
 
 // ffmpeg's own VP8 and VP9 decoders drop a WebM's alpha channel, and libvpx
 // keeps it, so a cutout reaches the keyer with its transparency.

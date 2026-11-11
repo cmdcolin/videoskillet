@@ -78,7 +78,9 @@ if (has('help') || positional.length === 0) {
   --audio-file=<path>           the track that drives the artifacts, when it
                                 is not the input (required with a raw stdin)
   --b=<path>                    a clip or still on deck B, looped; a WebM's
-                                alpha reaches the keyer
+                                alpha reaches the keyer. A link's own iurl,
+                                vurl, iurlb and vurlb are fetched when no
+                                file is given for that deck
   --quiet                       no progress line
 
 --look takes the link whole and reads it with the app's own parser, so the
@@ -217,7 +219,28 @@ if (!(codec in CODECS)) {
 // file, and neither does `--pattern`, so requiring a placeholder for one would
 // be a word with nothing to say.
 const patternName = flag('pattern')
-const input = positional.length > 1 ? positional[0] : null
+// A link's own still or clip URL stands in for a missing input file, and
+// ffmpeg reads it over https, so a look copied from the app renders over the
+// picture it was built on.
+const input =
+  positional.length > 1
+    ? positional[0]
+    : patternName === undefined
+      ? (link.iurl ?? link.vurl)
+      : null
+if (positional.length < 2 && input !== null) {
+  console.error(`note: deck A is the link's ${input}`)
+}
+for (const [yt, deck] of [
+  [link.yt, 'A'],
+  [link.ytb, 'B'],
+] as const) {
+  if (yt !== null) {
+    console.error(
+      `note: the link's video-URL source on deck ${deck} is not fetched; download it and pass the file`,
+    )
+  }
+}
 const output = positional.length > 1 ? positional[1] : positional[0]
 if (output === undefined) {
   console.error('no output file')
@@ -362,7 +385,10 @@ const source = rawIn
       )
     : await ffmpegDecode(input, ACTIVE_WIDTH, ACTIVE_HEIGHT, fps)
 
-const bPath = flag('b') ?? null
+const bPath = flag('b') ?? link.iurlb ?? link.vurlb ?? null
+if (flag('b') === undefined && bPath !== null) {
+  console.error(`note: deck B is the link's ${bPath}`)
+}
 const openB = () =>
   bPath === null
     ? null
