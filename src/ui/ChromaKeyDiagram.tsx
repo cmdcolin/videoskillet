@@ -92,7 +92,7 @@ export function ChromaKeyDiagram() {
       BOT_Y,
       external ? 'alpha' : additive ? 'additive' : 'keyer',
       external
-        ? "Passes B's alpha through as the key, so the source's own transparency sets how much of B the mix keeps. Hue, clip, gain and spill kill do nothing here."
+        ? "Passes B's alpha through clip and gain as the key, so the source's own transparency sets how much of B the mix keeps. Hue, acceptance and spill kill do nothing here."
         : additive
           ? "Measures how much backing each sample holds: B's chroma along the backing hue, less its chroma across it, against the backing level. That share of the backing comes off B and the same share of the fill goes under it."
           : "Slices B's chroma by hue and saturation: a wedge either side of the backing hue, above the clip, eased by the gain knob.",

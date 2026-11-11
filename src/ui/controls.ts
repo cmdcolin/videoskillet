@@ -2414,7 +2414,7 @@ export const GROUPS: Group[] = [
         step: 0.005,
         unit: '',
         fine: true,
-        help: 'The saturation a sample must reach before the keyer acts on its hue. A demodulator given an unsaturated sample reports an arbitrary phase, so without this greys key out at random.',
+        help: 'The saturation a sample must reach before the keyer acts on its hue. A demodulator given an unsaturated sample reports an arbitrary phase, so without this greys key out at random. With key source on B alpha it is the alpha below which the key cuts, so a faint fringe or shadow drops out.',
       },
       {
         key: 'bKeySoft',
@@ -2424,7 +2424,7 @@ export const GROUPS: Group[] = [
         max: 0.4,
         step: 0.005,
         unit: '',
-        help: 'How fast the keyer swings between keep and cut, in hue and saturation at once: the gain knob on the front of the box. At 0 the comparator snaps and the composite edge shows as steps.',
+        help: 'How fast the keyer swings between keep and cut, in hue and saturation at once: the gain knob on the front of the box. At 0 the comparator snaps and the composite edge shows as steps. With key source on B alpha it is the slope of the key above the clip, unity at 0.05: lower hardens the edge, higher spreads it until the solid subject lets A through.',
       },
       {
         key: 'bKeySpill',
@@ -2456,7 +2456,7 @@ export const GROUPS: Group[] = [
         step: 1,
         unit: '',
         choices: ['chroma', 'B alpha'],
-        help: "What the keyer cuts by. Chroma slices B's backing colour off the bus. B alpha patches a transparent source's alpha into the key input, the way a character generator sends a key beside its picture, so a cutout PNG, WebP or WebM keys with nothing to calibrate and keeps any green it holds. The hue, clip, gain, spill kill and additive controls only act on chroma.",
+        help: "What the keyer cuts by. Chroma slices B's backing colour off the bus. B alpha patches a transparent source's alpha into the key input, the way a character generator sends a key beside its picture, so a cutout PNG, WebP or WebM keys with nothing to calibrate and keeps any green it holds. Clip and gain shape the alpha key too. Hue, acceptance, spill kill and the additive keyer only act on chroma. The picture-in-picture inset keeps B's transparency whichever source the keyer uses.",
       },
       {
         key: 'bKeyAdditive',
@@ -4929,8 +4929,8 @@ export const NEEDS: Partial<Record<ControlKey, SliderNeed>> = {
   pipKeySoft: pipKeyed,
   bKeyHueDeg: chromaKeyed,
   bKeyAcceptDeg: chromaKeyed,
-  bKeyClip: chromaKeyed,
-  bKeySoft: chromaKeyed,
+  bKeyClip: keyed,
+  bKeySoft: keyed,
   bKeySpill: chromaKeyed,
   bKeyDelayUs: keyed,
   bKeySource: keyed,

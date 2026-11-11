@@ -198,10 +198,18 @@ fn chromaKey(at: i32, phase: f32, damaged: bool) -> KeySlice {
 // additive keyer is out of circuit, and the spill canceller has no backing to
 // null. The keyer only switches the active picture, so B's sync and burst
 // pass whichever way the key is inverted, and the dirty sum keeps its fight.
+//
+// A linear key still runs through the keyer's clip and gain. Clip is the alpha
+// below which the key cuts, so a faint fringe or shadow drops out. Gain is the
+// slope above it, with the gain knob's resting 0.05 as unity: turned down the
+// edge hardens toward a cut at the clip, and turned up the edge spreads until
+// even the solid subject lets A through.
 fn alphaKey(at: i32) -> KeySlice {
   let d = floor(P.bKeyDelay);
   let i = at + i32(d);
-  var g = mix(alphaBAt(clampIdx(i)), alphaBAt(clampIdx(i + 1)), P.bKeyDelay - d);
+  let alpha = mix(alphaBAt(clampIdx(i)), alphaBAt(clampIdx(i + 1)), P.bKeyDelay - d);
+  let gain = 0.05 / max(P.bKeySoft, 1e-3);
+  var g = clamp((alpha - P.bKeyClip) / max(1.0 - P.bKeyClip, 1e-3) * gain, 0.0, 1.0);
   if (P.bKey < 0.0) {
     g = 1.0 - g;
   }
@@ -725,13 +733,16 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
       // luma key: drop the inset where B's own luma crosses the slice, so a
       // dark/bright matte in B lets the program show through (the border stays
       // solid). Negative key inverts which side is kept.
-      var kg = 1.0;
+      //
+      // The DVE carries B's alpha through its frame store beside the picture,
+      // so a transparent part of B stays transparent in the inset.
+      var kg = select(alphaBAt(bnp), 1.0, isBorder);
       if (P.pipKey != 0.0) {
         var g = smoothstep(P.pipKeyLevel - P.pipKeySoft, P.pipKeyLevel + P.pipKeySoft, wireLumaBAt(bnp));
         if (P.pipKey < 0.0) {
           g = 1.0 - g;
         }
-        kg = select(mix(1.0, g, abs(P.pipKey)), 1.0, isBorder);
+        kg = kg * select(mix(1.0, g, abs(P.pipKey)), 1.0, isBorder);
       }
       comp[n] = mix(comp[n], inset, key * P.pipMix * kg);
     }
