@@ -14,10 +14,9 @@ look: '#vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_
 - Chroma key: fill to loop bus
 - Mixer feedback: strobe hold to 5
 
-The frame store records the composite signal, colour subcarrier included. The
-subcarrier's phase inverts on every frame, so on every other frame each stored
-copy decodes in complementary colours, and gold turns pale blue. **Colour
-framing** turns this off.
+The frame store records the composite signal with its colour subcarrier, whose
+phase inverts every frame. Alternate copies therefore decode in complementary
+colours, and gold turns pale blue. **Colour framing** turns this off.
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">

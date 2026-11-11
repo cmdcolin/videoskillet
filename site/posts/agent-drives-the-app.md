@@ -18,18 +18,17 @@ look: '#set=capLumaMHz:4.2,demodMHz:3.43,chromaGain:13.62,vir:0.86,lumaMHz:6,noi
 <button type="button" class="video-play-overlay" aria-label="Play video"><span class="video-play-icon" aria-hidden="true"></span></button>
 </div>
 
-An AI agent can drive videoskillet while it runs. Ask Claude Code or Claude in
-Chrome for a look in plain words, and the agent sets the controls, reads the
-board back and gives you the link.
+Ask Claude Code or Claude in Chrome for a look in plain words, and the agent
+sets the controls in the running app, reads the board back and gives you the
+link. In the recording, Claude Sonnet rebuilds the Purplady demo one stage at a
+time.
 
-In the recording, Claude Sonnet recreates the Purplady demo step-by-step
-
-An agent can also land a whole look in one step: `window.vfBoard.apply(link)`
-applies a link, and `window.vfBoard.read()` returns the board as text.
+`window.vfBoard.apply(link)` applies a whole look at once, and
+`window.vfBoard.read()` returns the board as text.
 
 To start, run `claude --chrome` with the app open in Chrome, or open the Claude
 in Chrome side panel in the app's tab. The **agent** button in the sidebar
-copies a prompt that starts from the look on screen.
+copies a starting prompt for the look on screen.
 
 The [AI guide](/guide/ai/) covers the details, and [llms.txt](/llms.txt) lists
 every control an agent can set.

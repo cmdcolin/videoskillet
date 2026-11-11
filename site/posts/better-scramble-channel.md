@@ -25,48 +25,43 @@ After: the picture tears, and the colour comes in bands.
 
 ![Three seconds of the 1984 catalogue cover through the scrambled channel. The torn shape of the model holds still while her face, arms and legs cycle through green, violet, magenta and yellow, and bands of colour drop out and come back across the frame.](https://myloveydove.com/videoskillet/blog/scramble-chroma-chaos.webp)
 
-The picture holds still while the colour floods, changes and drops out in bands.
-
 ## A turbo version
 
-Footage of a real scrambled channel on YouTube loses sync far harder than the
-preset above. Whole bands of the picture slide across the screen and wrap round
-the edge. The
+Footage of real scrambled channels on YouTube loses sync far harder, with whole
+bands of the picture sliding across the screen and wrapping round the edge. The
 [turbo sync loss](/app/#preset=turboSyncLoss&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
 preset swings the line oscillator's frequency a few tens of hertz either side of
 the line rate, and loosens the horizontal and vertical hold.
 
 ![The 1984 catalogue cover with bands of the picture slid sideways and wrapped round the edge. The grid of swimsuit photos is torn into wavy columns, and the colour is flooded pink, green and violet.](/blog/scramble-turbo-sync-loss.webp)
 
-The picture still shows through, but it moves from one second to the next.
-
 ## What made the colour look right
 
-The cable company scrambled a channel by removing the timing marks that tell a
-TV where each line of the picture starts, and it left the colour alone. Our
-first attempts added faults to the colour directly, and they looked fake.
+Cable companies scrambled a channel by removing the timing marks that tell a TV
+where each line starts, and left the colour alone. Our first attempts added
+faults to the colour directly, and they looked fake.
 
-Each line of a broadcast starts with a short colour reference, and the TV uses
-the timing marks to find it. Without the marks, the TV often reads the wrong
-spot. It averages that reference over dozens of lines, so one wrong reading
-tints a whole band of the picture. Once the simulated TV could make that
-mistake, the bands showed up with no code written to draw them. We also made the
-TV's colour timing wander slowly, which keeps the bands moving.
+Each line starts with a short colour reference, which the TV finds by the timing
+marks. Without the marks the TV often reads the wrong spot, and because it
+averages the reference over dozens of lines, one wrong reading tints a whole
+band. Once the simulated TV could make that mistake, the bands appeared with no
+code written to draw them. A slow wander in the TV's colour timing keeps them
+moving.
 
 ## Update, 1 November 2026
 
-The scrambled channel preset now models the RF gate that GI and Jerrold
-head-ends used. The carrier is cut 6 dB through every horizontal blanking
-interval, so the blanking shows as a grey bar and the colour floods to match the
-weakened burst. The links above open the version this post describes.
-[Open the new one](/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
+The preset now models the RF gate that GI and Jerrold head-ends used. The
+carrier drops 6 dB through every horizontal blanking interval, so the blanking
+shows as a grey bar and the colour floods to match the weakened burst. The links
+above open the version this post describes;
+[open the new one](/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
 ## Update, 11 November 2026
 
 [Oak Sigma and VideoCipher II](/blog/oak-sigma-and-videocipher/) covers two more
 scrambling systems, and
 [The scrambled channel in a camera loop](/blog/scrambled-channel-in-a-loop/)
-covers three presets that put the scrambler in a camera loop or on a tape.
+covers presets that put the scrambler in a camera loop or on a tape.
 
 _Photos from Wikimedia Commons under CC BY-SA 3.0, and the stills here are under
 the same licence: LIZ fashion's

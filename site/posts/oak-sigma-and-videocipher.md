@@ -19,12 +19,11 @@ and
 [Oak Sigma](/app/#preset=oakSigma&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
 The [scrambled channel](/blog/better-scramble-channel/) preset lowers the sync
-pulses, and a TV with no decoder loses its timing marks and tears the picture.
-Oak's Sigma system and the VideoCipher II satellite system removed the timing
-marks altogether and sent data in their place. Each line starts with a few bytes
-of encrypted sound where its timing mark was, and the pulses that hold the frame
-still are gone as well. A TV with no decoder shows the data as a speckled ribbon
-that wanders down the screen, and the picture comes through as a negative.
+pulses, so a TV with no decoder loses its timing marks and tears the picture.
+Oak's Sigma system and the VideoCipher II satellite system removed the sync
+pulses altogether and sent encrypted sound in their place. A TV with no decoder
+shows that data as a speckled ribbon wandering down the screen, and the picture
+as a negative.
 
 ## VideoCipher II
 
@@ -32,7 +31,7 @@ VideoCipher II sent encrypted sound and addressing in the front porch and the
 sync pulse of every line. The back porch and the colour burst are lifted to the
 middle of the video range, and the vertical interval holds a full-height pattern
 in place of its pulses. The picture is sent as a negative at 1.4 times the
-contrast. The brightest parts of the scene become the darkest parts of the
+contrast, so the brightest parts of the scene become the darkest parts of the
 signal, and the TV takes them for timing marks and tears around them.
 
 ![The catalogue cover torn into horizontal slabs of red, violet, blue and green, with a wide ribbon of black-and-white speckle winding down the middle of the frame.](/blog/scramble-videocipher.webp)
@@ -57,8 +56,8 @@ VideoCipher II's timing and gain. The patents give no data levels, and the
 article does not say which level the picture is inverted around, so we chose
 those values.
 
-The [camera loop post](/blog/scrambled-channel-in-a-loop/) puts the scrambler in
-a camera loop and on a tape, from the same release.
+The [camera loop post](/blog/scrambled-channel-in-a-loop/) covers the other
+scrambler presets from the same release.
 
 _The catalogue cover is LIZ fashion's
 [1984 catalogue cover](https://commons.wikimedia.org/wiki/File:%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg),
