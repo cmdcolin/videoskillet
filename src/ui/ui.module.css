@@ -262,7 +262,7 @@ button.filledOn {
 button.filledChosen,
 button.filledChosen:hover:not(:disabled) {
   color: var(--fg);
-  background: color-mix(in srgb, var(--fg) 14%, transparent);
+  background: var(--chosen-bg);
   border-color: var(--fg4);
 }
 .btn {
@@ -323,7 +323,7 @@ button.filledChosen:hover:not(:disabled) {
 .outlineChosen {
   composes: outline;
   color: var(--fg);
-  background: color-mix(in srgb, var(--fg) 14%, transparent);
+  background: var(--chosen-bg);
   border-color: var(--fg4);
 }
 
