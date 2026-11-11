@@ -1,10 +1,10 @@
 ---
-title: Even more scramble channel effects
+title: The scrambled channel in a camera loop
 date: 2026-11-11
 summary:
   A camera pointed at a scrambled channel lays the picture down as a row of
-  positive and negative copies, and the scrambler has two more systems, which
-  sent data where the timing marks were.
+  positive and negative copies, and a taped copy of the channel adds noise and
+  dropouts to the tearing.
 image: /blog/scramble-paper-dolls-film.webp
 imageAlt:
   Two faces repeated across the frame as overlapping copies, alternately pale
@@ -18,8 +18,10 @@ The two faces in the picture above are about 35 seconds into the film.
 
 The [scrambled channel](/blog/better-scramble-channel/) preset shows what a TV
 made of a premium channel it had no decoder for. The presets in this post point
-a camera at that TV and send the camera's picture back down the channel, and the
-a later section covers two scrambling systems that are new.
+a camera at that TV and send the camera's picture back down the channel, and a
+third plays the channel from a copied tape.
+[Oak Sigma and VideoCipher II](/blog/oak-sigma-and-videocipher/) covers the two
+scrambling systems added in the same release.
 
 ## Paper dolls
 
@@ -48,29 +50,6 @@ picture around its shadows. Each trip round the loop tears the picture again,
 and the tears build up into ribbons.
 
 ![Two faces at the top right of a picture torn into flowing ribbons of green, violet, blue and orange. Black, grey and white bands wind down the left of the frame.](/blog/scramble-marbled-film.webp)
-
-## Two systems that sent data
-
-Oak's Sigma system and the VideoCipher II satellite system both replaced the
-timing marks with data. Each line starts with a few bytes of encrypted sound
-where its timing mark was, and the marks that hold the frame still are gone as
-well. A TV with no decoder shows the data as a speckled ribbon that wanders down
-the screen, and the picture comes through as a negative.
-
-[Oak Sigma](/app/#preset=oakSigma&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
-turns the picture negative and back every few seconds.
-
-![The 1984 catalogue cover as a negative. The model is green at the head, violet across the arms, blue at the waist and magenta at the knees, and a ribbon of black-and-white speckle with wavy edges runs down the right of the frame.](/blog/scramble-oak-sigma.webp)
-
-[VideoCipher II](/app/#preset=videoCipher&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
-sends the negative at 1.4 times the contrast. The brightest parts of the scene
-become the darkest parts of the signal, and the TV takes them for timing marks
-and tears around them.
-
-![The catalogue cover torn into horizontal slabs of red, violet, blue and green, with a wide ribbon of black-and-white speckle winding down the middle of the frame.](/blog/scramble-videocipher.webp)
-
-The Oak patents and a 1986 trade article give the timing of both systems, and we
-chose the signal levels that those sources omit.
 
 ## A taped copy
 
