@@ -423,6 +423,16 @@ fn keyFill(program: f32, n: u32) -> f32 {
   return program;
 }
 
+// A non-additive mix: the two inputs on a pair of emitter followers sharing one
+// load, so the higher voltage drives the bus and the other transistor is cut
+// off. PNP followers pass the lower voltage. The handover follows the
+// junction's exponential, an e-fold in about 26 mV, which is 3.6 IRE.
+const NAM_KNEE = 3.6;
+
+fn nonAdditive(a: f32, b: f32, dir: f32) -> f32 {
+  return dir * (max(dir * a, dir * b) + NAM_KNEE * log(1.0 + exp(-abs(a - b) / NAM_KNEE)));
+}
+
 // Stray capacitance across a closed fader. The leak path is a small capacitor,
 // so what it passes is the derivative of B: its subcarrier and its edges, never
 // its flat areas. `prev` is B one sample earlier, taken the same way as `now`.
@@ -682,6 +692,9 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // It squashes the sum's sync tips with everything else, so the fight for
     // the line start changes character too: the deeper tip stops winning by
     // as much once both are against the rail.
+    if (P.busDiode != 0.0) {
+      summed = mix(summed, mix(P.aGain * a, nonAdditive(P.aGain * a, P.bGain * fill, sign(P.busDiode)), g), abs(P.busDiode));
+    }
     if (P.busClip > 0.0) {
       summed = softRail(
         summed,

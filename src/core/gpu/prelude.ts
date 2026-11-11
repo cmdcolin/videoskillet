@@ -154,6 +154,7 @@ export const PARAM_DEFS = [
   ['bGain', 'f32'], // additive mix gain
   ['bRing', 'f32'], // ring modulation amount
   ['busClip', 'f32'], // how little headroom the summing amplifier has, 0 = plenty
+  ['busDiode', 'f32'], // non-additive mix: -1 the darker input takes the bus, 1 the lighter, 0 a plain sum
   ['busCut', 'f32'], // the bus is switched to B for this fraction of the frame, from the bottom
   ['busBounce', 'f32'], // how worn the relay's contacts are: 0 a clean make, 1 forty lines of chatter
   ['bLeak', 'f32'], // stray-capacitance leak of B onto the bus, whatever the fader says
@@ -330,6 +331,7 @@ export const PARAM_DEFS = [
   ['mixPotSpeed', 'f32'], // how fast that wiper is moving, travel per second
   ['scramble', 'f32'], // head-end sync suppression depth: sync tip lifted toward blanking
   ['decoderDb', 'f32'], // descrambler box gain inside the carrier gate, dB
+  ['decoderSkew', 'f32'], // how late the box opens its gate, samples
   ['scrambleMode', 'f32'], // 0 gated, 1 line-alternate, 2 SSAVI (suppression + video inversion), 3 carrier (RF attenuation over H blanking + VBI), 4 tri-mode, 5 sine, 6 keyed SSAVI, 7 line delay (feeds), 8 Oak Sigma, 9 VideoCipher II
   // copy protection authored onto the source tape's vertical interval
   ['mvAgcIre', 'f32'], // Macrovision AGC-pulse level at full cycle, IRE (0 = unprotected)
@@ -1042,10 +1044,11 @@ fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f3
 // clear: on a tri-mode channel a 6 dB box restores the clear and 6 dB fields
 // and leaves 4 dB on the 10 dB fields. The other systems need other boxes, so
 // this one passes them through.
-fn descrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32, boxDb: f32) -> f32 {
+fn descrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32, boxDb: f32, skew: f32) -> f32 {
   let system = u32(mode + 0.5);
+  let gateS = u32(i32(s) - i32(skew) + i32(SPL)) % SPL;
   var out = v;
-  if (boxDb > 0.0 && depth > 0.0 && (system == 3u || system == 4u) && inCarrierGate(s)) {
+  if (boxDb > 0.0 && depth > 0.0 && (system == 3u || system == 4u) && inCarrierGate(gateS)) {
     var level = depth;
     if (system == 4u) {
       level = depth * triModeLevel(frame);

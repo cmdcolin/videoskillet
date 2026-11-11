@@ -347,6 +347,8 @@
 359 fbRegShiftPx step=0.01 default=0
 360 fbRegSizePct step=0.01 default=0
 361 bKeySource step=1 default=0 choices=chroma|B alpha
+362 busDiode step=0.01 default=0
+363 decoderSkewUs step=0.1 default=0
 
 # ?mod= sources, by name
 sine

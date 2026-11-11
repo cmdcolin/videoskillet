@@ -127,6 +127,7 @@ export const DEFAULT_CONTROLS = {
   scramble: 0, // sync-tip suppression depth (0 = in the clear)
   scrambleMode: 0, // 0 gated (every line), 1 line-alternate, 2 SSAVI (+ video inversion), 3 carrier (RF attenuation), 4 tri-mode, 5 sine, 6 keyed SSAVI, 7 Oak Sigma, 8 VideoCipher II
   decoderDb: 0, // descrambler box at the set: gain inside the carrier gate, dB
+  decoderSkewUs: 0, // how late the box opens its gate against the head-end's, us
   // copy protection authored onto the source's vertical interval
   macrovision: 0, // Macrovision pseudo-sync/AGC pulse depth on VBI lines 12-19
   mvStripeDeg: 0, // colorstripe: burst rotation on walking line bands, degrees
@@ -341,6 +342,7 @@ export const DEFAULT_CONTROLS = {
   mixPotPos: 0.5, // that crossfader's wiper: 0 all A, 1 all B
   mixPotHand: 0, // a hand working the crossfader
   busClip: 0, // headroom of the mixer's summing amplifier (0 = it never sees its rails)
+  busDiode: 0, // non-additive mix on the dirty bus: -1 the darker input wins, 1 the lighter, 0 a plain sum
   busBounce: 0, // the cut relay's contacts chattering between A and B as they make
   busCut: 0, // fraction of the frame, from the bottom, the bus is switched to B for
   bLeak: 0, // high-pass crosstalk of B onto the program bus past a closed fader
