@@ -57,7 +57,7 @@ export function LookPopover(props: {
   if (stacked)
     return (
       <button
-        className={cx(styles.trigger, props.showing && barStyles.btnOn)}
+        className={cx(styles.trigger, props.showing && barStyles.btnShown)}
         aria-pressed={props.showing}
         title="narrow the panel to every control this look moves off stock"
         onClick={props.onToggleShowing}

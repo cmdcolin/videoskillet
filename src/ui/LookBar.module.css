@@ -21,6 +21,9 @@
 .btnOn {
   composes: outlineOn from './ui.module.css';
 }
+.btnShown {
+  composes: outlineChosen from './ui.module.css';
+}
 button.btnOff {
   color: #55555f;
   border-color: var(--border-faint);

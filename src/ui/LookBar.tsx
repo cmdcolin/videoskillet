@@ -109,7 +109,7 @@ export function LookBar(props: {
             to stock, release and it comes back. The label says which state you
             are in, since the button is under your finger while it happens. */}
         <button
-          className={cx(styles.btn, props.comparing && styles.btnOn)}
+          className={cx(styles.btn, props.comparing && styles.btnShown)}
           aria-pressed={props.comparing}
           onPointerDown={() => props.onStartCompare()}
           onPointerUp={() => props.onEndCompare()}

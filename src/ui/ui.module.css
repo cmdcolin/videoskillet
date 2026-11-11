@@ -320,6 +320,20 @@ button.filledChosen:hover:not(:disabled) {
   }
 }
 
+.outlineChosen {
+  composes: outline;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 14%, transparent);
+  border-color: var(--fg4);
+}
+
+@media (hover: hover) {
+  .outlineChosen:hover:not(:disabled) {
+    color: var(--fg);
+    border-color: var(--fg4);
+  }
+}
+
 .outlineIcon {
   composes: outline;
   width: var(--ctl-h);
