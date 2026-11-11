@@ -2424,7 +2424,7 @@ export const GROUPS: Group[] = [
         max: 0.4,
         step: 0.005,
         unit: '',
-        help: 'How fast the keyer swings between keep and cut, in hue and saturation at once: the gain knob on the front of the box. At 0 the comparator snaps and the composite edge shows as steps. With key source on B alpha it is the slope of the key above the clip, unity at 0.05: lower hardens the edge, higher spreads it until the solid subject lets A through.',
+        help: 'How fast the keyer swings between keep and cut, in hue and saturation at once: the gain knob on the front of the box. At 0 the comparator snaps and the composite edge shows as steps. With key source on B alpha the key follows the alpha at 0.05. Lower hardens the edge toward a cut at the clip, and higher thins the partly transparent edge while the solid subject stays solid.',
       },
       {
         key: 'bKeySpill',

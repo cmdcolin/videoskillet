@@ -60,7 +60,7 @@ chroma keyer does in [Chroma keying with ghosts](/blog/keyer-ghosts/).
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">
-<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Beech_forest_M%C3%A1tra_in_winter.jpg/1280px-Beech_forest_M%C3%A1tra_in_winter.jpg&vurlb=https://myloveydove.com/videoskillet/sources/swift-alpha.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1,bKeyFill:2,cfbHold:5,bKeyFillHueDeg:30"><img style="aspect-ratio: 4 / 3; object-fit: cover; margin: 0;" loading="lazy" src="https://myloveydove.com/videoskillet/blog/alpha-swift-hue.webp" alt="Four seconds of a gold-foiled spacecraft turning over a winter beech forest. A stepped stack of its copies trails behind it, edged in green, blue and magenta, and the forest flickers between violet and green."></a>
+<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Beech_forest_M%C3%A1tra_in_winter.jpg/1280px-Beech_forest_M%C3%A1tra_in_winter.jpg&vurlb=https://myloveydove.com/videoskillet/sources/swift-alpha.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1,bKeyFill:2,cfbHold:5,bKeyFillHueDeg:30"><img style="aspect-ratio: 4 / 3; object-fit: cover; margin: 0;" loading="lazy" src="https://myloveydove.com/videoskillet/blog/alpha-swift-hue.webp" alt="Four seconds of a gold-foiled spacecraft turning over a winter beech forest. A stepped stack of its copies trails behind it, edged in green, blue and magenta, and the forest's tint drifts between violet and green."></a>
 <figcaption>Fill to loop bus, store hue at 30°</figcaption>
 </figure>
 <figure style="margin: 0;">
