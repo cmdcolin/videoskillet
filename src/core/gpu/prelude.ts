@@ -197,7 +197,8 @@ export const PARAM_DEFS = [
   ['bKeySoft', 'f32'], // comparator swing: edge softness in both angle and saturation
   ['bKeySpill', 'f32'], // chroma canceller: backing subcarrier reinjected antiphase
   ['bKeyDelay', 'f32'], // key-vs-fill horizontal registration, samples
-  ['bKeyAdditive', 'f32'], // 0 comparator, 1 additive: backing subtracted, fill added under a proportional matte
+  ['bKeySource', 'f32'], // 0 the chroma slice of B, 1 B's alpha on the external key input
+  ['bKeyAdditive', 'f32'], // 0 comparator, 1 additive: backing subtracted, fill added under a proportional matte; 0 while the key is external
   ['bKeyLevel', 'f32'], // additive: the backing's chroma at full light, chroma units
   ['bKeyBackY', 'f32'], // additive: the backing's luma at that level, 0..1
   ['bKeyFeed', 'f32'], // 1 while B's feed is damaging its waveform, so the keyer demodulates the damage
@@ -1527,14 +1528,19 @@ fn rgbOf(yuv: vec3f) -> vec3f {
 // line above its edges, on motion only, which is not a thing anyone would think
 // to look for.
 fn srcTexelB(tex: texture_2d<f32>, x: i32, y: i32, deint: f32) -> vec3f {
-  if (deint < 0.5) {
-    return textureLoad(tex, vec2i(x, y), 0).rgb;
+  return srcTexelAlphaB(tex, x, y, deint).rgb;
+}
+
+// B's texel with its alpha, which leaves the source on a wire of its own, the
+// key output beside the fill, and goes through the same deinterlacer.
+fn srcTexelAlphaB(tex: texture_2d<f32>, x: i32, y: i32, deint: f32) -> vec4f {
+  var texel = textureLoad(tex, vec2i(x, y), 0);
+  if (deint > 0.5) {
+    let e = y - (y & 1);
+    let n = min(e + 2, i32(ACTIVE_H) - 1);
+    texel = mix(textureLoad(tex, vec2i(x, e), 0), textureLoad(tex, vec2i(x, n), 0), f32(y - e) * 0.5);
   }
-  let e = y - (y & 1);
-  let n = min(e + 2, i32(ACTIVE_H) - 1);
-  let a = textureLoad(tex, vec2i(x, e), 0).rgb;
-  let b = textureLoad(tex, vec2i(x, n), 0).rgb;
-  return mix(a, b, f32(y - e) * 0.5);
+  return texel;
 }
 
 // Gamut limit by desaturation. A hard per-channel clamp on an out-of-gamut

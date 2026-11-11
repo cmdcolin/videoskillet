@@ -334,6 +334,7 @@ export class Sources {
     }
     const g = this.stageA.getContext('2d')
     if (g) {
+      g.clearRect(0, 0, w, h)
       g.drawImage(source, 0, 0, w, h)
       this.host.device.queue.copyExternalImageToTexture(
         { source: this.stageA, flipY: false },
@@ -359,6 +360,7 @@ export class Sources {
       const g = this.stageB.getContext('2d')
       if (g) {
         const [sx, sy, sw, sh] = coverFit43(w, h)
+        g.clearRect(0, 0, ACTIVE_WIDTH, ACTIVE_HEIGHT)
         g.drawImage(source, sx, sy, sw, sh, 0, 0, ACTIVE_WIDTH, ACTIVE_HEIGHT)
         d.queue.copyExternalImageToTexture(
           { source: this.stageB, flipY: false },

@@ -384,6 +384,7 @@ export const DEFAULT_CONTROLS = {
   bKeySoft: 0.05, // comparator swing, in the same units and as a fraction of PI
   bKeySpill: 0,
   bKeyDelayUs: 0, // key-vs-fill registration; one sample is 70 ns
+  bKeySource: 0, // 0 the chroma slice, 1 B's alpha on the external key input
   // The additive keyer's calibration: the backing a subtractor removes,
   // as chroma along the key hue and luma. The defaults are 75% green.
   bKeyAdditive: 0,

@@ -53,6 +53,7 @@ export const KEYER_KNOBS = {
     'bKeySoft',
     'bKeySpill',
     'bKeyDelayUs',
+    'bKeySource',
     'bKeyAdditive',
     'bKeyLevel',
     'bKeyBackY',

@@ -774,6 +774,10 @@ bKeyDelayUs  (key delay)
   -1.5..1.5 step 0.01 µs  default 0
   The registration trim, because the key path and the video path are different lengths of circuit. Off zero the matte lies beside the subject: one edge keeps a rim of backing colour, the other removes a rim of subject.
 
+bKeySource  (key source)
+  0=chroma 1=B alpha  default 0
+  What the keyer cuts by. Chroma slices B's backing colour off the bus. B alpha patches a transparent source's alpha into the key input, the way a character generator sends a key beside its picture, so a cutout PNG, WebP or WebM keys with nothing to set and keeps any green it holds. The hue, clip, gain, spill kill and additive controls only act on chroma.
+
 bKeyAdditive  (keyer)
   0=comparator 1=additive  default 0
   How the box makes its matte. The comparator cuts or keeps each sample by hue and saturation. The additive keyer works like an Ultimatte: it measures how much backing a sample holds, subtracts that much backing from B and adds that much fill underneath. A shadow on the backing becomes a shadow on the fill, fine hair keys part way, and spill goes with the backing. Set the backing level and luma to the lit backing; clip, gain and spill kill do nothing here. On the dirty path it only takes the backing down to black.

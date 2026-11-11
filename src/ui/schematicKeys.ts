@@ -378,6 +378,7 @@ export const CHROMA_KEY_OPENS = {
   spill: ['bKeySpill'],
   delay: ['bKeyDelayUs'],
   keyer: [
+    'bKeySource',
     'bKeyHueDeg',
     'bKeyAcceptDeg',
     'bKeyClip',

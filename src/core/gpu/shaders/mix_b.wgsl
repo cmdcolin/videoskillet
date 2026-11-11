@@ -37,6 +37,16 @@ fn lumaBAt(idx: u32) -> f32 {
   return select(0.0, luma(texel), inside);
 }
 
+// B's alpha at a raster index: the key output a source with transparency
+// sends beside its picture. It is 1 outside the active picture, so the
+// external key never takes B's sync and burst off the bus.
+fn alphaBAt(idx: u32) -> f32 {
+  let x = i32(idx % SPL) - i32(ACTIVE_START);
+  let y = i32(idx / SPL) - i32(ACTIVE_TOP);
+  let inside = x >= 0 && x < i32(ACTIVE_W) && y >= 0 && y < i32(ACTIVE_H);
+  return select(1.0, srcTexelAlphaB(inputTexB, clamp(x, 0, i32(ACTIVE_W) - 1), clamp(y, 0, i32(ACTIVE_H) - 1), P.deintB).a, inside);
+}
+
 // B's picture luma scaled by what the chroma pin left of it, before B's
 // video gain and inversion.
 fn wireLumaBAt(idx: u32) -> f32 {
@@ -174,6 +184,34 @@ fn chromaKey(at: i32, phase: f32, damaged: bool) -> KeySlice {
   return KeySlice(mix(1.0, g, min(abs(P.bKey), 1.0)), kdir * max(dot(uv, kdir), 0.0) * satg, level);
 }
 
+// The external key: B's alpha patched into the keyer's key input in place of
+// the chroma slice. It is a separate wire, so B's encoder bandlimit and its
+// feed damage never reach it, and its edge is as sharp as the source drew it.
+// It runs through the same registration trim as the chroma slice, and the
+// invert button works on it the same way. With nothing to subtract, the
+// additive keyer is out of circuit, and the spill canceller has no backing to
+// null.
+fn alphaKey(at: i32) -> KeySlice {
+  let d = floor(P.bKeyDelay);
+  let i = at + i32(d);
+  var g = mix(alphaBAt(clampIdx(i)), alphaBAt(clampIdx(i + 1)), P.bKeyDelay - d);
+  if (P.bKey < 0.0) {
+    g = 1.0 - g;
+  }
+  return KeySlice(mix(1.0, g, min(abs(P.bKey), 1.0)), vec2f(0.0), 0.0);
+}
+
+// The key on whichever input the source switch selects.
+fn keyOf(at: i32, phase: f32, damaged: bool) -> KeySlice {
+  var k: KeySlice;
+  if (P.bKeySource > 0.5) {
+    k = alphaKey(at);
+  } else {
+    k = chromaKey(at, phase, damaged);
+  }
+  return k;
+}
+
 // Spill suppression, as the hardware did it: a chroma canceller. You cannot
 // lift the green off a composite sample — luma and chroma are the same wire —
 // so the box reinjects the backing colour on the house carrier in antiphase
@@ -243,7 +281,7 @@ fn edgeTap(at: i32, dx: i32, dy: i32, phase: f32) -> f32 {
   let row = u / SPL;
   var kept = 0.0;
   if (s >= ACTIVE_START && s < ACTIVE_START + ACTIVE_W && row >= ACTIVE_TOP && row < ACTIVE_TOP + ACTIVE_H) {
-    kept = smoothstep(0.7, 0.9, keptBy(chromaKey(idx, phase, false)));
+    kept = smoothstep(0.7, 0.9, keptBy(keyOf(idx, phase, false)));
   }
   return kept;
 }
@@ -501,7 +539,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
         // the suppressor can null it flat. On a line that has lost lock the key
         // tears sideways with the picture.
         let phase = busPhase(at, n, frac, P.bHue);
-        let k = chromaKey(at, phase, true);
+        let k = keyOf(at, phase, true);
         behind = keyFill(a, n);
         if (P.bKeyEdge > 0.5) {
           let edge = keyEdge(at, phase);
@@ -570,7 +608,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
       // The additive keyer has no layer to add a fill under here either, so on
       // this path it only subtracts: B's backing goes to black, shadows
       // included, and the sum is A wherever the backing was.
-      let k = chromaKey(np, busPhase(np, n, frac, P.bHue + P.bPhase0 + P.bPhaseLine * f32(srow)), true);
+      let k = keyOf(np, busPhase(np, n, frac, P.bHue + P.bPhase0 + P.bPhaseLine * f32(srow)), true);
       if (P.bKeyAdditive > 0.5) {
         if (P.bKey > 0.0) {
           fill = subtractBacking(fill, k, np, n);

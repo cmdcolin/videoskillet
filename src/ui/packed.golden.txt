@@ -346,6 +346,7 @@
 358 synthCvSrc step=1 default=0 choices=the synth|picture A|picture B
 359 fbRegShiftPx step=0.01 default=0
 360 fbRegSizePct step=0.01 default=0
+361 bKeySource step=1 default=0 choices=chroma|B alpha
 
 # ?mod= sources, by name
 sine
