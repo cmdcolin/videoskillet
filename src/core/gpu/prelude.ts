@@ -135,6 +135,7 @@ export const PARAM_DEFS = [
   ['synthDelay', 'f32'], // the synth's output into a delay line on A's cable: samples of delay at full level
   ['synthVca', 'f32'], // the synth's output into a VCA on A's cable: gain lost at full level
   ['synthSync', 'f32'], // the synth's output subtracted from A's cable: IRE pulled down at full level
+  ['synthCvSrc', 'f32'], // the control input of those three boxes: 0 the synth, 1 A's picture, 2 B's
   // dirty mixer: source B is a second, non-genlocked composite signal
   ['srcNoiseB', 'f32'], // GPU-generated source B: 0 texture, 1 TV static, 2 VHS blank-tape static
   ['aGain', 'f32'], // A level on the summing bus, signed (negative inverts A)
@@ -400,6 +401,8 @@ export const PARAM_DEFS = [
   ['fbIris', 'f32'], // camera auto-iris: 0 manual exposure .. 1 underdamped servo (hunts)
   ['fbLag', 'f32'], // pickup-tube lag: the reading beam leaves charge behind on a dim target
   ['fbComet', 'f32'], // pickup-tube comet tails: beam current cap, highlights drain over several fields
+  ['fbRegShift', 'f32'], // camera tube centring error, picture widths: red +, blue -
+  ['fbRegSize', 'f32'], // camera tube size error, fraction: red's scan larger, blue's smaller
   // CRT faceplate: the emissive screen the camera photographs (and the display
   // shows). Sits between the decoded signal and the camera/lens model above.
   ['crtCutoff', 'f32'], // beam cutoff: drive below the knee emits no light (true black background)

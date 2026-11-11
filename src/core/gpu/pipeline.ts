@@ -42,7 +42,7 @@ import {
   underErrorScopes,
 } from './context'
 import { debugOn, directVideoPath, pageSearch, userAgent } from './env'
-import { aFeedOn, bFeedOn, bOn, bWaveOn, FEEDS } from './feedgates'
+import { aFeedOn, bChainOn, bFeedOn, bOn, bWaveOn, FEEDS } from './feedgates'
 import { designFilterBank, FILTER_KEYS } from './filterbank'
 import { AutoLock } from './framelock'
 import { FrameRead } from './frameread'
@@ -429,7 +429,7 @@ export class Engine implements EngineApi {
 
   // The pass graph's gates, bound to this engine's live controls. The
   // predicates themselves are pure and live in feedgates.ts, where the
-  // containment between them (bFeedOn ⊆ bWaveOn ⊆ bOn) is under test; these
+  // containment between them (bFeedOn ⊆ bWaveOn ⊆ bChainOn) is under test; these
   // are the closures the pass `when()` callbacks, the bind-group swap and the
   // uniform packing all share, so the routing cannot drift from the gating.
   private readonly aFeedOn = (): boolean => aFeedOn(this.controls)
@@ -832,10 +832,11 @@ export class Engine implements EngineApi {
       d.queue.submit([enc.finish()])
     }
     const c = this.controls
-    // What mixB can actually change, and so what the whole source-B chain is
-    // dispatched for; see feedgates.ts, which holds it alongside the two
-    // narrower gates it has to contain.
-    const bChainOn = () => bOn(c, this.sources.bEnabled)
+    // When the source-B chain ahead of the mixer is dispatched, and when the
+    // mixer is; see feedgates.ts, which holds both alongside the two narrower
+    // gates the first has to contain.
+    const bChain = () => bChainOn(c, this.sources.bEnabled)
+    const bMixOn = () => bOn(c, this.sources.bEnabled)
 
     this.composePass = {
       label: 'compose',
@@ -869,6 +870,7 @@ export class Engine implements EngineApi {
           { buffer: this.compA },
           { buffer: this.synthLineBuf },
           { buffer: this.filterBuf },
+          { buffer: this.bCompBuf },
         ],
         perLineT,
         this.aFeedOn,
@@ -884,7 +886,7 @@ export class Engine implements EngineApi {
         perTile,
         // a paused B deck holds its frame, so the snow generator freezes too —
         // the crawl was on the tape, and the tape has stopped
-        () => bChainOn() && this.sources.srcNoiseB > 0 && c.bPause === 0,
+        () => bChain() && this.sources.srcNoiseB > 0 && c.bPause === 0,
       ),
       pass(
         'encodeChromaB',
@@ -896,7 +898,7 @@ export class Engine implements EngineApi {
           { buffer: this.uvfBBuf },
         ],
         perPixelT,
-        bChainOn,
+        bChain,
       ),
       // B as a real waveform on its own raster — the thing feedB damages and
       // the dirty sum resamples. Like encodeComposite above, renderFrame
@@ -922,6 +924,7 @@ export class Engine implements EngineApi {
           { buffer: this.bCompBuf },
           { buffer: this.synthLineBuf },
           { buffer: this.filterBuf },
+          { buffer: this.compA },
         ],
         perLineT,
         this.bFeedOn,
@@ -940,7 +943,7 @@ export class Engine implements EngineApi {
           { buffer: this.compPrev },
         ],
         perLine,
-        bChainOn,
+        bMixOn,
       ),
       // The switcher's character generator, keyed onto the program bus. After
       // the mixer and before the loop, which is where a head-end box stands: what

@@ -343,6 +343,9 @@
 355 bChromaPin step=0.01 default=0
 356 aSeriesCapMHz step=0.01 default=0
 357 bSeriesCapMHz step=0.01 default=0
+358 synthCvSrc step=1 default=0 choices=the synth|picture A|picture B
+359 fbRegShiftPx step=0.01 default=0
+360 fbRegSizePct step=0.01 default=0
 
 # ?mod= sources, by name
 sine

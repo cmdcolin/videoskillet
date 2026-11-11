@@ -10,6 +10,7 @@ import { buildCaptionRom, CC_BUF_LEN } from '../../src/core/gpu/captionrom'
 import {
   aFeedOn,
   bFeedOn,
+  bChainOn,
   bOn,
   bWaveOn,
   FEEDS,
@@ -291,7 +292,8 @@ export class Graph {
       Math.ceil(ACTIVE_HEIGHT / 8),
     ] as const
     const perRow = [Math.ceil(LINES / 64), 1] as const
-    const bChainOn = () => bOn(c, this.bEnabled)
+    const bChain = () => bChainOn(c, this.bEnabled)
+    const bMixOn = () => bOn(c, this.bEnabled)
     const P = this.paramsBuf
     const filters = this.filterBuf
     const lineParams = this.lineParamsBuf
@@ -346,6 +348,7 @@ export class Graph {
           dst: this.compA,
           synthLine: this.synthLineBuf,
           filters,
+          other: bCompBuf,
         }),
         dispatch: perLineT,
         when: () => aFeedOn(c),
@@ -371,7 +374,7 @@ export class Graph {
           uvfB: uvfBBuf,
         }),
         dispatch: perPixelT,
-        when: bChainOn,
+        when: bChain,
       },
       {
         label: 'encodeCompositeB',
@@ -403,6 +406,7 @@ export class Graph {
           dst: bCompBuf,
           synthLine: this.synthLineBuf,
           filters,
+          other: this.compA,
         }),
         dispatch: perLineT,
         when: () => bFeedOn(c, this.bEnabled),
@@ -419,7 +423,7 @@ export class Graph {
           loopBus: compPrev,
         }),
         dispatch: perLine,
-        when: bChainOn,
+        when: bMixOn,
       },
       {
         label: 'fbComposite',

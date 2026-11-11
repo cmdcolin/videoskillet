@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_CONTROLS } from '../controls'
-import { aFeedOn, bFeedOn, bOn, bWaveOn, FEEDS, feedFaults } from './feedgates'
+import {
+  aFeedOn,
+  bChainOn,
+  bCvOn,
+  bFeedOn,
+  bOn,
+  bWaveOn,
+  FEEDS,
+  feedFaults,
+} from './feedgates'
 
 import type { Controls } from '../controls'
 
@@ -59,14 +68,20 @@ const KNOBS: Partial<Controls>[] = [
   { bGenlock: 1, busCut: 0.3 },
   { bGenlock: 1, bLeak: 0.05 },
   { bGain: 0.5, bPause: 0.8, bScramble: 1 },
+  { synthCvSrc: 2 },
+  { synthCvSrc: 2, synthDelayUs: 1 },
+  { synthCvSrc: 2, synthVca: 0.5, bGenlock: 1 },
+  { synthCvSrc: 2, synthSyncIre: 20, bNoiseIre: 5 },
+  { synthCvSrc: 1, synthDelayUs: 1 },
 ]
 
 describe('feed gates', () => {
   // The invariant the pass graph rests on. bFeedOn dispatching without bWaveOn
-  // would damage a buffer nothing reads; bWaveOn without bOn would leave mix_b
-  // resampling a bComp that no encode wrote this frame, which is a stale frame
-  // on screen rather than an error anything reports.
-  it('nests the three B gates', () => {
+  // would damage a buffer nothing reads; bWaveOn without bChainOn would encode
+  // a waveform from chroma nothing wrote this frame, and bOn without bChainOn
+  // would leave mix_b reading the same stale chroma. Both are a stale frame on
+  // screen, and nothing reports them.
+  it('nests the B gates', () => {
     for (const patch of KNOBS)
       for (const bEnabled of [false, true]) {
         const c = at(patch)
@@ -74,8 +89,22 @@ describe('feed gates', () => {
         if (bFeedOn(c, bEnabled))
           expect(bWaveOn(c, bEnabled), `bFeedOn ⊄ bWaveOn: ${where}`).toBe(true)
         if (bWaveOn(c, bEnabled))
-          expect(bOn(c, bEnabled), `bWaveOn ⊄ bOn: ${where}`).toBe(true)
+          expect(bChainOn(c, bEnabled), `bWaveOn ⊄ bChainOn: ${where}`).toBe(
+            true,
+          )
+        if (bOn(c, bEnabled))
+          expect(bChainOn(c, bEnabled), `bOn ⊄ bChainOn: ${where}`).toBe(true)
       }
+  })
+
+  it("runs B's chain for A's boxes with B off the bus", () => {
+    const c = at({ synthCvSrc: 2, synthDelayUs: 1 })
+    expect(bCvOn(c, true)).toBe(true)
+    expect(bWaveOn(c, true)).toBe(true)
+    expect(bOn(c, true)).toBe(false)
+    expect(bCvOn(c, false)).toBe(false)
+    expect(bCvOn(at({ synthCvSrc: 2 }), true)).toBe(false)
+    expect(bCvOn(at({ synthCvSrc: 1, synthDelayUs: 1 }), true)).toBe(false)
   })
 
   // Source B switched off is the whole B chain switched off — but not A's feed,

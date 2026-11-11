@@ -42,6 +42,7 @@ export const DEFAULT_CONTROLS = {
   synthVca: 0, // the synth's output on a VCA in A's cable: share of the level lost at full output
   synthDirt: 0, // how worn the synth's circuits are, 0 ideal to 1
   synthSyncIre: 0, // the synth's output subtracted from A's cable, IRE at full output
+  synthCvSrc: 0, // what drives those three boxes: 0 the synth, 1 input A's picture, 2 input B's
   synthShape: 2, // 0 ramp, 1 triangle, 2 sine, 3 pulse
   synthMix: 0, // 0 osc A alone, 1 sum, 2 ring mod, 3 comparator
   synthLevel: 1,
@@ -245,6 +246,8 @@ export const DEFAULT_CONTROLS = {
   fbKnee: 0.35,
   fbLag: 0, // pickup-tube lag: dim detail is read out over several fields
   fbComet: 0, // pickup-tube comet tails: highlights charge the target past what one field reads
+  fbRegShiftPx: 0, // tube registration, centring: red sits this far right of green and blue as far left
+  fbRegSizePct: 0, // tube registration, size: red's scan is this much larger than green's, blue's as much smaller
   // CRT faceplate (what the feedback camera and display photograph)
   crtCutoff: 0, // beam cutoff, 0 = off (identity, no black crush)
   crtGamma: 1, // gun gamma, 1 = linear passthrough

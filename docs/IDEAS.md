@@ -461,7 +461,7 @@ stops it being cheap is everything around that:
   `SOURCE_B_MODES`, `SOURCE_DESC`, `SOURCE_KIND`, the picker, and the docgen
   source list.
 - **The B encoders have to stay off in that mode**, a fourth condition in gates
-  whose containment (`bFeedOn ⊆ bWaveOn ⊆ bOn`) is under test.
+  whose containment (`bFeedOn ⊆ bWaveOn ⊆ bChainOn`) is under test.
 - **The chroma keyer reads `uvfB`**, which does not exist for the loop bus.
   Either the keyer is gated off in the mode or the loop's chroma is
   materialized, and the first is the honest cheap answer.

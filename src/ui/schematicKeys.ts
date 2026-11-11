@@ -45,7 +45,14 @@ export const CAMERA_LOOP_OPENS = {
   fader: ['fbMix', 'fbGain'],
   iris: ['fbIris'],
   lens: ['fbZoom', 'fbRotateDeg', 'fbShiftX', 'fbShiftY', 'fbFocus', 'fbVign'],
-  pickup: ['fbLag', 'fbComet', 'fbBlack', 'fbKnee'],
+  pickup: [
+    'fbLag',
+    'fbComet',
+    'fbRegShiftPx',
+    'fbRegSizePct',
+    'fbBlack',
+    'fbKnee',
+  ],
 } as const satisfies Opens
 
 export const CAMERA_LOOP_KEYS = Object.values(CAMERA_LOOP_OPENS).flat()
@@ -305,6 +312,7 @@ export const SYNTH_OPENS = {
     'synthDelayUs',
     'synthVca',
     'synthSyncIre',
+    'synthCvSrc',
   ],
   oscA: ['synthAHz', 'synthDriftPct', 'synthJitterUs', 'synthDirt'],
   oscB: [

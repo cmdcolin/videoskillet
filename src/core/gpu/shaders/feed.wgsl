@@ -26,6 +26,10 @@
 @group(0) @binding(2) var<storage, read_write> dst: array<f32>;
 @group(0) @binding(3) var<storage, read> synthLine: array<vec2f>;
 @group(0) @binding(4) var<storage, read> filters: array<f32>;
+// The other input's waveform as it stood a frame ago, for the control input
+// of A's three boxes. feedA is handed B's; feedB is handed A's and reads none
+// of it, because the boxes are on A's cable alone.
+@group(0) @binding(5) var<storage, read> other: array<f32>;
 
 // The termination's echo reaches this many samples back.
 const ECHO_LAG = 5u;
@@ -74,6 +78,28 @@ fn tapeAt(i: i32) -> f32 {
   return scrambleAt(v, row, s, P.scramble, P.scrambleMode, P.srcFrame);
 }
 
+// A picture on the boxes' control input in place of the synth. The input is a
+// control line with a fraction of video's bandwidth: sixteen taps two samples
+// apart span eight subcarrier cycles and land on opposite carrier phases in
+// pairs, so the chroma cancels and the voltage is the picture's brightness
+// over about two microseconds. It is clamped at black, so sync and burst sit
+// at zero volts and pass the boxes untouched: the line start holds while the
+// picture moves against it, and the subcarrier slides against a burst that
+// stayed put. Input B is read at the same place on its own raster a frame ago,
+// after its own feed's damage.
+fn pictureCv(n: u32, fromB: bool) -> f32 {
+  var lvl = 0.0;
+  for (var k = -8; k <= 7; k = k + 1) {
+    let i = clampIdx(i32(n) + k * 2);
+    if (fromB) {
+      lvl = lvl + other[i];
+    } else {
+      lvl = lvl + src[i];
+    }
+  }
+  return clamp((lvl / 16.0 - IRE_BLACK) / VIDEO_RANGE, 0.0, 1.0);
+}
+
 // deckAt gives one sample of the feed's deck half: the head-end, the deck and
 // the synth's boxes, which all sit ahead of the lead into the mixer.
 fn deckAt(n: u32) -> f32 {
@@ -107,7 +133,11 @@ fn deckAt(n: u32) -> f32 {
   var out: f32;
   var cv = 0.0;
   if (P.synthDelay > 0.0 || P.synthVca > 0.0 || P.synthSync > 0.0) {
-    cv = synthOut(row, s, synthPatch(P), 0.0, synthLine[row]);
+    if (P.synthCvSrc > 0.5) {
+      cv = pictureCv(n, P.synthCvSrc > 1.5);
+    } else {
+      cv = synthOut(row, s, synthPatch(P), 0.0, synthLine[row]);
+    }
   }
   // The synth's output driving a delay line in A's cable: the whole composite,
   // sync and burst too, comes out late by an amount that follows the synth's

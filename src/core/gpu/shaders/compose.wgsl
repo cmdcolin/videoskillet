@@ -191,6 +191,27 @@ fn cam(uv: vec2f) -> vec3f {
   return toDrive(acc);
 }
 
+// A three-tube camera splits the lens's image onto a red, a green and a blue
+// pickup tube, and each tube scans its own target with its own deflection
+// yoke. The three rasters are trimmed onto each other with centring and size
+// pots, and a camera that has warmed up or been knocked holds them apart.
+// Green carries most of the luma, so it is the reference the other two are
+// registered to. A centring error reads red a little to one side of green and
+// blue as far to the other; a size error scans red's target larger and blue's
+// smaller. In the loop the camera shoots its own misregistered picture, so
+// each lap moves red and blue the same step further and an echo's edges fan
+// out into a spectrum.
+fn camTubes(uv: vec2f) -> vec3f {
+  if (P.fbRegShift == 0.0 && P.fbRegSize == 0.0) {
+    return cam(uv);
+  }
+  let d = vec2f(P.fbRegShift, 0.0);
+  let c = uv - vec2f(0.5);
+  let r = cam(vec2f(0.5) + c / (1.0 + P.fbRegSize) - d).r;
+  let b = cam(vec2f(0.5) + c * (1.0 + P.fbRegSize) + d).b;
+  return vec3f(r, cam(uv).g, b);
+}
+
 @compute @workgroup_size(8, 8, 1)
 fn main(@builtin(global_invocation_id) gid: vec3u) {
   if (gid.x >= ACTIVE_W || gid.y >= ACTIVE_H) {
@@ -291,7 +312,7 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
     // closes there). Fresh state — zeros before the first sync — means no
     // correction yet, not a closed aperture.
     let iris = servoGain(timing[IRIS_GAIN]);
-    fb = cam(fuv) * P.fbGain * iris;
+    fb = camTubes(fuv) * P.fbGain * iris;
     // lens vignette, in sensor coordinates
     fb = fb * max(1.0 - P.fbVign * 1.45 * dot(rel0, rel0), 0.0);
   }

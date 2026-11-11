@@ -170,6 +170,10 @@ synthSyncIre  (synth → sync on A)
   0..80 step 0.1 IRE  default 0
   The synth's output subtracted from input A's cable, pulling the signal down past black where the synth is high. Dark picture there drops below the set's slicer and arrives as extra sync, so the false sync follows both the synth and the picture. The line oscillator's flywheel carries each pull down the raster, so the picture bends and hooks in smooth curves, and the hue follows the burst gate.
 
+synthCvSrc  (those boxes, driven by)
+  0=the synth 1=picture A 2=picture B  default 0
+  What drives the delay line, the level control and the sync pull on input A's cable. A picture is read for its brightness through a slow control line, and sync and burst count as black. Picture A is input A's own: bright picture is held back further than dark while the burst stays put, so hue turns a full circle for every 0.28 µs and colour follows the contours of brightness. Picture B is the other input, a frame late, and it can stay faded down: its bright areas pull A sideways and turn A's hue.
+
 ## Feed A · deck
 
 aPause  (A pause (deck held))
@@ -287,6 +291,14 @@ fbLag  (tube lag)
 fbComet  (comet tails)
   0..1 step 0.01  default 0
   The reading beam carries only so much current per field. A highlight charges the target past that, so it drains over several fields, and a moving light leaves a trail that holds the cap's brightness and then collapses. Low values catch the loop's own hot spots; high values catch the picture's highlights too.
+
+fbRegShiftPx  (tube centring)
+  -8..8 step 0.01 px  default 0
+  A three-tube camera scans a red, a green and a blue pickup tube, each with its own yoke, and centring pots lay the three pictures over each other. This is how far the red tube sits to the right of green, with blue as far to the left. Each lap of the loop shoots the last one with the same error, so an echo moves one step further in red and in blue every generation and its edges spread into a spectrum. A tenth of a pixel is visible in a long loop.
+
+fbRegSizePct  (tube size)
+  -3..3 step 0.01 %  default 0
+  The size pots of the same camera. The red tube's picture comes out this much larger than green's and the blue tube's as much smaller. The error is zero in the centre and grows toward the corners, so each lap of the loop pushes red outward and blue inward, and echoes gain rainbow rims that widen away from the middle.
 
 ## Tube face (what the camera shoots)
 

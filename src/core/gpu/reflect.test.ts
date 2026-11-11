@@ -42,6 +42,7 @@ describe('reflectBindings', () => {
       'dst',
       'synthLine',
       'filters',
+      'other',
     ])
   })
 

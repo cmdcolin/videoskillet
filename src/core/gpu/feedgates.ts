@@ -6,7 +6,7 @@
 // wrote this frame, break it the other and a full re-encode of B runs to
 // produce a frame identical to A's.
 //
-//   bFeedOn ⊆ bWaveOn ⊆ bOn
+//   bFeedOn ⊆ bWaveOn ⊆ bChainOn, and bOn ⊆ bChainOn
 //
 // Engine holds the same predicates as bound methods so the pass `when()`
 // callbacks, the bind-group swap and the uniform packing all read one answer.
@@ -108,16 +108,20 @@ export function feedFaults(c: Controls, src: FeedSource): boolean {
   )
 }
 
+// Whether any of the three boxes on A's cable is patched in.
+const boxesOn = (c: Controls) =>
+  c.synthDelayUs > 0 || c.synthVca > 0 || c.synthSyncIre > 0
+
+// Whether those boxes take their control voltage from input B's picture. B's
+// waveform is then read by A's feed, with B's fader open or closed.
+export function bCvOn(c: Controls, bEnabled: boolean): boolean {
+  return bEnabled && c.synthCvSrc > 1.5 && boxesOn(c)
+}
+
 // A's feed runs on its own account: A is the program bus, so a fault on its
 // cable bites whether or not anything is patched into the other input.
 export function aFeedOn(c: Controls): boolean {
-  return (
-    feedFaults(c, 'a') ||
-    c[FEEDS.a.pause] > 0 ||
-    c.synthDelayUs > 0 ||
-    c.synthVca > 0 ||
-    c.synthSyncIre > 0
-  )
+  return feedFaults(c, 'a') || c[FEEDS.a.pause] > 0 || boxesOn(c)
 }
 
 // Who consumes B's materialized waveform: the dirty sum resamples it, and the
@@ -126,15 +130,17 @@ export function aFeedOn(c: Controls): boolean {
 // crosspoint leak or (dirty only) the ring mod, so with those at zero the buffer
 // is never read. The genlocked fader is a crossfade the shader clamps to [0,1],
 // so a negative bGain left over from a session on the dirty path is a closed
-// fader, not a reason to re-encode B.
+// fader, not a reason to re-encode B. The boxes on A's cable read the buffer
+// too, when their control input is patched to B.
 export function bWaveOn(c: Controls, bEnabled: boolean): boolean {
   return (
-    bEnabled &&
-    (c.busCut > 0 ||
-      c.bLeak > 0 ||
-      (c.bGenlock < 0.5
-        ? c.bGain !== 0 || c.bRing !== 0 || c.mixPot > 0
-        : c.bGain > 0))
+    bCvOn(c, bEnabled) ||
+    (bEnabled &&
+      (c.busCut > 0 ||
+        c.bLeak > 0 ||
+        (c.bGenlock < 0.5
+          ? c.bGain !== 0 || c.bRing !== 0 || c.mixPot > 0
+          : c.bGain > 0)))
   )
 }
 
@@ -149,8 +155,7 @@ export function bFeedOn(c: Controls, bEnabled: boolean): boolean {
   )
 }
 
-// What mix_b can actually change, and so what the whole source-B chain
-// (composeB, encodeYuvB, encodeChromaB, encodeCompositeB) is dispatched for.
+// What mix_b can actually change, and so when mix_b is dispatched.
 // The genlocked path is a crossfade against the program bus, so it reads
 // neither the A fader nor the ring mod: a value left on either from a session
 // on the dirty path would otherwise re-encode B for a frame identical to the
@@ -165,4 +170,11 @@ export function bOn(c: Controls, bEnabled: boolean): boolean {
         ? c.bGain !== 0 || c.bRing !== 0 || c.aGain !== 1 || c.mixPot > 0
         : c.bGain > 0))
   )
+}
+
+// What the source-B chain ahead of the mixer (composeB, encodeChromaB,
+// encodeCompositeB) is dispatched for: a mixer with something to change, or
+// A's boxes reading B's picture with B off the bus.
+export function bChainOn(c: Controls, bEnabled: boolean): boolean {
+  return bOn(c, bEnabled) || bCvOn(c, bEnabled)
 }
