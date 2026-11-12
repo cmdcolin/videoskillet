@@ -21,7 +21,7 @@ const flag = name =>
   process.argv.find(arg => arg.startsWith(`--${name}`))?.split('=')[1] ?? ''
 
 const posts = readdirSync(POSTS)
-  .filter(file => file.endsWith('.md'))
+  .filter(file => file.endsWith('.md') && file !== 'CLAUDE.md')
   .map(file => ({
     file,
     text: readFileSync(`${POSTS}/${file}`, 'utf8'),

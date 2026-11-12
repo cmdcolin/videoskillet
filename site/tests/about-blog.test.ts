@@ -18,7 +18,9 @@ test('the bar links the about page and the blog, and the about page links privac
 })
 
 test('every published post points at an image that exists', () => {
-  for (const file of readdirSync('site/posts').filter(f => f.endsWith('.md'))) {
+  for (const file of readdirSync('site/posts').filter(
+    f => f.endsWith('.md') && f !== 'CLAUDE.md',
+  )) {
     const text = readFileSync(`site/posts/${file}`, 'utf8')
     if (/^draft: true$/m.test(text)) continue
     const image = /^image: (.+)$/m.exec(text)?.[1]

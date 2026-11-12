@@ -14,7 +14,7 @@ const docs = defineCollection({
 })
 
 const posts = defineCollection({
-  loader: glob({ base: 'site/posts', pattern: '*.md' }),
+  loader: glob({ base: 'site/posts', pattern: ['*.md', '!CLAUDE.md'] }),
   schema: postSchema,
 })
 
