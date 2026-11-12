@@ -460,9 +460,10 @@ custom hook that an unedited component calls can log "Expected a constant size
 argument for each invocation of useMemoCache" until a reload. Edited components
 reset their cache through React's own hot-reload path.
 
-`pnpm compiler` still runs the Babel compiler (`babel-plugin-react-compiler`),
-because it is the reference and `KNOWN` below is a list of its bail-outs. Two
-consequences worth knowing:
+`pnpm compiler` runs the Babel compiler (`babel-plugin-react-compiler`), because
+it is the reference and `KNOWN` below is a list of its bail-outs. It also runs
+the Oxc port over every file and fails on any diagnostic, since vite only warns
+about those. Two consequences worth knowing:
 
 - **The ref-during-render pattern above is exactly what the compiler refuses.**
   A bail-out leaves that code as written and costs the component its

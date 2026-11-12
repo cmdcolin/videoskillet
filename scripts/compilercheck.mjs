@@ -24,6 +24,9 @@
 
 import { transformAsync } from '@babel/core'
 import compiler from 'babel-plugin-react-compiler'
+import { transformSync } from 'oxc-transform-react'
+
+import { reactCompiler } from '../vite.shared.ts'
 
 import { readFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
@@ -57,6 +60,14 @@ async function sources(dir) {
   return out
 }
 
+// The app compiles with Oxc's port, which is a separate implementation that
+// can bail on code the Babel compiler accepts. Vite only warns about it.
+const oxcBailouts = (file, source) =>
+  transformSync(file, source, {
+    lang: file.endsWith('.tsx') ? 'tsx' : 'ts',
+    reactCompiler,
+  }).errors.map(error => ({ file, reason: `oxc: ${error.message}` }))
+
 const files = (await sources(SRC)).sort()
 const failures = []
 const skipped = []
@@ -65,8 +76,10 @@ let optimized = 0
 await Promise.all(
   files.map(async file => {
     const events = []
+    const source = await readFile(file, 'utf8')
+    failures.push(...oxcBailouts(file, source))
     try {
-      await transformAsync(await readFile(file, 'utf8'), {
+      await transformAsync(source, {
         filename: file,
         // Parsed rather than preset-stripped: @babel/preset-typescript is not a
         // dependency, and the compiler only needs to see the AST — nothing here
