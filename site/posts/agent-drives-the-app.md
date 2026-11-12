@@ -26,8 +26,8 @@ its work and hands you a link to the look. Watch Claude Sonnet rebuild the
 Purplady demo from scratch in the video.
 
 Want to try it? Run `claude --chrome` with the app open in Chrome, or open the
-Claude in Chrome side panel in the app's tab. The **agent** button in the
-sidebar copies a starting prompt for the look on screen.
+Claude in Chrome side panel in the app's tab. Press **agent** in the sidebar to
+copy a starting prompt for the look on screen.
 
 If you're building your own agent, we added `window.vfBoard.apply(link)` to
 apply a whole look at once and `window.vfBoard.read()` to return the board as

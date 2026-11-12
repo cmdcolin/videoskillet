@@ -1,5 +1,5 @@
 ---
-title: More scramble channels - Oak Sigma and VideoCipher II
+title: 'More scramble channels: Oak Sigma and VideoCipher II'
 date: 2026-11-11
 summary:
   We made two more scrambler presets, Oak Sigma and VideoCipher II. Without a
@@ -20,23 +20,22 @@ picture as a negative. Try
 and
 [Oak Sigma](/app/#preset=oakSigma&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
-For our previous [scrambled channel](/blog/better-scramble-channel/) post, we
-showed how we can simulate the channels that old
+In our [scrambled channel](/blog/better-scramble-channel/) post, we simulated
+the channels that old
 [Jerrold](https://en.wikipedia.org/wiki/Jerrold_Electronics) and
 [General Instrument](https://en.wikipedia.org/wiki/General_Instrument) boxes
 decoded, by weakening the sync pulses that tell the TV where each line starts.
-Oak Sigma and VideoCipher II went further: they took the sync out entirely, put
-encrypted sound data in its place and turned the video into a negative.
+Oak Sigma and VideoCipher II took the sync out entirely, put encrypted sound
+data in its place and turned the video into a negative.
 
 ## Background
 
-Before streaming, a subscription channel had a problem: the signal went out
-through the air or a cable to everyone, paying or not. The channels fixed that
-by [scrambling](https://en.wikipedia.org/wiki/Television_encryption) the signal
-on purpose. Your TV could still receive the channel, but the picture rolled,
-tore and flashed, and you couldn't watch it. When you subscribed, you rented a
-decoder box that put the signal back together, a bit like a paid unlock key for
-a channel.
+Before streaming, a subscription channel sent its signal through the air or a
+cable to everyone, paying or not. The channels kept non-subscribers out by
+[scrambling](https://en.wikipedia.org/wiki/Television_encryption) the signal on
+purpose. Your TV could still receive the channel, but the picture rolled, tore
+and flashed, and you couldn't watch it. When you subscribed, you rented a
+decoder box that put the signal back together.
 
 [Oak Industries](https://en.wikipedia.org/wiki/Oak_Industries) made the
 scrambling boxes behind
@@ -50,10 +49,9 @@ broadcasters never meant for them.
 ![An ON TV decoder box: a black front panel in a woodgrain frame, with the striped blue ON logo and "Subscription TV" on the left, an OFF/ON knob on the right, and "Tune TV to ch 3 for ON" below it.](/blog/oak-ontv-decoder.webp)
 
 Each system used its own simple trick, so each scrambled picture failed in its
-own way: lost sync, flipped brightness, a wobbling line. Hobbyists who wanted to
-watch without paying built their own decoders, which is part of why the makers
-kept adding to their systems. We like these failures a lot, because each one is
-a different way for a TV to lose its picture.
+own way, with lost sync, flipped brightness or a data ribbon where the sync
+belongs. Hobbyists who wanted to watch without paying built their own decoders,
+which is part of why the makers kept adding to their systems.
 
 ## VideoCipher II
 
@@ -61,7 +59,7 @@ We made VideoCipher II hide the sound inside the picture. We put sound and
 addressing data (which told each box whether you had paid) at the start of every
 line, where the sync pulse belongs, and sat the
 [colour burst](https://en.wikipedia.org/wiki/Color_burst), the TV's colour
-reference, on a mid-grey step after it. We invert the video at 1.4 times the
+reference, on a mid-grey step after it. We inverted the video at 1.4 times the
 gain, so the brightest parts of the scene sink below black, and the TV mistakes
 them for sync pulses and tears the picture there. Open
 [VideoCipher II](/app/#preset=videoCipher&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
@@ -71,11 +69,13 @@ to watch it tear the catalogue cover live.
 
 ## Oak Sigma
 
-We replaced each line's sync pulse with three bytes of data at 250 nanoseconds a
-bit: a clock byte and two bytes of encrypted sound. We made the level of that
-data wobble at about 15 Hz. The real system flipped the picture to negative at
-scene changes, at most once every 3 seconds. We flip ours at random intervals of
-3 to 25 seconds, so you never know when the negative is coming.
+Without a decoder, Oak Sigma runs a speckled ribbon down the side of the screen
+and turns the picture negative without warning. We replaced each line's sync
+pulse with three bytes of data at 250 nanoseconds a bit: a clock byte and two
+bytes of encrypted sound. We made the level of that data wobble at about 15 Hz.
+The real system flipped the picture to negative at scene changes, at most once
+every 3 seconds. We flip ours at random intervals of 3 to 25 seconds, so you
+never know when the negative is coming.
 
 ![The 1984 catalogue cover as a negative. The model is green at the head, violet across the arms, blue at the waist and magenta at the knees, and a ribbon of black-and-white speckle with wavy edges runs down the right of the frame.](/blog/scramble-oak-sigma.webp)
 

@@ -19,8 +19,8 @@ forest without a green screen! Drop a PNG, WebP or WebM with a transparent
 background on B, flip the new **Key source** switch to B alpha, and your cutout
 appears over A. Old character generators (the machines that put titles and
 captions on TV) sent the shape of their lettering down a separate wire beside
-the picture, and we do the same, so the edge stays as crisp as the artist drew
-it.
+the picture. We send B's alpha the same way, so the edge stays as crisp as the
+artist drew it.
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">
@@ -33,10 +33,9 @@ it.
 </figure>
 </div>
 
-Why did we bother? The [chroma keyer](https://en.wikipedia.org/wiki/Chroma_key)
-cuts out green, and this clover is green, so on the left the vineyard shows
-through its leaves. On the right we key by alpha, and the clover keeps all of
-its green.
+The [chroma keyer](https://en.wikipedia.org/wiki/Chroma_key) cuts out green, so
+on the left the vineyard shows through the clover's leaves. On the right we key
+by alpha, and the clover keeps all of its green.
 
 ## Key edges
 
@@ -56,10 +55,9 @@ Watch
 
 ## A moving cutout
 
-Moving cutouts work too! We key a WebM with an alpha channel frame by frame. Set
-the keyer's **Fill** to loop bus (the mixer's feedback path) and the keyer shows
-its own last frame behind the cutout, so this spacecraft leaves a trail of
-ghosts, the same trick as in [Chroma keying with ghosts](/blog/keyer-ghosts/).
+Moving cutouts work too! We read a WebM's alpha channel frame by frame. Set
+**Fill** to loop bus (the mixer's feedback path) and this spacecraft leaves a
+trail of ghosts, as in [Chroma keying with ghosts](/blog/keyer-ghosts/).
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">
