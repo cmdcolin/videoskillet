@@ -17,5 +17,4 @@ allowBuilds:
   '@firebase/util': false
   protobufjs: false
 minimumReleaseAgeExclude:
-  - astro@7.3.1
   - skillet-shared
