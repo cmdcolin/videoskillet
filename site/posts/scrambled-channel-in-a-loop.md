@@ -12,8 +12,8 @@ imageAlt:
 look: '#preset=paperDolls&vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/0/02/ARTIFACTS_-_Fashion_Film.webm/ARTIFACTS_-_Fashion_Film.webm.480p.vp9.webm'
 ---
 
-What happens when you point a camera at a scrambled channel? We had to find out,
-and we made three presets from what we saw! Try
+We pointed a camera at a scrambled channel, fed the picture back in, and made
+three presets from what we saw! Try
 [paper dolls](/app/#preset=paperDolls&vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/0/02/ARTIFACTS_-_Fashion_Film.webm/ARTIFACTS_-_Fashion_Film.webm.480p.vp9.webm).
 We took the picture at the top from about 35 seconds into the film.
 

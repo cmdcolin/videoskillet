@@ -18,7 +18,7 @@ with no decoder! Try it:
 
 ![A 1980 swimwear model in a zebra-print swimsuit and a white cape, arms spread against wood panelling, clean apart from noise and a soft cast.](/blog/scramble-before.webp)
 
-Before: the TV found its timing marks again, so the picture only washed out.
+Before: the TV still found the sync pulses, so the picture only washed out.
 
 ![The same model with the cape torn into wavy slabs, the cape pink, the wall behind her bright green and a band of red across her legs.](/blog/scramble-colour-loops.webp)
 
