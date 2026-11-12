@@ -35,7 +35,7 @@ decoder box that put the signal back together, a bit like a paid unlock key for
 a channel.
 
 Oak Industries made the scrambling boxes behind
-[ON TV](https://en.wikipedia.org/wiki/ON_TV_(TV_network)#/media/File:ONTV_Box_-_front.jpg),
+[ON TV](<https://en.wikipedia.org/wiki/ON_TV_(TV_network)#/media/File:ONTV_Box_-_front.jpg>),
 a US pay-TV channel that broadcast over the air. You rented the box, and without
 it the channel arrived scrambled. Oak's later Sigma system moved the same idea
 onto cable, and VideoCipher II did it for satellite, where people with backyard

@@ -27,7 +27,8 @@ that stage's controls open underneath it.
 - Lots of 'faults' like loose cable, bad receiver, inverted polarity, bad ground
 - Audio-reactive: from the 'mic'/system/loopback, or a file
 - All settings can be modulated (e.g. with LFO)
-- MIDI controller support via WebMIDI — map different knobs to settings
+- [MIDI](docs/MIDI.md) controller support via WebMIDI — map different knobs to
+  settings
 - Easy-to-use "randomize" buttons, and settings 'morph' over N seconds for
   smooth transitions
 - Has the spirit of [video toaster](https://en.wikipedia.org/wiki/Video_Toaster)
@@ -37,36 +38,31 @@ that stage's controls open underneath it.
 - Supports live youtube mixing, but you have to download our
   [command line](docs/CLI.md) tool with yt-dlp
 - Also renders videos entirely offline via [command line](docs/CLI.md)
+- Claude Code can interact with the webapp e.g.
+  [Automate it with an agent](https://videoskillet.com/blog/agent-drives-the-app/)
 - ...[much more](docs/FEATURES.md)
-
-## Automate it with an AI agent
-
-Claude Code can drive the app running in your browser: open
-https://videoskillet.com/app/, run `claude --chrome`, and just say what you want
-the app to do, plain english.
-
-See https://videoskillet.com/blog/agent-drives-the-app/
 
 ## Docs
 
 Using videoskillet:
 
-- [Getting started](docs/GETTING-STARTED.md)
+- [Blog](https://videoskillet.com/blog/)
 - [Main docs website](https://videoskillet.com/guide/)
-- [Features](docs/FEATURES.md)
-- [Effects](docs/EFFECTS.md)
-- [MIDI](docs/MIDI.md)
-- [FAQ](docs/FAQ.md)
 - [Comparison with other tools](docs/COMPARISON.md)
 - [URL params](public/llms.txt)
 
-Offline rendering/CLI:
+The UI is quite complex but agent's can use it effectively. Try just telling
+your claude code to launch videoskill.com/app and make some glitches, it'll do
+stuff for you
 
-- [CLI](docs/CLI.md) — takes a link and a file and writes ProRes 4444. Also has
-  `videoskillet serve`, which hosts the app on your own machine instead of from
-  website, and has yt-dlp integration to let you paste youtube on the fly (live
-  webapp doesn't have yt-dlp concept...running pnpm dev server also has yt-dlp
-  integration)
+## Offline rendering/CLI:
+
+The app is primarily this sort of realtime live VJ style webapp, but the CLI
+allows you to record videos statically. Also it has the `videoskillet serve`
+subcommand, which hosts the app on your own machine instead of from website, and
+has yt-dlp integration to let you paste youtube on the fly (live webapp doesn't
+have yt-dlp concept...running pnpm dev server also has yt-dlp integration) See
+[CLI](docs/CLI.md)
 
 ## Gallery
 
@@ -92,7 +88,7 @@ Each tile opens that look in the app.
     <td align="center"><a href="https://videoskillet.com/app/#set=lumaMHz:2.8,osd:1,osdHoldS:5,osdBlueS:1.5,lumaPeak:0.9,noiseIre:2,colorUnderMix:1,underJitterDeg:4,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:200,trackAmt:0.1,trackHunt:0.75,trackKick:0.9&amp;mod="><img src="public/demos/tape-in.webp" alt="The deck's blue background with PLAY drawn over it, then the picture arriving while the tracking servo hunts for the track." width="200" /><br />Tape in</a></td>
   </tr>
   <tr>
-    <td align="center"><a href="https://videoskillet.com/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&amp;vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm.480p.vp9.webm&amp;set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:5,bKeyFillHueDeg:30"><img src="https://myloveydove.com/videoskillet/blog/keyer-fade-sandwich-hue.webp" alt="A chicken fillet roll turning over an abandoned ballroom, with a disc of its keyed copies running through bands of every hue behind it." width="200" /><br />Sandwich séance</a></td>
+    <td align="center"><a href="https://videoskillet.com/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&amp;vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm.480p.vp9.webm&amp;set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:5,bKeyFillHueDeg:30"><img src="docs/img/sandwich-seance.webp" alt="A chicken fillet roll turning over an abandoned ballroom, with a disc of its keyed copies running through bands of every hue behind it." width="200" /><br />Sandwich séance</a></td>
     <td align="center"><a href="https://videoskillet.com/app/#preset=boxInALoop&amp;vurl=https://myloveydove.com/videoskillet/sources/artifacts-fashion-film.webm"><img src="public/demos/gatecrasher.webp" alt="A premium channel through a 10 dB decoder box whose gate timing has drifted, watched by a camera pointed at the screen. The box raises a strip of picture in place of the sync tip, so the set locks to that strip and its AGC follows it, and the camera loop copies the torn edge into a column of folds. Clip from ARTIFACTS by Tiffany Frances (CC BY 3.0)." width="200" /><br />Gatecrasher</a></td>
   </tr>
 </table>
