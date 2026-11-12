@@ -25,6 +25,28 @@ entirely, put encrypted sound data in its place and turned the video into a
 negative. A TV with no decoder shows that data as a speckled ribbon down the
 screen.
 
+## Background
+
+Before streaming, a subscription channel had a problem: the signal went out
+through the air or a cable to everyone, paying or not. The fix was to scramble
+it on purpose. Your TV could still receive the channel, but the picture rolled,
+tore and flashed, and you couldn't watch it. When you subscribed, you rented a
+decoder box that put the signal back together, a bit like a paid unlock key for
+a channel.
+
+Oak Industries made the scrambling boxes behind
+[ON TV](https://en.wikipedia.org/wiki/ON_TV_(TV_network)#/media/File:ONTV_Box_-_front.jpg),
+a US pay-TV channel that broadcast over the air. You rented the box, and without
+it the channel arrived scrambled. Oak's later Sigma system moved the same idea
+onto cable, and VideoCipher II did it for satellite, where people with backyard
+dishes could pick up channels that were never meant for them.
+
+The tricks were simple electronics, so the scrambled pictures all failed in
+different ways: lost sync, flipped brightness, a wobbling line. Hobbyists who
+wanted to watch without paying built their own decoders, which is part of why
+the systems kept getting more elaborate. We like these failures a lot, because
+each one is a different way for a TV to lose its picture.
+
 ## VideoCipher II
 
 We made VideoCipher II hide the sound inside the picture. Sound and addressing
@@ -32,8 +54,6 @@ data take over the front porch and sync of every line, and the burst sits on a
 mid-grey back porch. We invert the video at 1.4 times the gain, so the brightest
 parts of the scene become the lowest levels on the line, and the TV's sync
 separator locks onto those and tears the picture.
-
-![The catalogue cover torn into horizontal slabs of red, violet, blue and green, with a wide ribbon of black-and-white speckle winding down the middle of the frame.](/blog/scramble-videocipher.webp)
 
 ## Oak Sigma
 

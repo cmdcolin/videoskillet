@@ -72,4 +72,9 @@ Offline rendering/CLI:
 
 Note: this project is extensively vibecoded. The initial signal-path design was
 one-shotted by [Fable](https://claude.com/), which nailed the "signal level"
-idea behind the glitches.
+idea behind the glitches. If you use this in your own project(s), I'd appreciate
+credit
+
+## License
+
+MIT
