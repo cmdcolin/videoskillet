@@ -682,7 +682,7 @@ export const PRESETS: PresetDef[] = [
       decoderSkewUs: 1.5,
       syncSlicer: 2,
       hHold: 0.08,
-      fbMix: 0.45,
+      fbMix: 0.25,
       fbZoom: 1.003,
       fbShiftY: 0.003,
       fbGain: 1,

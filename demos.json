@@ -141,5 +141,24 @@
         "query": "#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG/1280px-Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0,bKeyFillFraming:1"
       }
     ]
+  },
+  {
+    "name": "Gatecrasher",
+    "showcase": false,
+    "gallery": true,
+    "says": "A premium channel through a 10 dB decoder box whose gate timing has drifted, watched by a camera pointed at the screen. The box raises a strip of picture in place of the sync tip, so the set locks to that strip and its AGC follows it, and the camera loop copies the torn edge into a column of folds. Clip from ARTIFACTS by Tiffany Frances (CC BY 3.0).",
+    "query": "#preset=boxInALoop&vurl=https://myloveydove.com/videoskillet/sources/artifacts-fashion-film.webm",
+    "riffs": [
+      {
+        "name": "No camera",
+        "says": "The box alone: slabs of red and blue that follow the picture's left edge.",
+        "query": "#preset=driftingBox&vurl=https://myloveydove.com/videoskillet/sources/artifacts-fashion-film.webm"
+      },
+      {
+        "name": "Gate early",
+        "says": "The gate opens 2 µs early and misses the burst, so the colour is driven far up and the frame washes out in pink and yellow.",
+        "query": "#preset=earlyBox&vurl=https://myloveydove.com/videoskillet/sources/artifacts-fashion-film.webm"
+      }
+    ]
   }
 ]
