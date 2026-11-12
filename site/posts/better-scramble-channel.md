@@ -39,24 +39,18 @@ to 58 Hz, so the picture wraps around the edge.
 
 ![The 1984 catalogue cover with bands of the picture slid sideways and wrapped round the edge. The grid of swimsuit photos is torn into wavy columns, and the colour is flooded pink, green and violet.](/blog/scramble-turbo-sync-loss.webp)
 
-## Why we scramble in Channel
-
-A premium channel's head-end scrambled the program after the studio had mixed
-it. We put the scrambler in **Channel**, which holds the head-end and the cable
-between the mixer and the TV's aerial socket. You'll find it as **sync
-suppression** and **system** in the **Cable / Wiring** group. To scramble one
-input before the mix, use **A sync suppression** in the **Feed A · deck** group
-of Source A.
+## How the TV loses its place
 
 A scrambler works on the sync pulses, the short dips at the start of every line
-that tell the TV where the line begins. The **Receiver** is the TV, and nothing
-in it knows the channel is scrambled. The tearing and the flooded colour come
-from the TV hunting for pulses it can't find.
+that tell the TV where the line begins. A premium channel scrambled the program
+after the studio had mixed it, because the studio's switcher needs clean sync on
+every input to cut between them. We did the same, so you'll find the scrambler
+as **sync suppression** and **system** in the **Cable / Wiring** group of
+**Channel**.
 
-<figure>
-<img src="/blog/scramble-map.svg" alt="The app's five signal-path stages in a row: Source A, Mix, Channel, Receiver and Screen. A note under Source A says the encoder turns the picture into a signal with sync pulses. A note under Mix says the studio mixes the program before the head-end. A note under Channel says the head-end scrambler in Cable / Wiring hides the pulses. A note under Receiver says the TV hunts for the pulses and tears the picture.">
-<figcaption>Where each part of the scramble happens in the app's signal path.</figcaption>
-</figure>
+Nothing in the TV knows the channel is scrambled. The tearing and the flooded
+colour come from the TV hunting for pulses it can't find, and we set its **sync
+slicer**, **horizontal hold** and **vertical hold** to decide how it hunts.
 
 ## Why the colour looks right
 
