@@ -82,9 +82,6 @@ We took Sigma's timing from Oak's US patents
 from Communications Technology (June 1986, page 70). We chose the data levels
 and the inversion level ourselves.
 
-There's more from the same release in
-[the scrambled channel in a camera loop](/blog/scrambled-channel-in-a-loop/).
-
 _The catalogue cover is LIZ fashion's
 [1984 catalogue cover](https://commons.wikimedia.org/wiki/File:%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg),
 from Wikimedia Commons under CC BY-SA 3.0, and the stills of it here are under

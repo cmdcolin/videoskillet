@@ -70,8 +70,7 @@ can
 ## Update, 11 November 2026
 
 We've since made more scramblers:
-[Oak Sigma and VideoCipher II](/blog/oak-sigma-and-videocipher/) and
-[the scrambled channel in a camera loop](/blog/scrambled-channel-in-a-loop/).
+[Oak Sigma and VideoCipher II](/blog/oak-sigma-and-videocipher/).
 
 _Photos from Wikimedia Commons under CC BY-SA 3.0, and the stills here are under
 the same licence: LIZ fashion's
