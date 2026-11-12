@@ -29,7 +29,7 @@ Want to try it? Run `claude --chrome` with the app open in Chrome, or open the
 Claude in Chrome side panel in the app's tab. The **agent** button in the
 sidebar copies a starting prompt for the look on screen.
 
-If you're building your own agent, `window.vfBoard.apply(link)` applies a whole
-look at once, and `window.vfBoard.read()` returns the board as text. The
-[AI guide](/guide/ai/) has the details, and [llms.txt](/llms.txt) lists every
-control an agent can set.
+If you're building your own agent, we added `window.vfBoard.apply(link)` to
+apply a whole look at once and `window.vfBoard.read()` to return the board as
+text. The [AI guide](/guide/ai/) has the details, and [llms.txt](/llms.txt)
+lists every control an agent can set.

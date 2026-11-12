@@ -17,9 +17,9 @@ look: '#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Baumsilhou
 We made the keyer cut out transparent images, so you can put a fox in a misty
 forest without a green screen! Drop a PNG, WebP or WebM with a transparent
 background on B, flip the new **Key source** switch to B alpha, and your cutout
-appears over A. Old character generators sent their key down its own wire beside
-the picture, and we do the same, so the edge stays as crisp as the artist drew
-it.
+appears over A. Old character generators sent the shape of their lettering down
+its own wire beside the picture, and we do the same, so the edge stays as crisp
+as the artist drew it.
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">
@@ -38,25 +38,26 @@ and the clover keeps all of its green.
 
 ## Key edges
 
-All the key edge effects work on alpha too. Give the clover a
+We made all the key edge effects work on alpha too. Give the clover a
 [drop shadow](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Beech_forest_M%C3%A1tra_in_winter.jpg/1280px-Beech_forest_M%C3%A1tra_in_winter.jpg&iurlb=https://upload.wikimedia.org/wikipedia/commons/3/3a/Gluecksklee_%28transparent_background%292.png&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1,bKeyEdge:2,bKeyEdgeUs:2.5,bKeyEdgeY:0.05).
 
 ![The clover over a winter beech forest with a black drop shadow below and to the right of it.](/blog/alpha-clover-shadow.webp)
 
 ## Genlock off
 
-Turn genlock off and B's sync fights A's, so the cutout slips and rolls around
-the screen with B's picture. It looks gloriously broken. Watch
+Turn genlock off, so B's picture no longer keeps time with A's, and the cutout
+slips and rolls around the screen with B's picture. It looks gloriously broken.
+Watch
 [the fox unlocked](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg/1280px-Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg&iurlb=https://upload.wikimedia.org/wikipedia/commons/f/f6/Yawning_red_fox_%28transparent_background%29.png&set=chromaGain:1.3,crtSat:1.2,bGain:0.6,aGain:0.7,bKey:1,bKeySource:1,bDetuneHz:5).
 
 ![The fox washed pale and summed over the misty forest, with a coloured stripe and a dark bar where its sync rolls through the picture.](/blog/alpha-fox-unlocked.webp)
 
 ## A moving cutout
 
-Moving cutouts work too! A WebM with an alpha channel keys frame by frame, and
-if you send the fill to the loop bus, this spacecraft leaves a trail of ghosts
-behind it, the same trick as in
-[Chroma keying with ghosts](/blog/keyer-ghosts/).
+Moving cutouts work too! We key a WebM with an alpha channel frame by frame, and
+if you set the keyer's **Fill** to loop bus, it shows its own last frame behind
+the cutout, so this spacecraft leaves a trail of ghosts behind it, the same
+trick as in [Chroma keying with ghosts](/blog/keyer-ghosts/).
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">

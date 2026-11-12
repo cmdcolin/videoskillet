@@ -15,8 +15,17 @@ comments. Posts are not reference pages.
   screen!"
 - Write "we" for the makers and "you" for the reader. The software is never the
   subject of a paragraph.
-- Use active verbs and ordinary words. "The keyer fills the hole with its own
-  earlier output" beats "The fill is sourced from the prior output".
+- Say what we did to get each look, in the active voice with "we" as the
+  subject: "We simulated the channels that old Jerrold and General Instrument
+  boxes decoded, by weakening the sync pulses". A look is something we built on
+  purpose, so never make the preset, the app or a control the actor, as in "Our
+  scrambled channel copies those boxes" or "It makes the line oscillator drift".
+  Name the real systems or brands we simulated.
+- Use no passive voice, in the history as well: "channels the broadcasters never
+  meant for them", not "channels that were never meant for them".
+- Use active verbs and ordinary words, and describe what the reader sees. "We
+  made the keyer show its own last frame wherever the green screen was" beats
+  "The fill is sourced from the prior output".
 - Show enthusiasm with specifics and the occasional exclamation mark. Say what
   looks good about the result, such as "it looks gloriously broken".
 - Put the link to try it near the top, then explain.
