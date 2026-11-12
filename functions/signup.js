@@ -87,14 +87,20 @@ export const signupMail = (app, user, totals, stats) => {
   }
 }
 
-const claim = (db, collection, uid) =>
-  db
-    .doc(`signupAlerts/${collection}_${uid}`)
-    .create({ at: Timestamp.now() })
-    .then(
-      () => true,
-      error => (error.code === ALREADY_EXISTS ? false : Promise.reject(error)),
-    )
+const claim = async (db, collection, uid) => {
+  try {
+    await db
+      .doc(`signupAlerts/${collection}_${uid}`)
+      .create({ at: Timestamp.now() })
+    return true
+  } catch (error) {
+    if (error.code === ALREADY_EXISTS) {
+      return false
+    } else {
+      throw error
+    }
+  }
+}
 
 export async function signupAlert({
   db,
@@ -114,7 +120,7 @@ export async function signupAlert({
     ])
     await mail(signupMail(app, user, totals, stats)).catch(async error => {
       await db.doc(`signupAlerts/${collection}_${uid}`).delete()
-      return Promise.reject(error)
+      throw error
     })
   }
 }

@@ -8,7 +8,7 @@ describe('countAccounts', () => {
     const db = {
       collection: name => ({
         count: () => ({
-          get: async () => ({ data: () => ({ count: sizes[name] }) }),
+          get: () => Promise.resolve({ data: () => ({ count: sizes[name] }) }),
         }),
       }),
     }
@@ -55,11 +55,13 @@ describe('signupMail', () => {
 
 afterEach(() => vi.unstubAllGlobals())
 
+const answer = body =>
+  Promise.resolve({ ok: true, json: () => Promise.resolve(body) })
+
 describe('traffic', () => {
   it('asks for whole hours and maps the answers', async () => {
-    const answer = body => ({ ok: true, json: async () => body })
     const calls = []
-    vi.stubGlobal('fetch', async (url, init) => {
+    vi.stubGlobal('fetch', (url, init) => {
       calls.push([url, init.headers.Authorization])
       return url.includes('/stats/hits')
         ? answer({ hits: [{ path: '/', count: 4, extra: 1 }] })
@@ -82,37 +84,40 @@ describe('traffic', () => {
   })
 
   it('throws when GoatCounter refuses', async () => {
-    vi.stubGlobal('fetch', async () => ({ ok: false, status: 401 }))
+    vi.stubGlobal('fetch', () => Promise.resolve({ ok: false, status: 401 }))
     await expect(traffic('bender', 'bad', new Date())).rejects.toThrow('401')
   })
 })
 
-describe('signupAlert', () => {
-  const setup = (create = async () => {}) => {
-    const marker = { create: vi.fn(create), delete: vi.fn(async () => {}) }
-    const sizes = { users: 3, benderUsers: 1 }
-    const db = {
-      doc: vi.fn(() => marker),
-      collection: name => ({
-        count: () => ({
-          get: async () => ({ data: () => ({ count: sizes[name] }) }),
-        }),
-      }),
-    }
-    const mail = vi.fn(async () => {})
-    const deps = {
-      db,
-      auth: { getUser: async uid => ({ uid, email: 'a@b.c' }) },
-      mail,
-      token: 't',
-      collection: 'users',
-      app: 'videoskillet',
-      uid: 'u1',
-    }
-    vi.stubGlobal('fetch', async () => ({ ok: false, status: 500 }))
-    return { marker, mail, deps }
+const setup = (create = () => Promise.resolve()) => {
+  const marker = {
+    create: vi.fn(create),
+    delete: vi.fn(() => Promise.resolve()),
   }
+  const sizes = { users: 3, benderUsers: 1 }
+  const db = {
+    doc: vi.fn(() => marker),
+    collection: name => ({
+      count: () => ({
+        get: () => Promise.resolve({ data: () => ({ count: sizes[name] }) }),
+      }),
+    }),
+  }
+  const mail = vi.fn(() => Promise.resolve())
+  const deps = {
+    db,
+    auth: { getUser: uid => Promise.resolve({ uid, email: 'a@b.c' }) },
+    mail,
+    token: 't',
+    collection: 'users',
+    app: 'videoskillet',
+    uid: 'u1',
+  }
+  vi.stubGlobal('fetch', () => Promise.resolve({ ok: false, status: 500 }))
+  return { marker, mail, deps }
+}
 
+describe('signupAlert', () => {
   it('mails once and claims the uid first', async () => {
     const { marker, mail, deps } = setup()
     await signupAlert(deps)
@@ -123,17 +128,17 @@ describe('signupAlert', () => {
   })
 
   it('stays quiet when the uid was already claimed', async () => {
-    const { mail, deps } = setup(async () => {
-      throw Object.assign(new Error('exists'), { code: 6 })
-    })
+    const { mail, deps } = setup(() =>
+      Promise.reject(Object.assign(new Error('exists'), { code: 6 })),
+    )
     await signupAlert(deps)
     expect(mail).not.toHaveBeenCalled()
   })
 
   it('fails loudly when the marker cannot be written', async () => {
-    const { mail, deps } = setup(async () => {
-      throw Object.assign(new Error('unavailable'), { code: 14 })
-    })
+    const { mail, deps } = setup(() =>
+      Promise.reject(Object.assign(new Error('unavailable'), { code: 14 })),
+    )
     await expect(signupAlert(deps)).rejects.toThrow('unavailable')
     expect(mail).not.toHaveBeenCalled()
   })
