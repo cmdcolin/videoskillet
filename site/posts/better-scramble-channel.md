@@ -43,8 +43,15 @@ to 58 Hz, so the picture wraps around the edge.
 
 In our first tries we added faults straight to the colour, and they looked fake.
 The real cable scramblers left the colour alone and only weakened the sync, so
-we did the same, and the colour went wrong by itself. Without sync, the TV looks
-for its colour reference, the
+we did the same at the head-end, in the **Channel** stage, and the colour went
+wrong by itself.
+
+<figure>
+<img src="/blog/better-scramble-channel-map.svg" alt="The look's place in the app's signal path: Source A, Mix, Channel, Receiver and Screen in a row, Source B joining Mix from below, and the Camera and Mixer loops over the top. Channel and Receiver are lit.">
+<figcaption>The signal path in the app, with this look's stages lit. The scrambler is the head-end in Channel, and the TV's colour circuits are in Receiver.</figcaption>
+</figure>
+
+Without sync, the TV looks for its colour reference, the
 [burst](https://en.wikipedia.org/wiki/Color_burst), in the wrong part of each
 line. Its colour gain circuit, the ACC (automatic colour control), averages the
 burst over 30 lines, and its hue circuit, the colour

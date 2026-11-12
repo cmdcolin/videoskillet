@@ -28,6 +28,15 @@ decoded, by weakening the sync pulses that tell the TV where each line starts.
 Oak Sigma and VideoCipher II took the sync out entirely, put encrypted sound
 data in its place and turned the video into a negative.
 
+We built every scrambler into the **Channel** stage as the head-end, so your
+source stays a clean picture and your TV gets the signal a non-subscriber's set
+got.
+
+<figure>
+<img src="/blog/oak-sigma-and-videocipher-map.svg" alt="The look's place in the app's signal path: Source A, Mix, Channel, Receiver and Screen in a row, Source B joining Mix from below, and the Camera and Mixer loops over the top. Channel and Receiver are lit.">
+<figcaption>The signal path in the app, with this look's stages lit. The scrambler is the head-end in Channel.</figcaption>
+</figure>
+
 ## Background
 
 Before streaming, a subscription channel sent its signal through the air or a

@@ -1,0 +1,307 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="608" height="224" class="map" viewBox="0 0 304 112" role="group" aria-label="signal chain"><style>svg { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+/* The chain in miniature at the head of the signal path: one labeled box per
+   stage, wired left to right, with the three feedback returns looping back over
+   the top and input B joining from below. Box and label take currentColor, so
+   one rule per state (idle / touched / open / off) colors a whole stage — and,
+   on the branch, its wires with it. */
+.map {
+  display: block;
+  width: 100%;
+  margin: 10px 0 2px;
+}
+/* The svg scales to its box, so the labels grow with it — at the bench's 664px
+   the miniature stops reading as a miniature. Cap it and let it sit at the left
+   of the panel head, over the first column. */
+@container panel (min-width: 540px) {
+  .map {
+    max-width: 420px;
+  }
+}
+.mapWire {
+  fill: none;
+  stroke: #44444f;
+  stroke-width: 1;
+}
+/* A box is a chip sitting *on* the wire, not another hairline drawn in the same
+   colour as one. It used to share the declaration above — same stroke, same
+   nothing for a fill — so the six things in the panel you are meant to click
+   were drawn exactly like the five inert lines joining them, and the only thing
+   that ever said otherwise was a line of prose under the graphic that went away
+   for good after the first click. Everything else clickable in this sidebar is
+   a filled control with a hover state; now this is too. */
+.mapBox {
+  fill: #26262e;
+  stroke: #44444f;
+  stroke-width: 1;
+  /* SVG hit-tests what is painted, and the two states below paint no fill —
+     which left an unfilled box pressable on its 1px outline and its label and
+     nowhere else. Measured at 390px: the SOUND box is 42x26 and answered a
+     press over 43x13 of that, the height of the word inside it. This says the
+     rect is the target whatever it is filled with, which is what every other
+     box on the drawing already was. */
+  pointer-events: all;
+}
+.mapArrow {
+  fill: #44444f;
+}
+/* A feedback return, wire and arrowhead as one colour so a running loop lights
+   both. Dashed for the optical loop and solid for the electrical one — the
+   schematic convention, and the only difference between the two that a diagram
+   this size can carry. */
+.mapReturn {
+  color: #44444f;
+}
+.mapReturn .mapWire {
+  stroke: currentColor;
+}
+.mapReturn .mapArrow {
+  fill: currentColor;
+}
+.mapReturnOptical .mapWire {
+  stroke-dasharray: 2 2;
+}
+/* The run carries an edit, in the same amber a box wears for one. Written above
+   the two accent states because a running loop, and the loop you are looking
+   at, are both worth more than "something in here is off stock" — and a loop
+   whose mix is up is off stock by definition, so the two would otherwise fight
+   over every lit run. */
+.mapReturnTouched {
+  color: #ceba64;
+}
+.mapReturnTouched .mapLoopLabel {
+  fill: #ceba64;
+}
+/* the loop is actually running — its mix is off zero */
+.mapReturnLive {
+  color: #7fd0a0;
+}
+/* A run the live query did not reach — the same statement .mapNodeDim makes,
+   on the three stages that have a wire instead of a box. Its label goes with
+   it: at --fg3 under the fade the word is still the loudest thing left on an
+   otherwise faint run. Pressable like the boxes, and it comes back to full
+   under the pointer for the same reason. */
+.mapReturnDim {
+  color: #44444f;
+  opacity: 0.45;
+}
+.mapReturnDim:hover,
+.mapReturnDim:focus-visible {
+  opacity: 1;
+}
+.mapReturnDim .mapLoopLabel {
+  fill: #a6a6ba;
+}
+/* The loop whose stage is open. Its chip takes the same tint an open box does,
+   and its wire gets heavier as well — the weight is what survives being the
+   same colour as `live`, and a running loop you have opened is the common
+   case. */
+.mapReturnOn {
+  color: #7fd0a0;
+}
+.mapReturnOn .mapWire {
+  stroke-width: 1.8;
+}
+.mapReturnOn .mapLoopChip {
+  fill: color-mix(in srgb, #7fd0a0 14%, #26262e);
+}
+.mapReturnOn .mapLoopLabel {
+  fill: #7fd0a0;
+}
+/* Each run is its own button, and the only way into that loop's stage. Colour
+   runs the length of it — wire, arrowhead, name and chip — so pointing at any
+   part of a loop lights all of it. */
+.mapLoopBtn {
+  cursor: pointer;
+}
+.mapLoopBtn:hover,
+.mapLoopBtn:focus-visible {
+  color: #e6e6ee;
+}
+.mapLoopBtn:focus-visible {
+  outline: none;
+}
+.mapLoopBtn:focus-visible .mapWire {
+  stroke-width: 2;
+}
+/* What makes a 1px wire pressable. Transparent rather than absent so it takes
+   pointer events, and 8 units wide so it cannot reach the next run 10 away. */
+.mapLoopHit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 8;
+}
+/* A run's own name, on the chip below, set like a box's name.
+
+   It does *not* take the run's colour, which is the one thing here that is not
+   currentColor. An idle run is --border, and theme.css draws the line at --fg4:
+   anything dimmer is decoration. A name is not decoration, so it sits at --fg3,
+   one step under the stage names so a wire still reads as subordinate to a
+   box. The two states that mean something do follow the run, and they are
+   spelled out below because the fill above stops them arriving on their own. */
+.mapLoopLabel {
+  fill: #a6a6ba;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  user-select: none;
+}
+/* The chip that name rides — the run's own box, and the only one a loop gets:
+   none of them is a stage of the trunk, so there is no point on the wire to
+   stand one. Drawn like every box here (see .mapBox) because it is the same
+   kind of thing to press. Its edge follows the run, so a chip lights with the
+   loop it names.
+
+   Its fill also does what the label used to do for itself: the name carried a
+   stroke of the panel colour, painted first, to knock the wire out around the
+   letters. A chip is that knockout with an edge on it, and a label inside one
+   must not keep the stroke — it would halo every glyph against the face. */
+.mapLoopChip {
+  fill: #26262e;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+.mapLoopBtn:hover .mapLoopChip,
+.mapLoopBtn:focus-visible .mapLoopChip {
+  fill: rgba(40, 40, 48, 0.85);
+}
+.mapLoopBtn:focus-visible .mapLoopChip {
+  stroke-width: 2;
+}
+.mapReturnLive .mapLoopLabel {
+  fill: #7fd0a0;
+}
+.mapLoopBtn:hover .mapLoopLabel,
+.mapLoopBtn:focus-visible .mapLoopLabel {
+  fill: #e6e6ee;
+}
+/* A stage a live query did not reach. It stays on the map because the map is
+   the chain: a search for "ghost" is asking where in the chain that lives, and
+   the drawing used to answer by removing every box but the two that matched and
+   re-laying out the rest — which is the one shape that cannot answer it.
+
+   Faint rather than restyled, and it replaces the idle rule instead of layering
+   over it (see ChainMap's className): the four states below are about the rig
+   and the look, and this one is about the search box, so a dimmed box says that
+   and nothing else.
+
+   Still a door, though, and that is what the pointer and the hover are for. It
+   used to sit at 0.3 with neither, which was right for a typed query that misses
+   two boxes and wrong for one that misses ten: the count on the modulation strip
+   narrows the panel to whatever the bay is driving, and the map answered by
+   greying out the whole chain — including the MODULATION box you would press to
+   undo it. A box that comes back to full under the pointer reads as out of
+   scope; one that cannot be pressed at all reads as broken. */
+.mapNodeDim {
+  color: #c6c6d6;
+  opacity: 0.45;
+  cursor: pointer;
+}
+.mapNodeDim:hover,
+.mapNodeDim:focus-visible {
+  color: #e6e6ee;
+  opacity: 1;
+}
+.mapNode {
+  color: #c6c6d6;
+  cursor: pointer;
+}
+.mapNode:hover {
+  color: #e6e6ee;
+}
+.mapNode:hover .mapBox {
+  fill: rgba(40, 40, 48, 0.85);
+}
+/* the stage carries an edit — the same amber the rest of the sidebar marks one
+   with */
+.mapNodeTouched {
+  color: #ceba64;
+}
+.mapNodeOn {
+  color: #7fd0a0;
+}
+/* The stage that is open, tinted as well as outlined: on a row of six filled
+   chips a stroke alone is a thin claim, and this is the map's answer to "where
+   am I". */
+.mapNodeOn .mapBox {
+  fill: color-mix(in srgb, #7fd0a0 14%, #26262e);
+}
+/* A stage that cannot be opened: Mix and input B with nothing patched into B.
+   Drawn rather than dropped — together they are the one thing on screen saying
+   a second input exists — so they have to read as absent rather than merely
+   unvisited, which is what the dashed outline, the flat fill and the
+   dimmer-than-idle colour are for. */
+.mapNodeOff {
+  color: #44444f;
+  cursor: default;
+}
+.mapNodeOff .mapBox {
+  fill: none;
+  stroke: currentColor;
+  stroke-dasharray: 2 2;
+}
+/* The whole B run — its lead-in and the wire up into the trunk — goes with the
+   node, so an unpatched input reads as one dim thing rather than a dim box on
+   live wiring. */
+.mapBranchOff .mapWire {
+  stroke: #2e2e38;
+}
+.mapBranchOff .mapArrow {
+  fill: #2e2e38;
+}
+/* And the same for a branch the query missed: the box fades on its own class,
+   so without this its wire stays at full strength and the box reads as
+   disconnected rather than as out of scope. */
+.mapBranchDim {
+  opacity: 0.45;
+}
+/* The group above carries the fade for the whole run, box included, so the box
+   must not fade a second time inside it — 0.45 of 0.45 is not a dim box, it is
+   a box that has left the drawing. The hover has to be restated for the same
+   reason: the group is what the pointer brings back, so the box inside it has
+   nothing left of its own to raise. */
+.mapBranchDim .mapNodeDim {
+  opacity: 1;
+}
+.mapBranchDim:hover {
+  opacity: 1;
+}
+.mapNode:hover .mapBox,
+.mapNodeTouched .mapBox,
+.mapNodeOn .mapBox {
+  stroke: currentColor;
+}
+/* svg user units, which are px at the sidebar's width: 10px caps in a 26-unit
+   box. */
+.mapLabel {
+  fill: currentColor;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  /* the box is the target, and a drag that starts on a label should not select
+     the word instead of pressing the stage */
+  user-select: none;
+}
+/* What is standing in a box that has a picker, captioned under its name. Three
+   boxes wear one — the two sources and the sound — and the register is the whole
+   reason it does not turn the map into a wall of text: 8px mixed case under 10px
+   caps, at --fg3, so the row still reads as six names with something written
+   under three of them rather than as twelve labels.
+
+   Not currentColor, for the same reason .mapLoopLabel is not: the caption is
+   subordinate to the name at every state, and following the state would put it
+   in amber beside a name in amber and double the mark. */
+.mapSub {
+  fill: #a6a6ba;
+  font-size: 8px;
+  letter-spacing: 0.01em;
+  user-select: none;
+}
+/* The two states where following the box *is* the point: an open stage owns its
+   whole chip, and a dimmed one has left the conversation entirely. */
+.mapNodeOn .mapSub {
+  fill: #7fd0a0;
+}
+.mapNodeDim .mapSub {
+  fill: currentColor;
+}
+</style><line class="mapWire" x1="0" x2="8.000000000000004" y1="57" y2="57"></line><line class="mapWire" x1="66.4" x2="77.5" y1="57" y2="57"></line><line class="mapWire" x1="104.4" x2="115.50000000000001" y1="57" y2="57"></line><line class="mapWire" x1="167.60000000000002" x2="178.7" y1="57" y2="57"></line><line class="mapWire" x1="237.09999999999997" x2="248.19999999999996" y1="57" y2="57"></line><line class="mapWire" x1="293.99999999999994" x2="301.5" y1="57" y2="57"></line><path class="mapArrow" d="M301.5 59.5L304 57L301.5 54.5Z"></path><g class="mapReturn mapLoopBtn mapReturnOptical" role="button" tabindex="0" aria-label="Camera feedback — optical: a camera pointed at the tube, its picture mixed into source A ahead of the encoder, plus the gun and glass it is looking at — open its controls"><title>Camera feedback — optical: a camera pointed at the tube, its picture mixed into source A ahead of the encoder, plus the gun and glass it is looking at — click for its controls</title><path class="mapLoopHit" d="M271.1 44L271.1 13Q271.1 9 267.1 9L55.8 9Q51.8 9 51.8 13L51.8 44"></path><path class="mapWire" d="M271.1 44L271.1 13Q271.1 9 267.1 9L55.8 9Q51.8 9 51.8 13L51.8 44"></path><path class="mapArrow" d="M49.3 40.25L51.8 44L54.3 40.25Z"></path><rect class="mapLoopChip" x="67.9" y="1" width="47.8" height="16" rx="3"></rect><text class="mapLoopLabel" x="91.80000000000001" y="9" text-anchor="middle" dominant-baseline="central">Camera</text></g><g class="mapReturn mapLoopBtn" role="button" tabindex="0" aria-label="Mixer feedback — electrical: the composite taken off the bus and crossfaded back against the live signal, subcarrier included — open its controls"><title>Mixer feedback — electrical: the composite taken off the bus and crossfaded back against the live signal, subcarrier included — click for its controls</title><path class="mapLoopHit" d="M207.9 44L207.9 31Q207.9 27 203.9 27L94.95 27Q90.95 27 90.95 31L90.95 44"></path><path class="mapWire" d="M207.9 44L207.9 31Q207.9 27 203.9 27L94.95 27Q90.95 27 90.95 31L90.95 44"></path><path class="mapArrow" d="M88.45 40.25L90.95 44L93.45 40.25Z"></path><rect class="mapLoopChip" x="105.9" y="19" width="41.5" height="16" rx="3"></rect><text class="mapLoopLabel" x="126.65" y="27" text-anchor="middle" dominant-baseline="central">Mixer</text></g><g class="mapBranchOff"><line class="mapWire" x1="0" y1="95" x2="8.000000000000004" y2="95"></line><path class="mapWire" d="M66.4 95L86.95 95Q90.95 95 90.95 91L90.95 70"></path><path class="mapArrow" d="M93.45 73.75L90.95 70L88.45 73.75Z"></path><g class="mapNode mapNodeOff" role="button" tabindex="0" aria-label="Source B — no source B — click to pick one and mix a second signal into the chain"><title>Source B — no source B — click to pick one and mix a second signal into the chain</title><rect class="mapBox" x="8.000000000000004" y="82" width="58.4" height="26" rx="3"></rect><text class="mapLabel" x="37.2" y="95" text-anchor="middle" dominant-baseline="central">Source B</text></g></g><g class="mapBranchOff"><line class="mapWire" x1="180.14999999999998" y1="95" x2="188.14999999999998" y2="95"></line><path class="mapWire" d="M207.9 82L207.9 70"></path><path class="mapArrow" d="M210.4 73.75L207.9 70L205.4 73.75Z"></path><g class="mapNode mapNodeOff" role="button" tabindex="0" aria-label="Sound — no sound reaching it — click and pick a mic, a track, or the clip’s own audio, and it drives the receiver"><title>Sound — no sound reaching it — click and pick a mic, a track, or the clip’s own audio, and it drives the receiver</title><rect class="mapBox" x="188.14999999999998" y="82" width="39.5" height="26" rx="3"></rect><text class="mapLabel" x="207.89999999999998" y="95" text-anchor="middle" dominant-baseline="central">Sound</text></g></g><g class=""><line class="mapWire" x1="254.49999999999997" y1="95" x2="254.49999999999997" y2="95"></line><path class="mapWire" d="M271.1 82L271.1 70"></path><path class="mapArrow" d="M268.6 78.25L271.1 82L273.6 78.25Z"></path><g class="mapNode" role="button" tabindex="0" aria-label="View — where the picture is watched from: the magnifier and where it is pointed, how fast the whole simulation is stepped, and the frame-rate lock. Nothing in here changes the signal, and a mutate is forbidden to touch any of it"><title>View — where the picture is watched from: the magnifier and where it is pointed, how fast the whole simulation is stepped, and the frame-rate lock. Nothing in here changes the signal, and a mutate is forbidden to touch any of it</title><rect class="mapBox" x="254.49999999999997" y="82" width="33.2" height="26" rx="3"></rect><text class="mapLabel" x="271.09999999999997" y="95" text-anchor="middle" dominant-baseline="central">View</text></g></g><g class="mapNode" role="button" tabindex="0" aria-label="Source A — קטלוג_1984_-_1.jpg — input A becoming a composite waveform: the encoder, the static generator, and the deck and cable this one signal arrives on"><title>Source A — קטלוג_1984_-_1.jpg — input A becoming a composite waveform: the encoder, the static generator, and the deck and cable this one signal arrives on</title><rect class="mapBox" x="8.000000000000004" y="44" width="58.4" height="26" rx="3"></rect><text class="mapLabel" x="37.2" y="52" text-anchor="middle" dominant-baseline="central">Source A</text><text class="mapSub" x="37.2" y="64" text-anchor="middle" dominant-baseline="central">קטלוג_1984_…</text></g><g class="mapNode" role="button" tabindex="0" aria-label="Mix — where the two signals meet: the mixer that combines them, the wipe and the PiP inset, and the character generator keying text over the program. Everything but the character generator needs a source B"><title>Mix — where the two signals meet: the mixer that combines them, the wipe and the PiP inset, and the character generator keying text over the program. Everything but the character generator needs a source B</title><rect class="mapBox" x="77.5" y="44" width="26.9" height="26" rx="3"></rect><text class="mapLabel" x="90.95" y="57" text-anchor="middle" dominant-baseline="central">Mix</text></g><g class="mapNode mapNodeTouched" role="button" tabindex="0" aria-label="Channel — everything between the encoder and the aerial socket: the tape it was recorded on, the tuner it came through, and the cable it came down"><title>Channel — everything between the encoder and the aerial socket: the tape it was recorded on, the tuner it came through, and the cable it came down (3 off stock)</title><rect class="mapBox" x="115.50000000000001" y="44" width="52.1" height="26" rx="3"></rect><text class="mapLabel" x="141.55" y="57" text-anchor="middle" dominant-baseline="central">Channel</text></g><g class="mapNode mapNodeTouched" role="button" tabindex="0" aria-label="Receiver — a TV finding sync and decoding colour from whatever arrives: hold, deflection, the decoder"><title>Receiver — a TV finding sync and decoding colour from whatever arrives: hold, deflection, the decoder (12 off stock)</title><rect class="mapBox" x="178.7" y="44" width="58.4" height="26" rx="3"></rect><text class="mapLabel" x="207.89999999999998" y="57" text-anchor="middle" dominant-baseline="central">Receiver</text></g><g class="mapNode" role="button" tabindex="0" aria-label="Screen — the tube itself: beam profile, phosphor persistence, shadow mask"><title>Screen — the tube itself: beam profile, phosphor persistence, shadow mask</title><rect class="mapBox" x="248.19999999999996" y="44" width="45.8" height="26" rx="3"></rect><text class="mapLabel" x="271.09999999999997" y="57" text-anchor="middle" dominant-baseline="central">Screen</text></g></svg>

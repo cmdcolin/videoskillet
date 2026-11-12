@@ -19,6 +19,11 @@ ghosts! Anything that moves in front of the green screen now trails copies of
 itself. We made the keyer show its own last frame wherever the green screen was,
 so the old copies of the sandwich stay on screen behind the new one.
 
+<figure>
+<img src="/blog/keyer-ghosts-map.svg" alt="The look's place in the app's signal path: Source A, Mix, Channel, Receiver and Screen in a row, Source B joining Mix from below, and the Camera and Mixer loops over the top. Source B holds the sandwich clip, and Mix and the Mixer loop are lit.">
+<figcaption>The signal path in the app, with this look's stages lit. The keyer is in Mix, and its fill comes round the Mixer loop from the frame store.</figcaption>
+</figure>
+
 You'll notice the copies flash between gold and pale blue. We made the frame
 store (the memory that holds a whole frame of video) keep the colour signal
 exactly as it came in. NTSC colour flips its phase every frame, so every other

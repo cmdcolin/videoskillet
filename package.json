@@ -80,6 +80,8 @@
     "test:rules": "firebase emulators:exec --only firestore --project ntscjs-rules-test \"vitest run firestoreRules && vitest run --root functions\"",
     "docs": "node scripts/diagrams.mjs",
     "docs:check": "node scripts/diagrams.mjs --check",
+    "blog:maps": "node scripts/blogmaps.mjs",
+    "blog:maps:check": "node scripts/blogmaps.mjs --check",
     "prepare": "husky"
   },
   "lint-staged": {

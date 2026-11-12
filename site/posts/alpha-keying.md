@@ -22,6 +22,11 @@ captions on TV) sent the shape of their lettering down a separate wire beside
 the picture. We send B's alpha the same way, so the edge stays as crisp as the
 artist drew it.
 
+<figure>
+<img src="/blog/alpha-keying-map.svg" alt="The look's place in the app's signal path: Source A, Mix, Channel, Receiver and Screen in a row, Source B joining Mix from below, and the Camera and Mixer loops over the top. Source A holds the forest and Source B the fox, and Mix is lit.">
+<figcaption>The signal path in the app, with this look's stages lit. B joins at Mix, where the keyer cuts by B's alpha.</figcaption>
+</figure>
+
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">
 <a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/Vignes_pr%C3%A8s_du_Pic_de_Vissou_-_October_2020.jpg/1280px-Vignes_pr%C3%A8s_du_Pic_de_Vissou_-_October_2020.jpg&iurlb=https://upload.wikimedia.org/wikipedia/commons/3/3a/Gluecksklee_%28transparent_background%292.png&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1"><img style="aspect-ratio: 4 / 3; object-fit: cover; margin: 0;" loading="lazy" src="/blog/alpha-clover-chroma.webp" alt="A four-leaf clover over an autumn vineyard on a black field. The vineyard shows faintly through the green of the leaves."></a>
