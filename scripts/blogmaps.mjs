@@ -1,23 +1,35 @@
 #!/usr/bin/env node
 import { createServer } from 'vite'
 
-// Renders the app's signal chain map (src/ui/ChainMap.tsx) for a blog post into
-// public/blog/<name>.svg, with a panel under one stage that shows the steps
-// inside it. The SVG carries its own styles, with the dark theme's tokens
-// written in as values, because the blog embeds it as an image.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+// Renders a figure of the app's signal path for a blog post into
+// public/blog/<name>.svg: the five trunk stages in the chain map's box style
+// (src/ui/ChainMap.module.css), with a note hung under each stage the post
+// explains. The SVG carries its own styles, with the dark theme's tokens written
+// in as values, because the blog embeds it as an image.
 const MAPS = [
   {
     name: 'scramble-map',
-    stage: 'Channel',
-    title: 'Inside Channel',
-    chips: [
-      { name: 'Head-end', sub: 'scrambles' },
-      { name: 'Air or cable', sub: 'noise, ghosts' },
-      { name: 'Decoder', sub: 'not rented', off: true },
+    callouts: [
+      {
+        stage: 'Source A',
+        lines: [
+          'The encoder turns the',
+          'picture into a signal',
+          'with sync pulses',
+        ],
+      },
+      {
+        stage: 'Channel',
+        lines: ['Cable / Wiring:', 'the scrambler hides', 'the pulses'],
+      },
+      {
+        stage: 'Receiver',
+        lines: ['The TV hunts for', 'the pulses and', 'tears the picture'],
+      },
     ],
   },
 ]
@@ -40,7 +52,7 @@ const resolve = text =>
     tokenValue.has(name) ? resolve(tokenValue.get(name)) : whole,
   )
 const style = resolve(
-  `svg { font-family: var(--font); }\n${read('src/ui/ChainMap.module.css')}`,
+  `svg { font-family: var(--font); }\n.note { fill: var(--fg2); font-size: 9.5px; }\n${read('src/ui/ChainMap.module.css')}`,
 )
 
 const server = await createServer({

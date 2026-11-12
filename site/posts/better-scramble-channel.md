@@ -39,18 +39,23 @@ to 58 Hz, so the picture wraps around the edge.
 
 ![The 1984 catalogue cover with bands of the picture slid sideways and wrapped round the edge. The grid of swimsuit photos is torn into wavy columns, and the colour is flooded pink, green and violet.](/blog/scramble-turbo-sync-loss.webp)
 
-## Where the scrambling happens
+## Why we scramble in Channel
 
-A pay channel scrambled its signal before it left the station, so it went out
-over the air or down the cable already scrambled. In videoskillet the
-**Channel** stage is that whole trip from the station to your TV, so we scramble
-the signal at the start of it, where the station's head-end sat. The air or
-cable adds its noise and ghosts after that, and the signal reaches your TV with
-no decoder box in the way, because you never rented one.
+A scrambler works on the sync pulses, the short dips at the start of every line
+that tell the TV where the line begins. Those pulses only exist once the encoder
+in **Source A** has turned your picture into a video signal, so the scrambler
+has to come after it. We put it in **Channel**, which holds everything between
+the encoder and the TV's aerial socket, where the station's head-end and the
+cable sat. You'll find it as **sync suppression** and **system** in the **Cable
+/ Wiring** group.
+
+The **Receiver** is the TV, and nothing in it knows the channel is scrambled.
+The tearing and the flooded colour come from the TV hunting for pulses it can't
+find.
 
 <figure>
-<img src="/blog/scramble-map.svg" alt="The app's signal path: Source A, Mix, Channel, Receiver and Screen in a row, with Source B and Sound joining from below and the Camera and Mixer loops over the top. A dashed panel under Channel shows its inside: a head-end that scrambles the signal, then the air or cable with its noise and ghosts, then a dashed decoder box that nobody rented.">
-<figcaption>The signal path in the app, with the inside of Channel drawn out.</figcaption>
+<img src="/blog/scramble-map.svg" alt="The app's five signal-path stages in a row: Source A, Mix, Channel, Receiver and Screen. A note under Source A says the encoder turns the picture into a signal with sync pulses. A note under Channel says the scrambler in Cable / Wiring hides the pulses. A note under Receiver says the TV hunts for the pulses and tears the picture.">
+<figcaption>Where each part of the scramble happens in the app's signal path.</figcaption>
 </figure>
 
 ## Why the colour looks right
