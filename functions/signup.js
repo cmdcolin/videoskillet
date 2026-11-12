@@ -3,7 +3,7 @@ import { Timestamp } from 'firebase-admin/firestore'
 const ALREADY_EXISTS = 6
 const HOUR = 60 * 60 * 1000
 const DAY = 24 * 60 * 60 * 1000
-const COUNTER = 'https://cmdcolin.goatcounter.com/api/v0'
+const counter = site => `https://${site}.goatcounter.com/api/v0`
 const TOP_PAGES = 5
 
 export const APPS = { users: 'videoskillet', benderUsers: 'bender' }
@@ -18,9 +18,9 @@ export async function countAccounts(db) {
   return Object.fromEntries(counts)
 }
 
-const get = async (path, token, params) => {
+const get = async (site, path, token, params) => {
   const response = await fetch(
-    `${COUNTER}${path}?${new URLSearchParams(params)}`,
+    `${counter(site)}${path}?${new URLSearchParams(params)}`,
     {
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(10_000),
@@ -32,21 +32,21 @@ const get = async (path, token, params) => {
   return response.json()
 }
 
-const views = async (token, now, days) => {
-  const { total } = await get('/stats/total', token, {
+const views = async (site, token, now, days) => {
+  const { total } = await get(site, '/stats/total', token, {
     start: new Date(now.getTime() - days * DAY).toISOString(),
     end: now.toISOString(),
   })
   return total
 }
 
-export async function traffic(token, at) {
+export async function traffic(site, token, at) {
   const now = new Date(Math.floor(at.getTime() / HOUR) * HOUR)
   const [today, week, month, pages] = await Promise.all([
-    views(token, now, 1),
-    views(token, now, 7),
-    views(token, now, 30),
-    get('/stats/hits', token, {
+    views(site, token, now, 1),
+    views(site, token, now, 7),
+    views(site, token, now, 30),
+    get(site, '/stats/hits', token, {
       start: new Date(now.getTime() - 7 * DAY).toISOString(),
       end: now.toISOString(),
       limit: String(TOP_PAGES),
@@ -110,7 +110,7 @@ export async function signupAlert({
     const [user, totals, stats] = await Promise.all([
       auth.getUser(uid).catch(() => ({ uid })),
       countAccounts(db).catch(() => ({})),
-      traffic(token, new Date()).catch(() => undefined),
+      traffic(app, token, new Date()).catch(() => undefined),
     ])
     await mail(signupMail(app, user, totals, stats)).catch(async error => {
       await db.doc(`signupAlerts/${collection}_${uid}`).delete()

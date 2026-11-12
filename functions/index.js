@@ -18,9 +18,13 @@ import { APPS, signupAlert } from './signup.js'
 const GMAIL = 'colin.diesh@gmail.com'
 const PASSWORD = defineSecret('GMAIL_APP_PASSWORD')
 
-// `firebase functions:secrets:set GOATCOUNTER_TOKEN`, a token with the
-// statistics permission. Deploying needs it set, even to a placeholder.
-const COUNTER_TOKEN = defineSecret('GOATCOUNTER_TOKEN')
+// One GoatCounter site per app, each with a token that has the statistics
+// permission: `firebase functions:secrets:set GOATCOUNTER_TOKEN_BENDER`, and
+// the same ending _VIDEOSKILLET. Deploying needs both set.
+const COUNTER_TOKENS = {
+  videoskillet: defineSecret('GOATCOUNTER_TOKEN_VIDEOSKILLET'),
+  bender: defineSecret('GOATCOUNTER_TOKEN_BENDER'),
+}
 
 initializeApp()
 
@@ -62,7 +66,7 @@ const alertOn = (collection, app) =>
   onDocumentCreated(
     {
       document: `${collection}/{uid}`,
-      secrets: [PASSWORD, COUNTER_TOKEN],
+      secrets: [PASSWORD, COUNTER_TOKENS[app]],
       timeoutSeconds: 60,
       retry: true,
     },
@@ -72,7 +76,7 @@ const alertOn = (collection, app) =>
         auth: getAuth(),
         mail: message =>
           mailer().sendMail({ from: GMAIL, to: GMAIL, ...message }),
-        token: COUNTER_TOKEN.value(),
+        token: COUNTER_TOKENS[app].value(),
         collection,
         app,
         uid: event.params.uid,

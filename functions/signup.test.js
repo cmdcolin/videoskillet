@@ -65,7 +65,11 @@ describe('traffic', () => {
         ? answer({ hits: [{ path: '/', count: 4, extra: 1 }] })
         : answer({ total: 9 })
     })
-    const stats = await traffic('t0k', new Date('2026-11-11T10:42:31.500Z'))
+    const stats = await traffic(
+      'bender',
+      't0k',
+      new Date('2026-11-11T10:42:31.500Z'),
+    )
     expect(stats).toEqual({
       today: 9,
       week: 9,
@@ -73,12 +77,13 @@ describe('traffic', () => {
       top: [{ path: '/', count: 4 }],
     })
     expect(calls[0][1]).toBe('Bearer t0k')
+    expect(calls[0][0]).toContain('https://bender.goatcounter.com/api/v0/')
     expect(calls[0][0]).toContain('end=2026-11-11T10%3A00%3A00.000Z')
   })
 
   it('throws when GoatCounter refuses', async () => {
     vi.stubGlobal('fetch', async () => ({ ok: false, status: 401 }))
-    await expect(traffic('bad', new Date())).rejects.toThrow('401')
+    await expect(traffic('bender', 'bad', new Date())).rejects.toThrow('401')
   })
 })
 
