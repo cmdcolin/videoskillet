@@ -32,10 +32,10 @@ We also made a rougher one. On real scrambled channels the picture slides
 sideways harder than on our preset above, so we built
 [turbo sync loss](/app/#preset=turboSyncLoss&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
 to match them. We made the TV's line oscillator, the clock that starts each
-line, drift a few tens of hertz either side of the line rate, loosened the
-horizontal hold, the knob that stops the picture sliding sideways, and slowed
-the vertical oscillator, which starts each frame, to 58 Hz, so the picture
-slides sideways and wraps around the edge.
+line, drift a few tens of hertz either side of the line rate (15,734 lines a
+second), loosened the horizontal hold, the knob that stops the picture sliding
+sideways, and slowed the vertical oscillator, which starts each frame, to 58 Hz,
+so the picture slides sideways and wraps around the edge.
 
 ![The 1984 catalogue cover with bands of the picture slid sideways and wrapped round the edge. The grid of swimsuit photos is torn into wavy columns, and the colour is flooded pink, green and violet.](/blog/scramble-turbo-sync-loss.webp)
 
@@ -44,19 +44,27 @@ slides sideways and wraps around the edge.
 In our first tries we added faults straight to the colour, and they looked fake.
 The real cable scramblers left the colour alone and only weakened the sync, so
 we did the same, and the colour went wrong by itself. Without sync, the TV looks
-for its colour reference, the burst, in the wrong part of each line. Its colour
-gain and hue circuits, the ACC and the colour PLL, average the burst over 30 and
-40 lines, so one bad reading shifts the colour of a whole band. We let the TV's
-colour crystal drift slowly, and that slides the bands down the screen.
+for its colour reference, the
+[burst](https://en.wikipedia.org/wiki/Color_burst), in the wrong part of each
+line. Its colour gain and hue circuits, the ACC (automatic colour control) and
+the colour [PLL](https://en.wikipedia.org/wiki/Phase-locked_loop), average the
+burst over 30 and 40 lines, so one bad reading shifts the colour of a whole
+band. We let the TV's
+[colour crystal](https://en.wikipedia.org/wiki/Crystal_oscillator) (the quartz
+that keeps its colour timing) drift slowly, and that slides the bands down the
+screen.
 
 ## Update, 1 November 2026
 
-We made the preset even more faithful. We simulated the gate that General
-Instrument and Jerrold built into cable head-ends, the equipment that sends the
-channels down the cable. It turned the broadcast signal down 6 dB in the gap
-between lines. That gap shows up as a grey bar, and the TV turns the colour up
-to make up for the weakened burst, so the colour floods. The links above still
-open the version this post describes, and you can
+We made the preset even more faithful. We simulated the gate that
+[General Instrument](https://en.wikipedia.org/wiki/General_Instrument) and
+[Jerrold](https://en.wikipedia.org/wiki/Jerrold_Electronics) built into cable
+[head-ends](https://en.wikipedia.org/wiki/Cable_television_headend), the
+equipment that sends the channels down the cable. It turned the broadcast signal
+down 6 dB (to half its strength) in the gap between lines. That gap shows up as
+a grey bar, and the TV turns the colour up to make up for the weakened burst, so
+the colour floods. The links above still open the version this post describes,
+and you can
 [open the new one](/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
 ## Update, 11 November 2026

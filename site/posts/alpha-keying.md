@@ -17,9 +17,9 @@ look: '#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Baumsilhou
 We made the keyer cut out transparent images, so you can put a fox in a misty
 forest without a green screen! Drop a PNG, WebP or WebM with a transparent
 background on B, flip the new **Key source** switch to B alpha, and your cutout
-appears over A. Old character generators sent the shape of their lettering down
-its own wire beside the picture, and we do the same, so the edge stays as crisp
-as the artist drew it.
+appears over A. Old character generators (the machines that put titles and
+captions on TV) sent the shape of their lettering down its own wire beside the
+picture, and we do the same, so the edge stays as crisp as the artist drew it.
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">
@@ -32,9 +32,10 @@ as the artist drew it.
 </figure>
 </div>
 
-Why did we bother? The chroma keyer cuts out green, and this clover is green, so
-on the left the vineyard shows through its leaves. On the right we key by alpha,
-and the clover keeps all of its green.
+Why did we bother? The [chroma keyer](https://en.wikipedia.org/wiki/Chroma_key)
+cuts out green, and this clover is green, so on the left the vineyard shows
+through its leaves. On the right we key by alpha, and the clover keeps all of
+its green.
 
 ## Key edges
 
@@ -55,9 +56,10 @@ Watch
 ## A moving cutout
 
 Moving cutouts work too! We key a WebM with an alpha channel frame by frame, and
-if you set the keyer's **Fill** to loop bus, it shows its own last frame behind
-the cutout, so this spacecraft leaves a trail of ghosts behind it, the same
-trick as in [Chroma keying with ghosts](/blog/keyer-ghosts/).
+if you set the keyer's **Fill** to loop bus (the mixer's feedback path), it
+shows its own last frame behind the cutout, so this spacecraft leaves a trail of
+ghosts behind it, the same trick as in
+[Chroma keying with ghosts](/blog/keyer-ghosts/).
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">

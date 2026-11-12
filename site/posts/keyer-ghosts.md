@@ -14,15 +14,17 @@ look: '#vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_
 - Chroma key: fill to loop bus
 - Mixer feedback: strobe hold to 5
 
-We made the chroma keyer leave ghosts! Anything that moves in front of the green
-screen now trails copies of itself, and a spinning sandwich shows it off well.
-To do it, we made the keyer show its own last frame wherever the green screen
-was, so the old copies of the sandwich stay on screen behind the new one.
+We made the [chroma keyer](https://en.wikipedia.org/wiki/Chroma_key) leave
+ghosts! Anything that moves in front of the green screen now trails copies of
+itself, and a spinning sandwich shows it off well. To do it, we made the keyer
+show its own last frame wherever the green screen was, so the old copies of the
+sandwich stay on screen behind the new one.
 
 You'll notice the copies flash between gold and pale blue. We made the frame
-store keep the colour signal exactly as it came in, and that signal flips every
-frame, so every other copy comes back in the opposite colour. If you'd rather
-keep them all gold, turn off **Colour framing**.
+store (the memory that holds a whole frame of video) keep the colour signal
+exactly as it came in, and that signal flips every frame, so every other copy
+comes back in the opposite colour. If you'd rather keep them all gold, turn off
+**Colour framing**.
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">

@@ -33,7 +33,10 @@ comments. Posts are not reference pages.
   it does to the picture. Keep every number, patent, source and control name,
   because the real mechanism is part of the fun.
 - Explain a jargon term in a few words the first time, such as "the burst gate
-  samples the wrong part of each line".
+  samples the wrong part of each line". For a concept many readers won't know,
+  such as a colour crystal, a head-end or a PLL, link it to Wikipedia or explain
+  it in parentheses the first time it appears, and link a company or system by
+  name the first time too.
 
 ## Do not write
 

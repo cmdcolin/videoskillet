@@ -25,12 +25,14 @@ bootleg.
 
 ## Paper dolls
 
-We made paper dolls from Zenith's SSAVI scrambler, which flipped the picture to
-a negative on a timer. We mix the camera back in at 70% and only lightly weaken
-the sync pulses that tell the TV where each line starts, so the TV keeps hold of
-the picture. Every trip around the loop adds another sideways-shifted copy of
-the picture, and the copy turns negative while the scrambler is inverting the
-picture, so the faces repeat in alternating colours like a chain of paper dolls.
+We made paper dolls from Zenith's
+[SSAVI](https://en.wikipedia.org/wiki/Television_encryption) scrambler, which
+flipped the picture to a negative on a timer. We mix the camera back in at 70%
+and only lightly weaken the sync pulses that tell the TV where each line starts,
+so the TV keeps hold of the picture. Every trip around the loop adds another
+sideways-shifted copy of the picture, and the copy turns negative while the
+scrambler is inverting the picture, so the faces repeat in alternating colours
+like a chain of paper dolls.
 
 ![The model from a 1984 swimwear catalogue repeated across the frame as overlapping copies, some blue and some orange, beside the grid of swimsuit photos in the same two colours. A white band and a black bar run down the right edge.](/blog/scramble-paper-dolls.webp)
 
