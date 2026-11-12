@@ -510,10 +510,7 @@ const FTYP = box(
 // past that is a size of 1 followed by a 64-bit `largesize` — eight bytes more
 // of header, which is why the payload's offset is read off this rather than
 // assumed to be 8.
-const mdatHeader = (
-  payload: number,
-  large: boolean,
-): Uint8Array<ArrayBuffer> =>
+const mdatHeader = (payload: number, large: boolean): Uint8Array<ArrayBuffer> =>
   large
     ? join([u32(1), str('mdat'), u64(payload + 16)])
     : join([u32(payload + 8), str('mdat')])

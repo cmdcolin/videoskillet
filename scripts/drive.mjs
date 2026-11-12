@@ -75,10 +75,7 @@ export function installHelpers() {
   // caret (and a • when something inside is off stock), so match the head.
   const section = title => {
     const btn = [...document.querySelectorAll('h3 button')].find(b =>
-      b.textContent
-        .replace(/^[▸▾]/, '')
-        .trim()
-        .startsWith(title),
+      b.textContent.replace(/^[▸▾]/, '').trim().startsWith(title),
     )
     return btn === undefined ? null : btn.closest('h3').parentElement
   }

@@ -20,9 +20,10 @@ picture as a negative. Try
 and
 [Oak Sigma](/app/#preset=oakSigma&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
-For our [scrambled channel](/blog/better-scramble-channel/), we simulated the
-channels that old [Jerrold](https://en.wikipedia.org/wiki/Jerrold_Electronics)
-and [General Instrument](https://en.wikipedia.org/wiki/General_Instrument) boxes
+For our previous [scrambled channel](/blog/better-scramble-channel/) post, we
+showed how we can simulate the channels that old
+[Jerrold](https://en.wikipedia.org/wiki/Jerrold_Electronics) and
+[General Instrument](https://en.wikipedia.org/wiki/General_Instrument) boxes
 decoded, by weakening the sync pulses that tell the TV where each line starts.
 Oak Sigma and VideoCipher II went further: they took the sync out entirely, put
 encrypted sound data in its place and turned the video into a negative.
@@ -62,7 +63,11 @@ line, where the sync pulse belongs, and sat the
 [colour burst](https://en.wikipedia.org/wiki/Color_burst), the TV's colour
 reference, on a mid-grey step after it. We invert the video at 1.4 times the
 gain, so the brightest parts of the scene sink below black, and the TV mistakes
-them for sync pulses and tears the picture there.
+them for sync pulses and tears the picture there. Open
+[VideoCipher II](/app/#preset=videoCipher&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
+to watch it tear the catalogue cover live.
+
+![The catalogue cover torn into horizontal slabs of red, violet, blue and green, with a wide ribbon of black-and-white speckle winding down the middle of the frame.](/blog/scramble-videocipher.webp)
 
 ## Oak Sigma
 
