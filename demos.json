@@ -160,5 +160,12 @@
         "query": "#preset=earlyBox&vurl=https://myloveydove.com/videoskillet/sources/artifacts-fashion-film.webm"
       }
     ]
+  },
+  {
+    "name": "Zebrabell",
+    "showcase": false,
+    "gallery": true,
+    "says": "The mixer loop keyed on brightness and run below zero, so each lap of the lit jellyfish comes back inverted against the one before it. Clip from Jellyfish at the Aquarium of Genoa by Superchilum (CC BY-SA 4.0).",
+    "query": "#preset=flipChain&vurl=https://myloveydove.com/videoskillet/sources/jellyfish-genoa.webm"
   }
 ]

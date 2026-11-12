@@ -1472,6 +1472,22 @@ export const PRESETS: PresetDef[] = [
     },
   },
   {
+    name: 'flipChain',
+    displayName: 'flip chain',
+    group: 'Feedback loops',
+    blurb:
+      'The loop returning below zero and keyed on brightness, so only the lit subject goes round. Each lap comes back 3 µs to the right and inverted against the lap before it: the bright subject returns as a black copy, that copy returns bright, and the next black again. A chain of alternating black and bright copies trails anything lit, over a picture that is otherwise left alone. At positive gain the same chain piles up into a white-hot smear.',
+    patch: {
+      cfbMix: 0.78,
+      cfbGain: -1.1,
+      cfbDelayUs: 3,
+      cfbKey: 1,
+      cfbKeyLevel: 36,
+      chromaGain: 1.6,
+      cfbGenlock: 1,
+    },
+  },
+  {
     name: 'ringInTheHighlights',
     displayName: 'ring in the highlights',
     group: 'Feedback loops',
