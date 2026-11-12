@@ -2,8 +2,8 @@
 title: Chroma keying with ghosts
 date: 2026-11-02
 summary:
-  The chroma keyer can fill the hole it cuts with its own earlier output, so
-  anything that moves in front of the green screen leaves copies of itself.
+  We made the chroma keyer leave ghosts. Anything that moves in front of the
+  green screen now trails copies of itself.
 image: https://myloveydove.com/videoskillet/blog/keyer-sandwich-turn.webp
 imageAlt:
   A chicken fillet roll turning over colour bars. A disc of copies of the roll
@@ -14,9 +14,14 @@ look: '#vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_
 - Chroma key: fill to loop bus
 - Mixer feedback: strobe hold to 5
 
-The frame store records the composite signal with its colour subcarrier, whose
-phase inverts every frame. Alternate copies therefore decode in complementary
-colours, and gold turns pale blue. **Colour framing** turns this off.
+We made the chroma keyer leave ghosts! Anything that moves in front of the green
+screen now trails copies of itself, and a spinning sandwich shows it off well.
+The trick is that the keyer fills the hole it cuts with its own earlier output.
+
+You'll notice the copies flash between gold and pale blue. That comes from the
+frame store, which records the colour subcarrier, and the subcarrier's phase
+flips every frame, so every other copy decodes in the opposite colour. If you'd
+rather keep them all gold, **Colour framing** turns it off.
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">
@@ -29,7 +34,7 @@ colours, and gold turns pale blue. **Colour framing** turns this off.
 </figure>
 </div>
 
-Set the key edge to extrude and each copy stands on a
+For more, set the key edge to extrude and every copy stands on a
 [violet slab](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg/1280px-Abandoned_grand_piano_-_Abandoned_Ballroom_%286%29.jpg&vurlb=https://upload.wikimedia.org/wikipedia/commons/transcoded/1/14/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm/HD_video_of_a_Chicken_fillet_roll_-_rotating_green_screen_alan_butler.webm.480p.vp9.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:5,bKeyFillMixA:0.1,bKeyEdge:3,bKeyEdgeUs:1.5,bKeyEdgeY:0.5,bKeyEdgeSat:0.35,bKeyEdgeHueDeg:30).
 
 _Footage: the sandwich is

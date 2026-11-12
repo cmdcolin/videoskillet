@@ -2,9 +2,9 @@
 title: The scrambled channel in a camera loop
 date: 2026-11-11
 summary:
-  A camera pointed at a scrambled channel lays the picture down as a row of
-  positive and negative copies, and a taped copy of the channel adds noise and
-  dropouts to the tearing.
+  We pointed a camera at a scrambled channel, and the picture came back as a row
+  of positive and negative copies. We made three presets from it, one of them a
+  taped bootleg.
 image: /blog/scramble-paper-dolls-film.webp
 imageAlt:
   Two faces repeated across the frame as overlapping copies, alternately pale
@@ -12,21 +12,23 @@ imageAlt:
 look: '#preset=paperDolls&vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/0/02/ARTIFACTS_-_Fashion_Film.webm/ARTIFACTS_-_Fashion_Film.webm.480p.vp9.webm'
 ---
 
-Try it:
+What happens when you point a camera at a scrambled channel? We had to find out,
+and we made three presets from what we saw! Try
 [paper dolls](/app/#preset=paperDolls&vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/0/02/ARTIFACTS_-_Fashion_Film.webm/ARTIFACTS_-_Fashion_Film.webm.480p.vp9.webm).
 The two faces in the picture above are about 35 seconds into the film.
 
-Two presets point a camera at a set showing the
-[scrambled channel](/blog/better-scramble-channel/) and mix its output back into
-the signal ahead of the scrambler. The third plays the channel from a dubbed
-tape.
+Two of them point a camera at a TV showing the
+[scrambled channel](/blog/better-scramble-channel/) and feed the camera's output
+back into the signal ahead of the scrambler. The third plays the channel from a
+dubbed tape, like a bootleg.
 
 ## Paper dolls
 
-Zenith's SSAVI scrambler inverted the video on a keyed schedule. The camera
-output is mixed back at 0.7, and the sync suppression is light enough that the
-set keeps lock. Each pass through the loop adds a horizontally offset copy, and
-the copy is inverted while the key is set.
+We made paper dolls from Zenith's SSAVI scrambler, which inverted the video on a
+keyed schedule. We feed the camera back at 0.7 and keep the sync suppression
+light enough for the TV to hold lock. Every trip around the loop adds another
+sideways-shifted copy of the picture, and the copy turns negative while the key
+is set, so the faces repeat in alternating colours.
 
 ![The model from a 1984 swimwear catalogue repeated across the frame as overlapping copies, some blue and some orange, beside the grid of swimsuit photos in the same two colours. A white band and a black bar run down the right edge.](/blog/scramble-paper-dolls.webp)
 
@@ -35,14 +37,16 @@ The picture above is the same preset over
 
 ## Marbled channel
 
-[Marbled channel](/app/#preset=marbledChannel&vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/0/02/ARTIFACTS_-_Fashion_Film.webm/ARTIFACTS_-_Fashion_Film.webm.480p.vp9.webm)
-mixes the camera back at 0.28 over the full scrambled channel. The set loses
-lock on every pass, so the tearing compounds.
+We made
+[marbled channel](/app/#preset=marbledChannel&vurl=https://upload.wikimedia.org/wikipedia/commons/transcoded/0/02/ARTIFACTS_-_Fashion_Film.webm/ARTIFACTS_-_Fashion_Film.webm.480p.vp9.webm)
+by feeding the camera back at 0.28 over the full scrambled channel. The TV loses
+lock on every pass, so the tearing builds up into flowing ribbons.
 
 ![Two faces at the top right of a picture torn into flowing ribbons of green, violet, blue and orange. Black, grey and white bands wind down the left of the frame.](/blog/scramble-marbled-film.webp)
 
 ## A taped copy
 
+We also made a bootleg.
 [Bootleg fight](/app/#preset=bootlegFight&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
 is a second-generation VHS dub of the scrambled channel, with tape noise,
 dropouts, colour-under jitter and time-base wow on top.

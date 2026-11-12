@@ -2,8 +2,8 @@
 title: A more realistic scrambled channel
 date: 2026-10-15
 summary:
-  The scrambled channel preset now tears like an undecoded premium channel on a
-  real set, and its colour floods, bands and drops out while the picture holds.
+  We reworked the scrambled channel preset. It now tears like a premium channel
+  with no decoder, and the colour floods, bands and drops out.
 image: /blog/scramble-catalogue.webp
 imageAlt:
   A 1984 swimwear catalogue cover through the scrambled channel. The model and
@@ -12,48 +12,54 @@ imageAlt:
 look: '#preset=scrambledChannel&set=scramble:0.7,scrambleMode:0,chromaGain:1.8&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg'
 ---
 
-Try it:
+We rebuilt the scrambled channel preset so it looks like a real premium channel
+with no decoder! Try it:
 [scrambled channel](/app/#preset=scrambledChannel&set=scramble:0.7,scrambleMode:0,chromaGain:1.8&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
 ![A 1980 swimwear model in a zebra-print swimsuit and a white cape, arms spread against wood panelling, clean apart from noise and a soft cast.](/blog/scramble-before.webp)
 
-Before: the TV found its timing marks again, and the picture only washed out.
+Before: the TV found its timing marks again, so the picture only washed out.
 
 ![The same model with the cape torn into wavy slabs, the cape pink, the wall behind her bright green and a band of red across her legs.](/blog/scramble-colour-loops.webp)
 
-After: the picture tears, and the colour comes in bands.
+After: the picture tears and the colour comes in bands.
 
 ![Three seconds of the 1984 catalogue cover through the scrambled channel. The torn shape of the model holds still while her face, arms and legs cycle through green, violet, magenta and yellow, and bands of colour drop out and come back across the frame.](https://myloveydove.com/videoskillet/blog/scramble-chroma-chaos.webp)
 
 ## A turbo version
 
-Recordings of real scrambled channels lose horizontal lock harder than the
-preset above. The
+We also made a rougher one. Real scrambled channels lose horizontal lock harder
+than the preset above, so we built
 [turbo sync loss](/app/#preset=turboSyncLoss&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
-preset drifts the line oscillator a few tens of hertz either side of the line
-rate, lowers the horizontal hold and detunes the vertical oscillator to 58 Hz.
+to match them. It makes the TV's line oscillator drift a few tens of hertz
+either side of the line rate, loosens the horizontal hold and detunes the
+vertical oscillator to 58 Hz, so the picture slides sideways and wraps around
+the edge.
 
 ![The 1984 catalogue cover with bands of the picture slid sideways and wrapped round the edge. The grid of swimsuit photos is torn into wavy columns, and the colour is flooded pink, green and violet.](/blog/scramble-turbo-sync-loss.webp)
 
-## What made the colour look right
+## Why the colour looks right
 
-The cable scrambler suppressed sync and left the chroma alone, and faults
-injected into the chroma directly looked fake. Without sync, the set's burst
-gate samples the wrong part of the line. The ACC and the colour PLL average the
-burst over 30 and 40 lines, so one bad sample shifts the gain and hue of a whole
-band. A slow drift of the colour crystal moves the bands down the screen.
+Our first tries injected faults straight into the chroma, and they looked fake.
+The real cable scrambler left the chroma alone and only suppressed sync, so we
+did the same, and the colour went wrong by itself. Without sync, the TV's burst
+gate samples the wrong part of each line. The ACC and the colour PLL average
+that burst over 30 and 40 lines, so one bad sample shifts the gain and hue of a
+whole band. A slow drift of the colour crystal then slides the bands down the
+screen.
 
 ## Update, 1 November 2026
 
-The preset now models the RF gate of GI and Jerrold head-ends, which cut the
-carrier 6 dB through horizontal blanking. The blanking detects as grey, and the
-ACC raises the chroma gain to match the weakened burst. The links above open the
-version this post describes;
+We made the preset even more faithful. It now copies the RF gate in GI and
+Jerrold head-ends, which cut the carrier 6 dB through horizontal blanking. The
+blanking shows up as grey, and the ACC turns the chroma gain up to match the
+weakened burst. The links above still open the version this post describes, and
+you can
 [open the new one](/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
 ## Update, 11 November 2026
 
-Two newer posts cover
+We've since made more scramblers:
 [Oak Sigma and VideoCipher II](/blog/oak-sigma-and-videocipher/) and
 [the scrambled channel in a camera loop](/blog/scrambled-channel-in-a-loop/).
 

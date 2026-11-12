@@ -2,8 +2,8 @@
 title: Keying by alpha
 date: 2026-11-11
 summary:
-  The keyer can cut by source B's alpha channel, so a transparent PNG, WebP or
-  WebM on B keys over A with no green screen and keeps any green it holds.
+  We taught the keyer to cut out transparent PNGs, WebPs and WebMs, so you can
+  key a fox, a clover or a spacecraft over anything without a green screen.
 image: /blog/alpha-fox-mist.webp
 imageAlt:
   A yawning red fox cut out of its photograph and keyed over a misty forest with
@@ -14,10 +14,12 @@ look: '#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Baumsilhou
 - Source B: a picture with a transparent background
 - Chroma key: key to 1, key source to B alpha
 
-**Key source** switches the keyer's key input from the chroma slice of B to B's
-alpha channel. A character generator sent its key the same way, on a separate
-wire beside its picture. The alpha reaches the keyer without passing through B's
-encoder, so its edge is as sharp as the source drew it.
+We made the keyer cut out transparent images, so you can put a fox in a misty
+forest without a green screen! Drop a PNG, WebP or WebM with a transparent
+background on B, flip the new **Key source** switch to B alpha, and your cutout
+appears over A. Old character generators sent their key down its own wire beside
+the picture, and we do the same, so the edge stays as crisp as the artist drew
+it.
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">
@@ -30,33 +32,31 @@ encoder, so its edge is as sharp as the source drew it.
 </figure>
 </div>
 
-The chroma keyer cuts by hue, and the clover's leaves sit inside the green wedge
-it is set to cut, so the vineyard shows through them. Its transparent background
-has no backing colour to slice and stays black. Keyed by its alpha, the clover
-keeps all its green and the background drops away.
+Why did we bother? The chroma keyer cuts out green, and this clover is green, so
+on the left the vineyard shows through its leaves. On the right we key by alpha,
+and the clover keeps all of its green.
 
 ## Key edges
 
-The edge generator delays the key and combines it with itself, so it works off
-the alpha the same way it works off a chroma key. Try a
+All the key edge effects work on alpha too. Give the clover a
 [drop shadow](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Beech_forest_M%C3%A1tra_in_winter.jpg/1280px-Beech_forest_M%C3%A1tra_in_winter.jpg&iurlb=https://upload.wikimedia.org/wikipedia/commons/3/3a/Gluecksklee_%28transparent_background%292.png&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1,bKeyEdge:2,bKeyEdgeUs:2.5,bKeyEdgeY:0.05).
 
 ![The clover over a winter beech forest with a black drop shadow below and to the right of it.](/blog/alpha-clover-shadow.webp)
 
 ## Genlock off
 
-With genlock off, B is summed onto A and its sync fights A's. The keyer reads
-B's alpha at B's own position on the raster, so the cutout slips and rolls with
-B's picture. Try
+Turn genlock off and B's sync fights A's, so the cutout slips and rolls around
+the screen with B's picture. It looks gloriously broken. Watch
 [the fox unlocked](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg/1280px-Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg&iurlb=https://upload.wikimedia.org/wikipedia/commons/f/f6/Yawning_red_fox_%28transparent_background%29.png&set=chromaGain:1.3,crtSat:1.2,bGain:0.6,aGain:0.7,bKey:1,bKeySource:1,bDetuneHz:5).
 
 ![The fox washed pale and summed over the misty forest, with a coloured stripe and a dark bar where its sync rolls through the picture.](/blog/alpha-fox-unlocked.webp)
 
 ## A moving cutout
 
-A WebM with an alpha channel keys the same way, frame by frame. With the fill on
-the loop bus, the spacecraft leaves copies of itself where it has been, as the
-chroma keyer does in [Chroma keying with ghosts](/blog/keyer-ghosts/).
+Moving cutouts work too! A WebM with an alpha channel keys frame by frame, and
+if you send the fill to the loop bus, this spacecraft leaves a trail of ghosts
+behind it, the same trick as in
+[Chroma keying with ghosts](/blog/keyer-ghosts/).
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">

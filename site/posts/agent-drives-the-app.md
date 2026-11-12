@@ -1,7 +1,9 @@
 ---
 title: Letting an AI agent drive the app
 date: 2026-11-01
-summary: Claude Code and other AI agents can drive videoskillet.
+summary:
+  We made videoskillet drivable by AI agents, so you can ask Claude Code for a
+  look.
 image: /blog/agent-ai-card.webp
 imageAlt:
   The words "videoskillet + AI" in white type on black, fringed in violet and
@@ -18,16 +20,16 @@ look: '#set=capLumaMHz:4.2,demodMHz:3.43,chromaGain:13.62,vir:0.86,lumaMHz:6,noi
 <button type="button" class="video-play-overlay" aria-label="Play video"><span class="video-play-icon" aria-hidden="true"></span></button>
 </div>
 
-Ask Claude Code or Claude in Chrome for a look in plain words, and the agent
-sets the controls, reads the board back and gives you the link. Here Claude
-Sonnet rebuilds the Purplady demo.
+We made videoskillet so an AI agent can run it for you! Tell Claude Code or
+Claude in Chrome what you want in plain words, and it turns the knobs, checks
+its work and hands you a link to the look. Watch Claude Sonnet rebuild the
+Purplady demo from scratch in the video.
 
-`window.vfBoard.apply(link)` applies a whole look at once, and
-`window.vfBoard.read()` returns the board as text.
+Want to try it? Run `claude --chrome` with the app open in Chrome, or open the
+Claude in Chrome side panel in the app's tab. The **agent** button in the
+sidebar copies a starting prompt for the look on screen.
 
-To start, run `claude --chrome` with the app open in Chrome, or open the Claude
-in Chrome side panel in the app's tab. The **agent** button in the sidebar
-copies a starting prompt for the look on screen.
-
-The [AI guide](/guide/ai/) covers the details, and [llms.txt](/llms.txt) lists
-every control an agent can set.
+If you're building your own agent, `window.vfBoard.apply(link)` applies a whole
+look at once, and `window.vfBoard.read()` returns the board as text. The
+[AI guide](/guide/ai/) has the details, and [llms.txt](/llms.txt) lists every
+control an agent can set.
