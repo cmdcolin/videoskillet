@@ -241,10 +241,13 @@ export function useSecond(
   }
 
   // A tape of the camera on screen, which stays on screen.
-  const record = async (): Promise<Landing> =>
-    held.current !== null || left > 0 || opening
-      ? 'failed'
-      : tape(++turn.current)
+  const record = async (): Promise<Landing> => {
+    if (held.current !== null || left > 0 || opening) {
+      return 'failed'
+    }
+    ++turn.current
+    return tape(turn.current)
+  }
 
   // A second press while the relay is still being laid is turned away and
   // leaves B to the first.

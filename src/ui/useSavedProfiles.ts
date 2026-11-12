@@ -201,7 +201,8 @@ export function useSavedProfiles(
     landed?: () => string,
     still?: Promise<string | null>,
   ) => {
-    const mine = landed === undefined ? named.current : ++named.current
+    if (landed !== undefined) ++named.current
+    const mine = named.current
     editProfiles(owner, edit)
       .then(next => {
         if (uid.current !== owner) return
