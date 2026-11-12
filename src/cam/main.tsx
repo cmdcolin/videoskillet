@@ -12,7 +12,7 @@ import { readLink } from './link'
 // src/main.tsx gives.
 document.body.style.margin = '0'
 registerServiceWorker()
-startAnalytics()
+startAnalytics('videoskillet')
 
 export default function Cam() {
   return <CamPage link={readLink(paramsOf(location))} />

@@ -22,6 +22,6 @@ import './theme.css'
 // way `packages/render-core/src/gpuDevice.ts` in jbrowse-components does it.
 // See docs/adr/0002.
 registerServiceWorker()
-startAnalytics()
+startAnalytics('videoskillet')
 
 export default App
