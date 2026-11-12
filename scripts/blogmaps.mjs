@@ -23,8 +23,16 @@ const MAPS = [
         ],
       },
       {
+        stage: 'Mix',
+        lines: ['The studio mixes', 'the program before', 'the head-end'],
+      },
+      {
         stage: 'Channel',
-        lines: ['Cable / Wiring:', 'the scrambler hides', 'the pulses'],
+        lines: [
+          'Cable / Wiring:',
+          'the head-end scrambler',
+          'hides the pulses',
+        ],
       },
       {
         stage: 'Receiver',
