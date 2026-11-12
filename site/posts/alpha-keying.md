@@ -18,8 +18,9 @@ We made the keyer cut out transparent images, so you can put a fox in a misty
 forest without a green screen! Drop a PNG, WebP or WebM with a transparent
 background on B, flip the new **Key source** switch to B alpha, and your cutout
 appears over A. Old character generators (the machines that put titles and
-captions on TV) sent the shape of their lettering down its own wire beside the
-picture, and we do the same, so the edge stays as crisp as the artist drew it.
+captions on TV) sent the shape of their lettering down a separate wire beside
+the picture, and we do the same, so the edge stays as crisp as the artist drew
+it.
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">
@@ -46,7 +47,7 @@ We made all the key edge effects work on alpha too. Give the clover a
 
 ## Genlock off
 
-Turn genlock off, so B's picture no longer keeps time with A's, and the cutout
+Turn genlock off and B's picture stops keeping time with A's, so the cutout
 slips and rolls around the screen with B's picture. It looks gloriously broken.
 Watch
 [the fox unlocked](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg/1280px-Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg&iurlb=https://upload.wikimedia.org/wikipedia/commons/f/f6/Yawning_red_fox_%28transparent_background%29.png&set=chromaGain:1.3,crtSat:1.2,bGain:0.6,aGain:0.7,bKey:1,bKeySource:1,bDetuneHz:5).
@@ -55,11 +56,10 @@ Watch
 
 ## A moving cutout
 
-Moving cutouts work too! We key a WebM with an alpha channel frame by frame, and
-if you set the keyer's **Fill** to loop bus (the mixer's feedback path), it
-shows its own last frame behind the cutout, so this spacecraft leaves a trail of
-ghosts behind it, the same trick as in
-[Chroma keying with ghosts](/blog/keyer-ghosts/).
+Moving cutouts work too! We key a WebM with an alpha channel frame by frame. Set
+the keyer's **Fill** to loop bus (the mixer's feedback path) and the keyer shows
+its own last frame behind the cutout, so this spacecraft leaves a trail of
+ghosts, the same trick as in [Chroma keying with ghosts](/blog/keyer-ghosts/).
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.25rem 0;">
 <figure style="margin: 0;">

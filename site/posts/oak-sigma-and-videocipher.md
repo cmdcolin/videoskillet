@@ -13,21 +13,19 @@ imageAlt:
 look: '#preset=videoCipher&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg'
 ---
 
-We made two new scrambler presets, based on how real satellite and cable
-scramblers hid a channel. For our
-[scrambled channel](/blog/better-scramble-channel/), we simulated the channels
-that old [Jerrold](https://en.wikipedia.org/wiki/Jerrold_Electronics) and
-[General Instrument](https://en.wikipedia.org/wiki/General_Instrument) boxes
-decoded, by weakening the sync pulses that tell the TV where each line starts,
-so it couldn't lock onto the picture.
-
-Now we've simulated Oak Sigma and VideoCipher II, which went further: they took
-the sync out entirely, put encrypted sound data in its place and turned the
-video into a negative. A TV with no decoder shows that data as a speckled ribbon
-down the screen. Try
+We made two new scrambler presets, Oak Sigma and VideoCipher II! Without a
+decoder you get a speckled ribbon of encrypted sound down the screen and the
+picture as a negative. Try
 [VideoCipher II](/app/#preset=videoCipher&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
 and
 [Oak Sigma](/app/#preset=oakSigma&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
+
+For our [scrambled channel](/blog/better-scramble-channel/), we simulated the
+channels that old [Jerrold](https://en.wikipedia.org/wiki/Jerrold_Electronics)
+and [General Instrument](https://en.wikipedia.org/wiki/General_Instrument) boxes
+decoded, by weakening the sync pulses that tell the TV where each line starts.
+Oak Sigma and VideoCipher II went further: they took the sync out entirely, put
+encrypted sound data in its place and turned the video into a negative.
 
 ## Background
 
@@ -42,10 +40,10 @@ a channel.
 [Oak Industries](https://en.wikipedia.org/wiki/Oak_Industries) made the
 scrambling boxes behind
 [ON TV](<https://en.wikipedia.org/wiki/ON_TV_(TV_network)#/media/File:ONTV_Box_-_front.jpg>),
-a US pay-TV channel that broadcast over the air. You rented the box, and without
-it you saw the channel scrambled. Oak's later Sigma system moved the same idea
-onto cable, and [VideoCipher II](https://en.wikipedia.org/wiki/Videocipher) did
-it for satellite, where people with backyard dishes could pick up channels the
+a US pay-TV channel that broadcast over the air. Oak's later Sigma system moved
+the same idea onto cable, and
+[VideoCipher II](https://en.wikipedia.org/wiki/Videocipher) did it for
+satellite, where people with backyard dishes could pick up channels the
 broadcasters never meant for them.
 
 ![An ON TV decoder box: a black front panel in a woodgrain frame, with the striped blue ON logo and "Subscription TV" on the left, an OFF/ON knob on the right, and "Tune TV to ch 3 for ON" below it.](/blog/oak-ontv-decoder.webp)
@@ -53,8 +51,8 @@ broadcasters never meant for them.
 The tricks were simple electronics, so the scrambled pictures all failed in
 different ways: lost sync, flipped brightness, a wobbling line. Hobbyists who
 wanted to watch without paying built their own decoders, which is part of why
-the makers kept making their systems more elaborate. We like these failures a
-lot, because each one is a different way for a TV to lose its picture.
+the makers kept adding to their systems. We like these failures a lot, because
+each one is a different way for a TV to lose its picture.
 
 ## VideoCipher II
 
@@ -68,7 +66,7 @@ mistakes them for sync pulses and tears the picture there.
 ## Oak Sigma
 
 We replaced each line's sync pulse with three bytes of data at 250 nanoseconds a
-bit, a clock byte and two bytes of encrypted sound, and made their level wobble
+bit: a clock byte and two bytes of encrypted sound. We made their level wobble
 at about 15 Hz. The real system flipped the picture to negative at scene
 changes, at most once every 3 seconds. We flip ours at random intervals of 3 to
 25 seconds, so you never know when the negative is coming.
