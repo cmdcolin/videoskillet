@@ -28,15 +28,6 @@ decoded, by weakening the sync pulses that tell the TV where each line starts.
 Oak Sigma and VideoCipher II took the sync out entirely, put encrypted sound
 data in its place and turned the video into a negative.
 
-We built every scrambler into the **Channel** stage as the head-end, so your
-source stays a clean picture and your TV gets the signal a non-subscriber's set
-got.
-
-<figure>
-<img src="/blog/oak-sigma-and-videocipher-map.svg" alt="The look's place in the app's signal path: Source A, Mix, Channel, Receiver and Screen in a row, Source B joining Mix from below, and the Camera and Mixer loops over the top. Channel and Receiver are lit.">
-<figcaption>The signal path in the app, with this look's stages lit. The scrambler is the head-end in Channel.</figcaption>
-</figure>
-
 ## Background
 
 Before streaming, a subscription channel sent its signal through the air or a
@@ -61,6 +52,20 @@ Each system used its own simple trick, so each scrambled picture failed in its
 own way, with lost sync, flipped brightness or a data ribbon where the sync
 belongs. Hobbyists who wanted to watch without paying built their own decoders,
 which is part of why the makers kept adding to their systems.
+
+## Where the scrambling happens
+
+A pay channel scrambled its signal before it left the station, so it went out
+over the air or down the cable already scrambled. In videoskillet the
+**Channel** stage is that whole trip from the station to your TV, so we scramble
+the signal at the start of it, where the station's head-end sat. The air or
+cable adds its noise and ghosts after that, and the signal reaches your TV with
+no decoder box in the way, because you never rented one.
+
+<figure>
+<img src="/blog/scramble-map.svg" alt="The app's signal path: Source A, Mix, Channel, Receiver and Screen in a row, with Source B and Sound joining from below and the Camera and Mixer loops over the top. A dashed panel under Channel shows its inside: a head-end that scrambles the signal, then the air or cable with its noise and ghosts, then a dashed decoder box that nobody rented.">
+<figcaption>The signal path in the app, with the inside of Channel drawn out.</figcaption>
+</figure>
 
 ## VideoCipher II
 

@@ -1,21 +1,25 @@
 #!/usr/bin/env node
 import { createServer } from 'vite'
 
-// Renders the app's signal chain map (src/ui/ChainMap.tsx) for a blog post's
-// look into public/blog/<post>-map.svg. The map is the sidebar's own component,
-// lit the way the sidebar lights it when the post's look link opens, so a post
-// shows the reader the stages the link will touch. The SVG carries its own
-// styles, with the dark theme's tokens written in as values, because the blog
-// embeds it as an image.
+// Renders the app's signal chain map (src/ui/ChainMap.tsx) for a blog post into
+// public/blog/<name>.svg, with a panel under one stage that shows the steps
+// inside it. The SVG carries its own styles, with the dark theme's tokens
+// written in as values, because the blog embeds it as an image.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const POSTS = [
-  'better-scramble-channel',
-  'oak-sigma-and-videocipher',
-  'alpha-keying',
-  'keyer-ghosts',
+const MAPS = [
+  {
+    name: 'scramble-map',
+    stage: 'Channel',
+    title: 'Inside Channel',
+    chips: [
+      { name: 'Head-end', sub: 'scrambles' },
+      { name: 'Air or cable', sub: 'noise, ghosts' },
+      { name: 'Decoder', sub: 'not rented', off: true },
+    ],
+  },
 ]
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -39,12 +43,6 @@ const style = resolve(
   `svg { font-family: var(--font); }\n${read('src/ui/ChainMap.module.css')}`,
 )
 
-const lookOf = post => {
-  const look = read(`site/posts/${post}.md`).match(/^look: '([^']+)'$/m)?.[1]
-  if (look === undefined) throw new Error(`${post}.md has no look`)
-  return look
-}
-
 const server = await createServer({
   root,
   configFile: false,
@@ -58,8 +56,8 @@ const check = process.argv.includes('--check')
 const stale = []
 try {
   const { blogMapMarkup } = await server.ssrLoadModule('/src/ui/blogMap.tsx')
-  for (const post of POSTS) {
-    const markup = blogMapMarkup(lookOf(post))
+  for (const map of MAPS) {
+    const markup = blogMapMarkup(map)
     const [, w, h] = markup.match(/viewBox="0 0 (\d+) (\d+)"/) ?? []
     const svg = `${markup
       .replace(
@@ -67,7 +65,7 @@ try {
         `<svg xmlns="http://www.w3.org/2000/svg" width="${Number(w) * 2}" height="${Number(h) * 2}" `,
       )
       .replace(/^(<svg[^>]*>)/, `$1<style>${style}</style>`)}\n`
-    const out = join(root, 'public', 'blog', `${post}-map.svg`)
+    const out = join(root, 'public', 'blog', `${map.name}.svg`)
     if (check) {
       if (!existsSync(out) || readFileSync(out, 'utf8') !== svg) stale.push(out)
     } else {
