@@ -2708,6 +2708,8 @@ export class Engine implements EngineApi {
       bLineHz: c.bLineHz,
       bDetuneHz: c.bDetuneHz,
       bRollLps: c.bRollLps,
+      bHPosUs: c.bHPosUs,
+      bVPosLines: c.bVPosLines,
       bPause: c.bPause,
       bWanderUs: c.bWanderUs,
       wipePos: c.wipePos,

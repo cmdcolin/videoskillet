@@ -11,6 +11,8 @@ const STILL: MixControls = {
   bLineHz: 0,
   bDetuneHz: 0,
   bRollLps: 0,
+  bHPosUs: 0,
+  bVPosLines: 0,
   bPause: 0,
   bWanderUs: 0,
   wipePos: 0.5,
@@ -125,6 +127,13 @@ describe('MixState', () => {
     expect(Number.isInteger(out.bRowOff)).toBe(true)
     expect(out.bRowOff).toBeGreaterThanOrEqual(0)
     expect(out.bRowOff).toBeLessThan(LINES)
+  })
+
+  it('parks a still B where the position knobs put it', () => {
+    const out = step(new MixState(), { bHPosUs: 10, bVPosLines: 40 }, 30)
+    expect(out.bShift0).toBeCloseTo(SAMPLES_PER_LINE - 10e-6 * SAMPLE_RATE, 6)
+    expect(out.bRowOff).toBe(LINES - 40)
+    expect(out.bShiftLine).toBe(0)
   })
 
   it('ping-pongs the swept wipe inside 0..1 and reverses direction', () => {

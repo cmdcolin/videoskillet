@@ -454,6 +454,10 @@ bLineHz  (line offset)
   -60..60 step 0.01 Hz  default 0.15
   How far B's line rate sits from A's. The two horizontal oscillators are unlocked, so B skews a little more on each line and slides sideways. Genlock locks B's lines to A's, so this acts on the dirty sum only.
 
+bHPosUs  (B h position)
+  -32..32 step 0.1 µs  default 0
+  Where B's line starts against A's, as a delay on B's sync generator. With the line offset at 0 this is where B's picture and its blanking bar stand: at 0 the two line starts coincide and the bar stays in A's own blanking. With B sliding it moves the point the slide passes through. It acts on the dirty sum only.
+
 bDetuneHz  (sc detune)
   -3000..3000 step 0.01 Hz  default 40
   How far B's colour subcarrier sits from A's 3.579545 MHz. The decoder locks to A's burst, so B's hue cycles continuously: the rainbow crawl of a non-genlocked source. Genlock locks B's subcarrier to A's, so this acts on the dirty sum only.
@@ -461,6 +465,10 @@ bDetuneHz  (sc detune)
 bRollLps  (frame roll)
   -30..30 step 0.01 l/f  default 0.1
   B's vertical drift in lines per frame, from its field rate not matching A's. Genlock locks B's fields to A's, so this acts on the dirty sum only.
+
+bVPosLines  (B v position)
+  -262..262 step 1 lines  default 0
+  Where B's frame starts against A's, in lines. With the frame roll at 0 this is where B's picture and its vertical interval stand: at 0 the two frames coincide. It acts on the dirty sum only.
 
 ## Pot crossfader
 

@@ -83,6 +83,8 @@ export interface MixControls {
   bLineHz: number // B line-frequency offset
   bDetuneHz: number // B subcarrier detune
   bRollLps: number // B vertical slip, lines per frame
+  bHPosUs: number // where B's line starts against A's, µs, positive to the right
+  bVPosLines: number // where B's frame starts against A's, lines, positive downward
   bPause: number // B deck pause: 0 play, >0 held with this much servo damage
   bWanderUs: number // how far B's own clock strays from the house, µs
   wipePos: number // wipe position slider
@@ -179,11 +181,11 @@ export class MixState {
 
     return {
       wipePos: wp < 1 ? wp : 2 - wp,
-      bShift0: wrap(this.hShift, SAMPLES_PER_LINE),
+      bShift0: wrap(this.hShift - usToSamples(c.bHPosUs), SAMPLES_PER_LINE),
       bShiftLine: shiftPerLine,
       bPhase0: this.scPhase * 2 * Math.PI + pausePhase,
       bPhaseLine: 2 * Math.PI * c.bDetuneHz * LINE_S,
-      bRowOff: Math.floor(this.vRoll),
+      bRowOff: Math.floor(wrap(this.vRoll - c.bVPosLines, LINES)),
       bWanderTop: wanderTop,
       bWanderBottom: wanderBottom,
       decks: { a, b },

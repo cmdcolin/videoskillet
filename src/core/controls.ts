@@ -351,6 +351,8 @@ export const DEFAULT_CONTROLS = {
   bLineHz: 0.15,
   bDetuneHz: 40,
   bRollLps: 0.1,
+  bHPosUs: 0, // where B's line starts against A's on the dirty sum, µs to the right
+  bVPosLines: 0, // where B's frame starts against A's on the dirty sum, lines downward
   bHueDeg: 0,
   bVidGain: 1,
   bInv: 0,
