@@ -81,6 +81,14 @@ mistakes them for sync pulses and tears the picture there. Open
 [VideoCipher II](/app/#preset=videoCipher&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
 to watch it tear the catalogue cover live.
 
+<div class="video-frame" style="--video-aspect: 754 / 480">
+<video
+  aria-label="Five seconds of the 1984 catalogue cover through VideoCipher II. The picture is torn into wavy horizontal slabs of red, violet, green and yellow that shift and recolour, and a ribbon of black-and-white speckle winds down the middle of the frame."
+  autoplay muted loop playsinline
+  poster="/blog/scramble-videocipher-poster.webp"
+  src="https://myloveydove.com/videoskillet/blog/scramble-videocipher.mp4"></video>
+</div>
+
 ## Oak Sigma
 
 Without a decoder, Oak Sigma runs a speckled ribbon down the side of the screen
