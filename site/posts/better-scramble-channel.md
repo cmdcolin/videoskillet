@@ -24,7 +24,13 @@ Before: the TV still found the sync pulses, so the picture only washed out.
 
 After: the picture tears and the colour comes in bands.
 
-![Three seconds of the 1984 catalogue cover through the scrambled channel. The torn shape of the model holds still while her face, arms and legs cycle through green, violet, magenta and yellow, and bands of colour drop out and come back across the frame.](https://myloveydove.com/videoskillet/blog/scramble-chroma-chaos.webp)
+<div class="video-frame" style="--video-aspect: 754 / 480">
+<video
+  aria-label="Three seconds of the 1984 catalogue cover through the scrambled channel. The torn shape of the model holds still while her face, arms and legs cycle through green, violet, magenta and yellow, and bands of colour drop out and come back across the frame."
+  autoplay muted loop playsinline
+  poster="/blog/scramble-chroma-chaos-poster.webp"
+  src="https://myloveydove.com/videoskillet/blog/scramble-chroma-chaos.mp4"></video>
+</div>
 
 ## A turbo version
 

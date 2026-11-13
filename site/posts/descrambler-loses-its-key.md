@@ -18,7 +18,13 @@ picture holds, but grey streaks comb through it, and they come and go as the
 snow gets heavier and lighter. Try
 [Foghorn](/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/1951_Toni_Frissell_outdoor_fashion_photo_of_model_and_lighthouse_%28enhanced%29.jpg/960px-1951_Toni_Frissell_outdoor_fashion_photo_of_model_and_lighthouse_%28enhanced%29.jpg&set=scramble:1,scrambleMode:3,decoderDb:10,hDetuneHz:4,agc:1,hvSagUs:14,hvRing:0.2,killThresh:2,accLagLines:30,afpcLagLines:40,matrixClip:1,scDetuneKHz:0.06,burstLock:0.3,noiseIre:2,syncSlicer:2,hHold:0.08,rfSnow:0.14&mod=rfSnow:lorenz:0.15:0.12).
 
-![Eight seconds of the 1951 lighthouse photograph through a scrambled channel and a descrambler box. Thin grey streaks and sideways jitter cover the picture, thin out until it is nearly clean, and come back. A black bar at the right edge breaks into grey lines and closes up again.](https://myloveydove.com/videoskillet/blog/scramble-sound-key.webp)
+<div class="video-frame" style="--video-aspect: 754 / 480">
+<video
+  aria-label="Eight seconds of the 1951 lighthouse photograph through a scrambled channel and a descrambler box. Thin grey streaks and sideways jitter cover the picture, thin out until it is nearly clean, and come back. A black bar at the right edge breaks into grey lines and closes up again."
+  autoplay muted loop playsinline
+  poster="/blog/scramble-sound-key-poster.webp"
+  src="https://myloveydove.com/videoskillet/blog/scramble-sound-key.mp4"></video>
+</div>
 
 In our [scrambled channel](/blog/better-scramble-channel/) post we simulated the
 cable channels that
