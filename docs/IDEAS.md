@@ -720,11 +720,12 @@ inversion axis, so `src/core/signal/datasync.ts` holds the values chosen for
 them. Not built:
 
 - VideoCrypt's cut-and-rotate. No NTSC system used it.
-- A misaligned decoder box. Radio-Electronics (February 1984, page 47) says
-  video leaking into the pulse detector streaks the picture, and US 5,014,309
-  says the restore steps show as light bars at the picture's sides.
-- Scrambling inside the mixer loop. The camera loop passes through the head-end
-  on every lap, which `paperDolls` and `marbledChannel` use.
+- The light bars at the picture's sides that US 5,014,309 says a mistimed
+  decoder box's restore steps draw. The box timing control (`decoderSkewUs`)
+  models the mistimed gate itself.
+- False triggering in the box's pulse detector. Radio-Electronics (February
+  1984, page 47) says video leaking into it streaks the picture. The box misses
+  pulses as snow rises and fires only on real ones.
 - Scene-cut detection. Sigma inverted at scene changes, at most once in three
   seconds, and the key here holds for a random 3 to 25 seconds.
 - Sigma's boosted byte, one of the three on each line, and the 15.75 kHz

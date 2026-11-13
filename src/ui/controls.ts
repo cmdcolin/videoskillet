@@ -3121,7 +3121,7 @@ export const GROUPS: Group[] = [
         max: 12,
         step: 0.5,
         unit: 'dB',
-        help: "A descrambler box between the cable and the set, for the carrier and tri-mode systems. It reads the head-end's key and raises the carrier inside the gate by as many dB as each field was cut, up to this rating. A 6 dB box on a tri-mode channel restores the clear and 6 dB fields and leaves 4 dB on the 10 dB fields, so the picture holds and then tears on those steps.",
+        help: "A descrambler box between the cable and the set, for the carrier and tri-mode systems. It reads the head-end's key off the sound carrier and raises the carrier inside the gate by as many dB as each field was cut, up to this rating. A 6 dB box on a tri-mode channel restores the clear and 6 dB fields and leaves 4 dB on the 10 dB fields, so the picture holds and then tears on those steps. Snow makes the box miss lines, which come through scrambled as grey streaks.",
       },
       {
         key: 'decoderSkewUs',

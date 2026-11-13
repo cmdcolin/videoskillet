@@ -526,7 +526,7 @@ fn main(
   // The descrambler box (prelude `descrambleAt`), on the subscriber's side of
   // everything the cable did above, so it raises the cable's noise in its gate
   // along with the carrier.
-  out = descrambleAt(out, row, s, scramble, P.scrambleMode, P.frame, P.decoderDb, P.decoderSkew);
+  out = descrambleAt(out, row, s, scramble, P.scrambleMode, P.frame, P.decoderDb, P.decoderSkew, P.rfSnow);
 
   // Audio patched straight into the video line — the classic bend. Sampled at
   // line rate the waveform paints one level per row, so bass rolls horizontal

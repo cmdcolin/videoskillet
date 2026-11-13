@@ -1044,14 +1044,32 @@ fn scrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32) -> f3
 // clear: on a tri-mode channel a 6 dB box restores the clear and 6 dB fields
 // and leaves 4 dB on the 10 dB fields. The other systems need other boxes, so
 // this one passes them through.
-fn descrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32, boxDb: f32, skew: f32) -> f32 {
+//
+// The key rides the sound carrier, as amplitude modulation on its FM (Radio-
+// Electronics, February 1984 page 47 and February 1987 page 44): a pulse ahead
+// of each line's sync opens the gate, and a packet after the vertical interval
+// names the field's mode. The sound carrier is well below the picture carrier,
+// so as snow rises the box misses pulses first, and those lines go through
+// unrestored, and then misreads packets, and restores whole fields by the
+// wrong amount.
+const KEY_MISS_PER_SNOW = 3.0;
+const KEY_MISS_ONSET = 0.05;
+const KEY_MISREAD_SHARE = 0.5;
+
+fn descrambleAt(v: f32, row: u32, s: u32, depth: f32, mode: f32, frame: u32, boxDb: f32, skew: f32, snow: f32) -> f32 {
   let system = u32(mode + 0.5);
   let gateS = u32(i32(s) - i32(skew) + i32(SPL)) % SPL;
+  let keyedRow = select(row, row + 1u, gateS >= SPL - SCRAMBLE_GATE_LEAD);
+  let miss = clamp(KEY_MISS_PER_SNOW * (snow - KEY_MISS_ONSET), 0.0, 0.95);
+  let pulseHeard = rand01(pcg(keyedRow * 2654435761u + frame * 40503u + 0x6b3u)) >= miss;
   var out = v;
-  if (boxDb > 0.0 && depth > 0.0 && (system == 3u || system == 4u) && inCarrierGate(gateS)) {
+  if (boxDb > 0.0 && depth > 0.0 && (system == 3u || system == 4u) && inCarrierGate(gateS) && pulseHeard) {
     var level = depth;
     if (system == 4u) {
-      level = depth * triModeLevel(frame);
+      let misread = rand01(pcg(frame * 2246822519u + 0x9a7u)) < KEY_MISREAD_SHARE * miss;
+      let g = rand01(pcg(frame * 3266489917u + 0x51u));
+      let guess = select(select(1.0, 0.6, g < 0.67), 0.0, g < 0.33);
+      level = depth * select(triModeLevel(frame), guess, misread);
     }
     out = carrierScaled(v, -min(10.0 * level, boxDb));
   }
