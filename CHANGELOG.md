@@ -2,6 +2,60 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.6](https://github.com/cmdcolin/videoskillet/compare/v2.25.5...v2.25.6) - 2026-11-13
+
+### Features
+- *(signal)* [`cc71a5a`](https://github.com/cmdcolin/videoskillet/commit/cc71a5afcb137f9b077f79bcc839fc546aa2e577) a diode mix on the dirty bus and a mistimed decoder box
+- *(ui)* [`b2f5ef7`](https://github.com/cmdcolin/videoskillet/commit/b2f5ef75b27ccdb411f9a6bc5c54805c973c3edc) a Gatecrasher gallery entry, and box in a loop at a quarter mix
+- *(signal)* [`a649405`](https://github.com/cmdcolin/videoskillet/commit/a649405a5b97731019ec59b38bf86423a29e0633) position knobs for B on the dirty sum
+- *(ui)* [`2ec03ff`](https://github.com/cmdcolin/videoskillet/commit/2ec03ff4a7357c4122577ae6e450e91ba9887f97) email on a first save, per app, with account totals and traffic
+- *(ui)* [`d00cbef`](https://github.com/cmdcolin/videoskillet/commit/d00cbefb0b26129b9742cdf5ee1e5fe561852db5) read each app's visitors from its own GoatCounter site
+- *(ui)* [`e8ce2ff`](https://github.com/cmdcolin/videoskillet/commit/e8ce2ffc4b2e1533c5c185e6d96325be1c423dad) add the flip chain preset and the Zebrabell gallery demo
+- *(signal)* [`48e04f5`](https://github.com/cmdcolin/videoskillet/commit/48e04f51b6079d25094413557b7395e920fe1d01) the descrambler box reads its key off the sound carrier
+- *(ui)* [`eabc162`](https://github.com/cmdcolin/videoskillet/commit/eabc1624694c0468c931bda85b314a55c33601b9) add the Foghorn gallery demo
+
+### Fixes
+- *(ui)* [`13357ee`](https://github.com/cmdcolin/videoskillet/commit/13357ee6587ee2e8768d48074530a4ae67f482bf) keep the posts folder's CLAUDE.md out of the blog
+- [`b679068`](https://github.com/cmdcolin/videoskillet/commit/b6790686547d79999e2af35cecc1c4465ca794cf) clear the lint errors in the signup alert
+- *(ui)* [`a50ce85`](https://github.com/cmdcolin/videoskillet/commit/a50ce850b6b3871910c4a6ae781069d9a158b965) keep ref increments out of conditional expressions
+- *(ui)* [`f7c6c8d`](https://github.com/cmdcolin/videoskillet/commit/f7c6c8d7e95a1a7cc73ae97c8a4090d3cdf0467a) quote the ring in the highlights blurb so presets.ts parses
+
+### Refactor
+- *(ui)* [`42d2c17`](https://github.com/cmdcolin/videoskillet/commit/42d2c17adb9d1bb7638be32f8a9f12cde21ae0d4) record's guard no longer returns early
+
+### Documentation
+- *(ui)* [`7498db1`](https://github.com/cmdcolin/videoskillet/commit/7498db17871dd27bdf84e96147a161941ad92f2b) add background on ON TV and scrambling to the Oak Sigma post
+- [`3b43066`](https://github.com/cmdcolin/videoskillet/commit/3b4306617d42d5c194730b1e13c0217d97a766c1) add a gallery of demo tiles to the README
+- [`4279071`](https://github.com/cmdcolin/videoskillet/commit/4279071386aaffd3d1965b0f678644bd8c08ef75) move the README gallery down to just above About
+- [`b51a738`](https://github.com/cmdcolin/videoskillet/commit/b51a738a968346c120444ae022d354cbd05c895f) drop the two scrambling tiles from the README gallery
+- [`9b41efa`](https://github.com/cmdcolin/videoskillet/commit/9b41efafb43d3bd23111ff5ac37e3cd8d4c82692) swap Skeledance for the spaceship and restore Gatecrasher in the README gallery
+- [`6ad40c7`](https://github.com/cmdcolin/videoskillet/commit/6ad40c74006dd5bc3e73fd4fb1eea4eafd05ef58) use the spinning sandwich instead of the spaceship in the README gallery
+- [`16963b1`](https://github.com/cmdcolin/videoskillet/commit/16963b163932295c31c6c48531c8286c46d503a3) show the README's sandwich tile as a still frame
+- [`1377948`](https://github.com/cmdcolin/videoskillet/commit/1377948acdad6d5340ac2ef95ef3ba9752beff10) say what we did in the blog posts and show the ON TV decoder
+- [`c86f986`](https://github.com/cmdcolin/videoskillet/commit/c86f986f3ae1dea3b0fd54bc879912883128e568) link or explain unfamiliar terms in the blog posts
+- [`7674643`](https://github.com/cmdcolin/videoskillet/commit/76746435db0becf10a910c5e01e782c629f44dd9) tighten the blog prose
+- [`381d5f5`](https://github.com/cmdcolin/videoskillet/commit/381d5f516a677f4810dcec60380d0fa06c01f8a3) smooth a few more sentences in the blog posts
+- [`5afcda9`](https://github.com/cmdcolin/videoskillet/commit/5afcda9844f6b6d1725ad57c9bc88cfa7f7b18a9) drop the scrambled-channel camera loop post
+- [`b2c4ca7`](https://github.com/cmdcolin/videoskillet/commit/b2c4ca73257776063beb83289435211979a35482) tighten the blog posts and keep them in the active voice
+- [`cff405d`](https://github.com/cmdcolin/videoskillet/commit/cff405d864100faf5748673b8307084fd47a87af) show the app's signal chain map in the scramble and keyer posts
+- [`3bb8f69`](https://github.com/cmdcolin/videoskillet/commit/3bb8f69011f53be98f038ac465fd6ad8617374a3) draw the inside of Channel under the map in the scramble posts
+- [`8c33fb8`](https://github.com/cmdcolin/videoskillet/commit/8c33fb84049c4b4ac18e3480807c85ac2216c128) explain why the scrambler sits in Channel, with callouts on the stages
+- [`c9b7763`](https://github.com/cmdcolin/videoskillet/commit/c9b7763c822bbb9782cefccd8707428e00292eee) place the scrambler after the studio mix and mention the per-feed one
+- [`ed9f90c`](https://github.com/cmdcolin/videoskillet/commit/ed9f90c65ce615cad602768afd810c5898e4d397) drop the signal-path figures from the scramble posts
+- [`7463f15`](https://github.com/cmdcolin/videoskillet/commit/7463f154668c9fe7b0a810fcce0cdabe1af6a234) state what happened instead of what never did in post and preset copy
+
+### Chores
+- [`2736173`](https://github.com/cmdcolin/videoskillet/commit/2736173350927454cd7b730ed7b5559432a88f6b) put videoskillet's page views on its own GoatCounter site
+- [`91a4837`](https://github.com/cmdcolin/videoskillet/commit/91a4837e7c55fc16531e88a1b3527d9b78e74474) record the delete-user-data extension's new etag
+- [`e237535`](https://github.com/cmdcolin/videoskillet/commit/e23753553a70f0898785a1dc1902875afd374ae6) update dependencies
+- [`4550c9b`](https://github.com/cmdcolin/videoskillet/commit/4550c9bc138b746f79c8df50b25df28819891483) drop the astro 7.3.1 release-age exclusion
+- [`fe304f4`](https://github.com/cmdcolin/videoskillet/commit/fe304f4a3bdc3886612ae7386665c068a3fb495f) fail the compiler check on Oxc compiler bailouts
+- [`4af4029`](https://github.com/cmdcolin/videoskillet/commit/4af4029c688432655ea9b279acaa6081d62c6e2d) format two lines that fail the oxfmt check in CI
+- [`f5af0fa`](https://github.com/cmdcolin/videoskillet/commit/f5af0faa788af2ed1ca833be6a34ae44730290dc) rewrap a line in the posts notes that fails the format check
+
+### Other Changes
+- [`d175051`](https://github.com/cmdcolin/videoskillet/commit/d175051c0f28e94c6b8175eceea1cd75c0dd59e9) Post personality
+
 ## [2.25.5](https://github.com/cmdcolin/videoskillet/compare/v2.25.4...v2.25.5) - 2026-11-11
 
 ### Features
