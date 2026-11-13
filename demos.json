@@ -124,6 +124,13 @@
     "query": "#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg"
   },
   {
+    "name": "Foghorn",
+    "showcase": false,
+    "gallery": true,
+    "says": "A premium channel through a matched descrambler box, on a cable whose signal fades and comes back. The box reads its key off the sound carrier, which sinks under the snow before the picture does, so as the signal fades the box misses lines and they come through scrambled as grey streaks. Photograph by Toni Frissell, 1951 (Library of Congress).",
+    "query": "#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/1951_Toni_Frissell_outdoor_fashion_photo_of_model_and_lighthouse_%28enhanced%29.jpg/960px-1951_Toni_Frissell_outdoor_fashion_photo_of_model_and_lighthouse_%28enhanced%29.jpg&set=scramble:1,scrambleMode:3,decoderDb:10,hDetuneHz:4,agc:1,hvSagUs:14,hvRing:0.2,killThresh:2,accLagLines:30,afpcLagLines:40,matrixClip:1,scDetuneKHz:0.06,burstLock:0.3,noiseIre:2,syncSlicer:2,hHold:0.08,rfSnow:0.14&mod=rfSnow:lorenz:0.15:0.12"
+  },
+  {
     "name": "Skeledance",
     "showcase": false,
     "gallery": true,
