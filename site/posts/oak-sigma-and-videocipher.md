@@ -44,7 +44,7 @@ a US pay-TV channel that broadcast over the air. Oak's later Sigma system moved
 the same idea onto cable, and
 [VideoCipher II](https://en.wikipedia.org/wiki/Videocipher) did it for
 satellite, where people with backyard dishes could pick up channels the
-broadcasters never meant for them.
+broadcasters sold only to paying subscribers.
 
 ![An ON TV decoder box: a black front panel in a woodgrain frame, with the striped blue ON logo and "Subscription TV" on the left, an OFF/ON knob on the right, and "Tune TV to ch 3 for ON" below it.](/blog/oak-ontv-decoder.webp)
 
@@ -71,17 +71,15 @@ A.
 
 ## VideoCipher II
 
-We made VideoCipher II hide the sound inside the picture. We put sound and
-addressing data (which told each box whether you had paid) at the start of every
-line, where the sync pulse belongs, and sat the
+We simulated VideoCipher II, which hides the sound inside the picture. It puts
+sound and addressing data (which told each box whether you had paid) at the
+start of every line, where the sync pulse belongs, and sits the
 [colour burst](https://en.wikipedia.org/wiki/Color_burst), the TV's colour
-reference, on a mid-grey step after it. We inverted the video at 1.4 times the
-gain, so the brightest parts of the scene sink below black, and the TV mistakes
-them for sync pulses and tears the picture there. Open
+reference, on a mid-grey step after it. It also inverts the video at 1.4 times
+the gain, so the brightest parts of the scene sink below black, and a TV
+mistakes them for sync pulses and tears the picture there. Open
 [VideoCipher II](/app/#preset=videoCipher&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
 to watch it tear the catalogue cover live.
-
-![The catalogue cover torn into horizontal slabs of red, violet, blue and green, with a wide ribbon of black-and-white speckle winding down the middle of the frame.](/blog/scramble-videocipher.webp)
 
 ## Oak Sigma
 

@@ -21,8 +21,8 @@ comments. Posts are not reference pages.
   purpose, so never make the preset, the app or a control the actor, as in "Our
   scrambled channel copies those boxes" or "It makes the line oscillator drift".
   Name the real systems or brands we simulated.
-- Use no passive voice, in the history as well: "channels the broadcasters never
-  meant for them", not "channels that were never meant for them".
+- Use no passive voice, in the history as well: "channels the broadcasters sold only
+  to subscribers", not "channels that were sold only to subscribers".
 - Use active verbs and ordinary words, and describe what the reader sees. "We
   made the keyer show its own last frame wherever the green screen was" beats
   "The fill is sourced from the prior output".

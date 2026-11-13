@@ -269,7 +269,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'one line back',
     group: 'Tape wear',
     blurb:
-      'Binder hydrolysis, and the circuit that is supposed to hide half of it. The same failure does two things at once. The oxide sheds, so the head reads nothing several times a line, and the tape grabs the drum until the tension breaks it free, a relaxation oscillator that shows as bands of shear leaning further line by line and then snapping back. Where the head read nothing the compensator patches the gap from a delay line holding the line above. A line of NTSC is 227.5 subcarrier cycles, so the patch arrives exactly half a cycle out of phase: invisible in brightness, and in the complementary hue. That is why a shedding tape on a cheap deck streaks in colours the scene never had rather than in white. The chroma AGC lags well behind, so colour blooms back through each scarred band instead of snapping, and where two dropouts stack the delay line holds a line that lost the same samples, so the raw dropout shows through.',
+      'Binder hydrolysis, and the circuit that is supposed to hide half of it. The same failure does two things at once. The oxide sheds, so the head reads nothing several times a line, and the tape grabs the drum until the tension breaks it free, a relaxation oscillator that shows as bands of shear leaning further line by line and then snapping back. Where the head read nothing the compensator patches the gap from a delay line holding the line above. A line of NTSC is 227.5 subcarrier cycles, so the patch arrives exactly half a cycle out of phase: invisible in brightness, and in the complementary hue. That is why a shedding tape on a cheap deck streaks in the complementary hue. The chroma AGC lags well behind, so colour blooms back through each scarred band instead of snapping, and where two dropouts stack the delay line holds a line that lost the same samples, so the raw dropout shows through.',
     patch: {
       dropoutRate: 120,
       dropoutLenUs: 30,
@@ -1492,7 +1492,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ring in the highlights',
     group: 'Feedback loops',
     blurb:
-      'The loop return keyed on brightness, so the multiply can only happen where the picture is already lit. Highlights grow scalloped trails sideways and everything under the slice, a dark subject or a saturated backing, stays photographic. That is the difference between feedback that follows the subject and feedback that floods the frame. Keyed and summed, the trail is a grey smear of the highlight itself. Keyed and multiplied, the same trail comes back through the spectrum, because the loop against the live picture lands at sums and differences the highlight never carried.',
+      'The loop return keyed on brightness, so the multiply can only happen where the picture is already lit. Highlights grow scalloped trails sideways and everything under the slice, a dark subject or a saturated backing, stays photographic. That is the difference between feedback that follows the subject and feedback that floods the frame. Keyed and summed, the trail is a grey smear of the highlight itself. Keyed and multiplied, the same trail comes back through the spectrum, because the loop against the live picture lands at the sums and differences of the two pictures' frequencies.',
     patch: {
       cfbMix: 0.92,
       cfbGain: 1.02,
@@ -1533,7 +1533,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'warp in the highlights',
     group: 'Feedback loops',
     blurb:
-      "The same key on the varactor instead of the multiplier. What comes back is the highlight in the wrong place rather than a colour it never had. The varactor pulls the loop's own delay by the brightness passing through it, and the key only lets the pulled return land where the picture was already lit. A lit subject tears sideways into ribbons that recolour as they go, every 70 ns of pull being another 90 degrees of hue, and a dark subject or a saturated backing sits through it in register. Feedback that displaces geometry rather than manufacturing colour, keyed so it displaces only what it was pointed at.",
+      "The same key on the varactor instead of the multiplier. What comes back is the highlight in the wrong place. The varactor pulls the loop's own delay by the brightness passing through it, and the key only lets the pulled return land where the picture was already lit. A lit subject tears sideways into ribbons that recolour as they go, every 70 ns of pull being another 90 degrees of hue, and a dark subject or a saturated backing sits through it in register. Feedback that displaces geometry, keyed so it displaces only what it was pointed at.",
     patch: {
       cfbMix: 0.8,
       cfbGain: 1.06,
@@ -2789,7 +2789,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'contour lines',
     group: 'Circuit bent',
     blurb:
-      "The video synth patched over slot A with the picture's own brightness driving its oscillator. Frequency rather than phase, so the wave runs faster through bright picture and slower through dark, equal-brightness regions fall into step, and the image draws itself as contour lines. The colorizer turns those bands into hue, and the encoder downstream gets a picture full of edges it was never designed to carry.",
+      "The video synth patched over slot A with the picture's own brightness driving its oscillator. Frequency rather than phase, so the wave runs faster through bright picture and slower through dark, equal-brightness regions fall into step, and the image draws itself as contour lines. The colorizer turns those bands into hue, and the encoder downstream gets a picture full of contour edges.",
     patch: {
       synthOver: 0.6,
       synthShape: 1,
@@ -3611,7 +3611,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'chroma rails',
     group: 'Past the redline',
     blurb:
-      "Colour driven six times past the knob's top into output stages with no headroom left, under a colorized pulse laid over the picture. The guns hit their rails one at a time, so every hue on screen slides to whichever corner of the cube it reached first and the picture comes back in four colours it was never carrying.",
+      "Colour driven six times past the knob's top into output stages with no headroom left, under a colorized pulse laid over the picture. The guns hit their rails one at a time, so every hue on screen slides to whichever corner of the cube it reached first and the picture comes back in four colours.",
     patch: {
       // The two together are the look; either alone is not it. Gain past 1
       // with the matrix fitting back into gamut (matrixClip 0) just makes
@@ -3657,7 +3657,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'out of headroom',
     group: 'Past the redline',
     blurb:
-      'Two controls and nothing else: colour driven nine times up, into output amplifiers that simply hit their rails. Every hue on screen slides to whichever corner of the RGB cube it reached first, and the picture comes back in primaries it was never carrying. The mechanism on its own, to lay over whatever is already on the board.',
+      'Two controls and nothing else: colour driven nine times up, into output amplifiers that simply hit their rails. Every hue on screen slides to whichever corner of the RGB cube it reached first, and the picture comes back in primaries. The mechanism on its own, to lay over whatever is already on the board.',
     patch: {
       // Deliberately bare. Everything else that reads as this look — bars,
       // hash, a phosphor — is a separate mechanism that happens to sit well
@@ -3939,7 +3939,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'a hair off the crystal',
     group: 'Circuit bent',
     blurb:
-      "The synth's oscillator laid over the picture and parked a few hundred hertz off 3.579545 MHz. Brightness at the subcarrier frequency is chroma to the encoder, so it hands the decoder a colour it never saw, and the small detune walks that colour round the wheel across every line. The picture comes back under a rainbow raster made of nothing but a sine wave, with the subcarrier itself showing through as dots.",
+      "The synth's oscillator laid over the picture and parked a few hundred hertz off 3.579545 MHz. Brightness at the subcarrier frequency is chroma to the encoder, so it hands the decoder a colour, and the small detune walks that colour round the wheel across every line. The picture comes back under a rainbow raster made of nothing but a sine wave, with the subcarrier itself showing through as dots.",
     patch: {
       synthOver: 0.6,
       synthAHz: 3580200,
@@ -3986,7 +3986,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'aimed at the VCR',
     group: 'Tape wear',
     blurb:
-      'Copy protection meeting the one set it was never meant to bother. Colorstripe rotates the burst on walking bands of lines, so those bands come back in the wrong hue, and the AGC pulses in the vertical interval make the set crush its gain. This set is also a VIR receiver, trusting line 19 to trim its own hue and saturation, and line 19 is inside the damaged interval, so the whole frame drifts after the bands.',
+      'Copy protection meeting a set that trusts the vertical interval. Colorstripe rotates the burst on walking bands of lines, so those bands come back in the wrong hue, and the AGC pulses in the vertical interval make the set crush its gain. This set is also a VIR receiver, trusting line 19 to trim its own hue and saturation, and line 19 is inside the damaged interval, so the whole frame drifts after the bands.',
     patch: {
       macrovision: 0.7,
       mvStripeDeg: 150,
