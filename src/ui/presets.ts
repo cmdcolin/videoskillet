@@ -1492,7 +1492,7 @@ export const PRESETS: PresetDef[] = [
     displayName: 'ring in the highlights',
     group: 'Feedback loops',
     blurb:
-      'The loop return keyed on brightness, so the multiply can only happen where the picture is already lit. Highlights grow scalloped trails sideways and everything under the slice, a dark subject or a saturated backing, stays photographic. That is the difference between feedback that follows the subject and feedback that floods the frame. Keyed and summed, the trail is a grey smear of the highlight itself. Keyed and multiplied, the same trail comes back through the spectrum, because the loop against the live picture lands at the sums and differences of the two pictures' frequencies.',
+      "The loop return keyed on brightness, so the multiply can only happen where the picture is already lit. Highlights grow scalloped trails sideways and everything under the slice, a dark subject or a saturated backing, stays photographic. That is the difference between feedback that follows the subject and feedback that floods the frame. Keyed and summed, the trail is a grey smear of the highlight itself. Keyed and multiplied, the same trail comes back through the spectrum, because the loop against the live picture lands at the sums and differences of the two pictures' frequencies.",
     patch: {
       cfbMix: 0.92,
       cfbGain: 1.02,
