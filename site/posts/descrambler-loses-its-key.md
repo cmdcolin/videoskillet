@@ -1,5 +1,5 @@
 ---
-title: The descrambler that heard its key on the sound
+title: A descrambler box on a weak signal
 date: 2026-11-13
 summary:
   We made the cable descrambler box read its key off the sound carrier, so a
@@ -31,7 +31,7 @@ signal it puts the picture back together.
 
 ![The same photograph through the scrambled channel with the box restoring it: a clean, steady picture with soft colour and a plain black bar at the right edge.](/blog/scramble-sound-key-clear.webp)
 
-## The key rode on the sound
+## How the box got its timing
 
 The box had to know exactly when each gap started, and on a tri-mode channel it
 also had to know whether the head-end (the cable company's transmitting
