@@ -71,7 +71,7 @@ again.
 
 ## Drifting sync and mains hum
 
-We pushed the signal further for these three. We put back the drifting line
+We pushed the signal further for this one. We put back the drifting line
 oscillator from the scrambled channel post, so the picture swings sideways while
 the box loses pulses. We also added mains hum to an amplifier's supply (the
 **hum modulation** control). The hum isn't locked to the frame, so a slow ripple
@@ -79,29 +79,17 @@ climbs the picture and changes how deep the sync is on each line it passes. The
 TV starts each line in a slightly different place, so the torn edge of the
 blanking interval, the black band where the sync pulse sits, bends and bulges
 instead of holding one shape. We kept the colour lock steady and turned the
-saturation up, so the pinks stay pink. Click any of them to open the look.
+saturation up, so the pinks stay pink. Click the clip to open the look.
 
-<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin: 1.25rem 0;">
-<figure style="margin: 0;">
-<a href="/app/#set=scramble:1,scrambleMode:3,decoderDb:10,rfSnow:0.14,hHold:0.08,syncSlicer:2,agc:1,chromaGain:1.5,crtSat:1.4,noiseIre:1,hDetuneHz:4,hvSagUs:14,hvRing:0.2,afpcLagLines:40,humMod:0.3&mod=rfSnow:lorenz:0.15:0.12,hDetuneHz:lorenz:0.25:0.0015,hvSagUs:lorenz:0.15:0.05&iurl=https://upload.wikimedia.org/wikipedia/commons/1/19/Marc_Jacobs_Fall-Winter_2012_03.jpg"><video style="aspect-ratio: 754 / 480; object-fit: cover; margin: 0; width: 100%;" autoplay muted loop playsinline aria-label="A model in a pink fur hat and a white fur coat against a dark runway crowd. Grey streaks run across her, the picture sways sideways, and a torn black band down the right edge bulges and bends as a ripple climbs the frame." poster="/blog/descrambler-fur-hat-poster.webp" src="https://myloveydove.com/videoskillet/blog/descrambler-fur-hat.mp4"></video></a>
-</figure>
-<figure style="margin: 0;">
-<a href="/app/#set=scramble:1,scrambleMode:3,decoderDb:10,rfSnow:0.14,hHold:0.08,syncSlicer:2,agc:1,chromaGain:1.5,crtSat:1.4,noiseIre:1,hDetuneHz:4,hvSagUs:14,hvRing:0.2,afpcLagLines:40,humMod:0.3&mod=rfSnow:lorenz:0.15:0.12,hDetuneHz:lorenz:0.25:0.0015,hvSagUs:lorenz:0.15:0.05&iurl=https://upload.wikimedia.org/wikipedia/commons/6/63/Belusso_Mercedes_Benz_Fashion_Week.jpg"><video style="aspect-ratio: 754 / 480; object-fit: cover; margin: 0; width: 100%;" autoplay muted loop playsinline aria-label="A model in a sheer pink cover-up on a white runway, with a second model walking away beside her. The picture streaks, washes bright and dark as a ripple passes, and the torn band at the right edge changes shape." poster="/blog/descrambler-runway-poster.webp" src="https://myloveydove.com/videoskillet/blog/descrambler-runway.mp4"></video></a>
-</figure>
-<figure style="margin: 0;">
+<figure>
 <a href="/app/#set=scramble:1,scrambleMode:3,decoderDb:10,rfSnow:0.14,hHold:0.08,syncSlicer:2,agc:1,chromaGain:1.5,crtSat:1.4,noiseIre:1,hDetuneHz:4,hvSagUs:14,hvRing:0.2,afpcLagLines:40,humMod:0.3&mod=rfSnow:lorenz:0.15:0.12,hDetuneHz:lorenz:0.25:0.0015,hvSagUs:lorenz:0.15:0.05&iurl=https://upload.wikimedia.org/wikipedia/commons/4/40/Pink_sunglasses_on_swimsuit_model_%286080359110%29.jpg"><video style="aspect-ratio: 754 / 480; object-fit: cover; margin: 0; width: 100%;" autoplay muted loop playsinline aria-label="A smiling woman in pink wraparound sunglasses against a pale sky, cut by grey streaks, with the right edge of the picture tearing and bending." poster="/blog/descrambler-pink-shades-poster.webp" src="https://myloveydove.com/videoskillet/blog/descrambler-pink-shades.mp4"></video></a>
 </figure>
-</div>
 
 _The lighthouse photograph is Toni Frissell's
 [model and lighthouse](<https://commons.wikimedia.org/wiki/File:1951_Toni_Frissell_outdoor_fashion_photo_of_model_and_lighthouse_(enhanced).jpg>)
 from 1951, from the Library of Congress with no known restrictions._
 
-_The fur hat is
-[Marc Jacobs Fall-Winter 2012 03](https://commons.wikimedia.org/wiki/File:Marc_Jacobs_Fall-Winter_2012_03.jpg)
-by Christopher Macsurak, under CC BY 2.0. The runway is
-[Belusso Mercedes Benz Fashion Week](https://commons.wikimedia.org/wiki/File:Belusso_Mercedes_Benz_Fashion_Week.jpg)
-by James Santiago, under CC BY-SA 4.0. The sunglasses are
+_The sunglasses are
 [Pink sunglasses on swimsuit model](<https://commons.wikimedia.org/wiki/File:Pink_sunglasses_on_swimsuit_model_(6080359110).jpg>)
-by Michael Dorausch, under CC BY-SA 2.0. All three are from Wikimedia Commons,
-and the clips of them here are under the same licences._
+by Michael Dorausch, under CC BY-SA 2.0, from Wikimedia Commons, and the clip of
+it here is under the same licence._
