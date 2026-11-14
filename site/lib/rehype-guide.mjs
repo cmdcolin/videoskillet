@@ -323,6 +323,7 @@ const wrapVideos = tree => {
   })
   visit(tree, 'element', (node, i, parent) => {
     if (node.tagName !== 'video' || parent === undefined) return
+    if (parent.type === 'element' && parent.tagName === 'a') return
     if (
       parent.type === 'element' &&
       parent.properties?.className?.includes('videoframe')
