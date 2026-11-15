@@ -6,9 +6,8 @@
 //
 // `alt=""` because the name is on the card beside it.
 //
-// A demo's riffs are plain links under its card, not cards of their own — a
-// riff has no recording behind it, just a query one small mod off the demo
-// above it, so all it needs is a name to link with.
+// A demo's posts are plain links under its card, so a reader can learn how the
+// mechanism on screen works.
 import { gallery } from '../../scripts/demos.mjs'
 ---
 
@@ -40,13 +39,13 @@ import { gallery } from '../../scripts/demos.mjs'
           <span class="open">open →</span>
         </span>
       </a>
-      {demo.riffs.length > 0 && (
-        <p class="riffs">
-          riffs:{' '}
-          {demo.riffs.map((riff, i) => (
+      {demo.posts.length > 0 && (
+        <p class="posts">
+          read:{' '}
+          {demo.posts.map((post, i) => (
             <>
-              {i > 0 && ' '}
-              <a {...riff.link}>{riff.name}</a>
+              {i > 0 && ' · '}
+              <a href={post.href}>{post.title}</a>
             </>
           ))}
         </p>

@@ -40,11 +40,9 @@
 //          like "Wonkitize me" over them does not make it. Read off the look
 //          itself — the controls it carries that stock does not — so a caption
 //          is a description of the board and not a guess at the picture.
-//   riffs  optional small mods on this demo's own board — the query with one
-//          or two values pushed somewhere weirder, each just a name, a `says`
-//          and a query of its own. They show as plain links under the card,
-//          not as cards themselves: no recording, no still, just a way to
-//          reach a look one step off a look already on the page.
+//   posts  optional ids of blog posts (`site/posts/<id>.md`) about the mechanism
+//          the demo shows. They show as plain links under the card, so a
+//          reader can learn how keying, the scramble channel and the like work.
 //
 // Order is the order everything shows in: the carousel plays its members in it,
 // the gallery lists all of them in it, and the README prints it.
@@ -75,17 +73,26 @@ export const slug = name =>
 
 // Annotated because `JSON.parse` hands back `any`, and `landing-demos.test.ts`
 // imports this module: without a shape here, the tests over it are unchecked.
-/** @type {{ name: string, query: string, says: string, showcase: boolean, gallery: boolean, riffs?: { name: string, query: string, says: string }[] }[]} */
+/** @type {{ name: string, query: string, says: string, showcase: boolean, gallery: boolean, posts?: string[] }[]} */
 const listed = JSON.parse(readFileSync('demos.json', 'utf8'))
 
-// Shared between a demo and a riff: both are a name plus a query, and both
-// queries arrive under the same two sigils.
 const checkQuery = (name, query) => {
   if (!query.startsWith('?') && !query.startsWith('#')) {
     throw new Error(
       `${name}: query must start with '?' or '#', not an origin — got ${query.slice(0, 40)}…`,
     )
   }
+}
+
+// A post's title is the one frontmatter line the link needs, so it is read
+// here rather than pulling in the content collection.
+const postLink = (demo, id) => {
+  const source = readFileSync(`site/posts/${id}.md`, 'utf8')
+  const title = /^title: (.+)$/m.exec(source)?.[1]
+  if (title === undefined) {
+    throw new Error(`${demo}: post ${id} has no title`)
+  }
+  return { href: `/blog/${id}/`, title: title.replace(/^'(.*)'$/, '$1') }
 }
 
 // The same board on the camera page, for a phone. It takes the app's own link
@@ -115,15 +122,7 @@ export const demos = listed.map(demo => {
   // it owns the address bar it writes the look into the fragment, so half the
   // links a person copies begin `#`.
   checkQuery(demo.name, demo.query)
-  const riffs = (demo.riffs ?? []).map(riff => {
-    checkQuery(`${demo.name}: ${riff.name}`, riff.query)
-    const href = `/app/${riff.query}`
-    return {
-      ...riff,
-      href,
-      link: { href, 'data-cam': camHref(riff.name, riff.query) },
-    }
-  })
+  const posts = (demo.posts ?? []).map(id => postLink(demo.name, id))
   return {
     ...demo,
     file,
@@ -133,7 +132,7 @@ export const demos = listed.map(demo => {
     clip: `${CLIPS}${file}.mp4`,
     still: `demos/${file}.webp`,
     poster: `/demos/${file}.webp`,
-    riffs,
+    posts,
   }
 })
 

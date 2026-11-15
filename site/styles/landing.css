@@ -500,10 +500,10 @@ code {
 .demo:focus-visible .open {
   color: var(--accent);
 }
-/* A demo's riffs, under its card rather than in it — the <li> carries the
-   border so the card and its riffs read as one block, the way a saved look's
+/* A demo's posts, under its card rather than in it — the <li> carries the
+   border so the card and its posts read as one block, the way a saved look's
    card and its button row do in site.css. */
-.grid li:has(> .riffs) {
+.grid li:has(> .posts) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -511,14 +511,14 @@ code {
   border-radius: 0.6rem;
   background: var(--surface);
 }
-.grid li:has(> .riffs) > .demo {
+.grid li:has(> .posts) > .demo {
   border: 0;
   border-radius: 0;
 }
 .grid li:has(> .demo:hover, > .demo:focus-visible) {
   border-color: var(--accent);
 }
-.riffs {
+.posts {
   margin: 0;
   padding: 0.5rem 0.85rem 0.6rem;
   border-top: 1px solid var(--border-faint);
@@ -526,15 +526,15 @@ code {
   color: var(--fg4);
   line-height: 1.5;
 }
-.riffs a {
+.posts a {
   color: var(--fg2);
 }
-.riffs a:hover,
-.riffs a:focus-visible {
+.posts a:hover,
+.posts a:focus-visible {
   color: var(--accent);
 }
 /* On a phone the gallery is a row a thumb swipes, so
-   fourteen demos take one screen of the page and the riffs stay on desktop. */
+   fourteen demos take one screen of the page and the posts stay on desktop. */
 @media (max-width: 34rem) {
   #galleryHost .grid {
     display: flex;
@@ -555,7 +555,7 @@ code {
     width: 64vw;
     scroll-snap-align: start;
   }
-  #galleryHost .riffs,
+  #galleryHost .posts,
   #galleryHost .demo .open {
     display: none;
   }

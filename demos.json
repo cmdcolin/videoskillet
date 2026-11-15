@@ -81,19 +81,7 @@
     "showcase": true,
     "gallery": true,
     "says": "A caption decoder with two pins held on its font ROM, reading line 21 through an inverting mixer loop keyed on the live picture.",
-    "query": "#src=cat&set=chromaGain:2.62,cc:1,ccBox:0.85,ccRomAddr:1,ccRomData:-3,cgMix:0.48,cgY:0.28,cgScale:2.5,cgRomAddr:5,noiseIre:5.9,rfMistuneMHz:0.39,fbMix:0.61,fbZoom:1.028,fbGain:1.096,fbBlack:0.045,cfbMix:1,cfbGain:-1.22,cfbDelayUs:2.357,cfbLines:60,cfbKey:1,cfbKeyLevel:53,cfbKeySoft:10,cfbKeyExt:1,cfbRing:1,cfbGenlock:1,phosphor:0.1603,timeScale:0.45&mod=",
-    "riffs": [
-      {
-        "name": "Wrong pin",
-        "says": "Same board, a different address line held on the font ROM.",
-        "query": "#src=cat&set=chromaGain:2.62,cc:1,ccBox:0.85,ccRomAddr:7,ccRomData:-3,cgMix:0.48,cgY:0.28,cgScale:2.5,cgRomAddr:5,noiseIre:5.9,rfMistuneMHz:0.39,fbMix:0.61,fbZoom:1.028,fbGain:1.096,fbBlack:0.045,cfbMix:1,cfbGain:-1.22,cfbDelayUs:2.357,cfbLines:60,cfbKey:1,cfbKeyLevel:53,cfbKeySoft:10,cfbKeyExt:1,cfbRing:1,cfbGenlock:1,phosphor:0.1603,timeScale:0.45&mod="
-      },
-      {
-        "name": "Runaway",
-        "says": "Same board, the mixer loop's gain pushed toward its own edge.",
-        "query": "#src=cat&set=chromaGain:2.62,cc:1,ccBox:0.85,ccRomAddr:1,ccRomData:-3,cgMix:0.48,cgY:0.28,cgScale:2.5,cgRomAddr:5,noiseIre:5.9,rfMistuneMHz:0.39,fbMix:0.61,fbZoom:1.028,fbGain:1.096,fbBlack:0.045,cfbMix:1,cfbGain:-2.4,cfbDelayUs:2.357,cfbLines:60,cfbKey:1,cfbKeyLevel:53,cfbKeySoft:10,cfbKeyExt:1,cfbRing:1,cfbGenlock:1,phosphor:0.1603,timeScale:0.45&mod="
-      }
-    ]
+    "query": "#src=cat&set=chromaGain:2.62,cc:1,ccBox:0.85,ccRomAddr:1,ccRomData:-3,cgMix:0.48,cgY:0.28,cgScale:2.5,cgRomAddr:5,noiseIre:5.9,rfMistuneMHz:0.39,fbMix:0.61,fbZoom:1.028,fbGain:1.096,fbBlack:0.045,cfbMix:1,cfbGain:-1.22,cfbDelayUs:2.357,cfbLines:60,cfbKey:1,cfbKeyLevel:53,cfbKeySoft:10,cfbKeyExt:1,cfbRing:1,cfbGenlock:1,phosphor:0.1603,timeScale:0.45&mod="
   },
   {
     "name": "Purplady",
@@ -121,14 +109,16 @@
     "showcase": false,
     "gallery": true,
     "says": "A premium channel with its sync interval cut 6 dB at the head-end. The set takes the picture's shadows for sync, so the picture tears along them, and its clamp sets black from whatever its flyback lands on, so the blanking bar comes up black, white or grey. The frame holds, and the colour floods to make up for the weakened burst.",
-    "query": "#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg"
+    "query": "#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg",
+    "posts": ["better-scramble-channel", "oak-sigma-and-videocipher"]
   },
   {
     "name": "Foghorn",
     "showcase": false,
     "gallery": true,
     "says": "A premium channel through a matched descrambler box, on a cable whose signal fades and comes back. The box reads its key off the sound carrier, which sinks under the snow before the picture does, so as the signal fades the box misses lines and they come through scrambled as grey streaks. Photograph by Toni Frissell, 1951 (Library of Congress).",
-    "query": "#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/1951_Toni_Frissell_outdoor_fashion_photo_of_model_and_lighthouse_%28enhanced%29.jpg/960px-1951_Toni_Frissell_outdoor_fashion_photo_of_model_and_lighthouse_%28enhanced%29.jpg&set=scramble:1,scrambleMode:3,decoderDb:10,hDetuneHz:4,agc:1,hvSagUs:14,hvRing:0.2,killThresh:2,accLagLines:30,afpcLagLines:40,matrixClip:1,scDetuneKHz:0.06,burstLock:0.3,noiseIre:2,syncSlicer:2,hHold:0.08,rfSnow:0.14&mod=rfSnow:lorenz:0.15:0.12"
+    "query": "#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/1951_Toni_Frissell_outdoor_fashion_photo_of_model_and_lighthouse_%28enhanced%29.jpg/960px-1951_Toni_Frissell_outdoor_fashion_photo_of_model_and_lighthouse_%28enhanced%29.jpg&set=scramble:1,scrambleMode:3,decoderDb:10,hDetuneHz:4,agc:1,hvSagUs:14,hvRing:0.2,killThresh:2,accLagLines:30,afpcLagLines:40,matrixClip:1,scDetuneKHz:0.06,burstLock:0.3,noiseIre:2,syncSlicer:2,hHold:0.08,rfSnow:0.14&mod=rfSnow:lorenz:0.15:0.12",
+    "posts": ["descrambler-loses-its-key"]
   },
   {
     "name": "Skeledance",
@@ -136,18 +126,7 @@
     "gallery": true,
     "says": "A chroma keyer that fills the green from its own frame store, recording every fourth frame, so a dancing skeleton leaves copies that fade back into a still of a graveyard at night. Colour framing on the store keeps the copies in their own colours. Skeleton by Eva Vikström (CC BY 3.0), graveyard by Guliolopez (CC BY-SA 3.0).",
     "query": "#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG/1280px-Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0.15,bKeyFillFraming:1",
-    "riffs": [
-      {
-        "name": "Clear on a press",
-        "says": "A long trail, and a one-shot in the modulation bay on \"program A in fill\": each fire wipes the copies back to the graveyard.",
-        "query": "#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG/1280px-Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&mod=bKeyFillMixA:trig:1:1&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0.03,bKeyFillFraming:1"
-      },
-      {
-        "name": "No fade",
-        "says": "Same board with the fade at 0, so the copies bury the graveyard.",
-        "query": "#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG/1280px-Temple_Hill_Graveyard_%28Cork%29_at_night_01.JPG&vurlb=https://myloveydove.com/videoskillet/sources/creatures-for-chroma-key-death.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeyAcceptDeg:45,bKeyClip:0.05,bKeySpill:0.6,bKeyFill:2,cfbHold:3,bKeyFillMixA:0,bKeyFillFraming:1"
-      }
-    ]
+    "posts": ["keyer-ghosts", "alpha-keying"]
   },
   {
     "name": "Gatecrasher",
@@ -155,18 +134,7 @@
     "gallery": true,
     "says": "A premium channel through a 10 dB decoder box whose gate timing has drifted, watched by a camera pointed at the screen. The box raises a strip of picture in place of the sync tip, so the set locks to that strip and its AGC follows it, and the camera loop copies the torn edge into a column of folds. Clip from ARTIFACTS by Tiffany Frances (CC BY 3.0).",
     "query": "#preset=boxInALoop&vurl=https://myloveydove.com/videoskillet/sources/artifacts-fashion-film.webm",
-    "riffs": [
-      {
-        "name": "No camera",
-        "says": "The box alone: slabs of red and blue that follow the picture's left edge.",
-        "query": "#preset=driftingBox&vurl=https://myloveydove.com/videoskillet/sources/artifacts-fashion-film.webm"
-      },
-      {
-        "name": "Gate early",
-        "says": "The gate opens 2 µs early and misses the burst, so the colour is driven far up and the frame washes out in pink and yellow.",
-        "query": "#preset=earlyBox&vurl=https://myloveydove.com/videoskillet/sources/artifacts-fashion-film.webm"
-      }
-    ]
+    "posts": ["descrambler-loses-its-key"]
   },
   {
     "name": "Zebrabell",

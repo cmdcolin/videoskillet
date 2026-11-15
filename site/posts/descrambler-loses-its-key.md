@@ -85,6 +85,20 @@ saturation up, so the pinks stay pink. Click the clip to open the look.
 <a href="/app/#set=scramble:1,scrambleMode:3,decoderDb:10,rfSnow:0.14,hHold:0.08,syncSlicer:2,agc:1,chromaGain:1.5,crtSat:1.4,noiseIre:1,hDetuneHz:4,hvSagUs:14,hvRing:0.2,afpcLagLines:40,humMod:0.3&mod=rfSnow:lorenz:0.15:0.12,hDetuneHz:lorenz:0.25:0.0015,hvSagUs:lorenz:0.15:0.05&iurl=https://upload.wikimedia.org/wikipedia/commons/4/40/Pink_sunglasses_on_swimsuit_model_%286080359110%29.jpg"><video style="aspect-ratio: 754 / 480; object-fit: cover; margin: 0; width: 100%;" autoplay muted loop playsinline aria-label="A smiling woman in pink wraparound sunglasses against a pale sky, cut by grey streaks, with the right edge of the picture tearing and bending." poster="/blog/descrambler-pink-shades-poster.webp" src="https://myloveydove.com/videoskillet/blog/descrambler-pink-shades.mp4"></video></a>
 </figure>
 
+## Gate timing
+
+We made two more looks with a decoder box whose gate timing has gone wrong. When
+the gate opens 2 µs early, it
+[misses the burst](/app/#preset=earlyBox&vurl=https://myloveydove.com/videoskillet/sources/artifacts-fashion-film.webm)
+(the short colour reference at the start of each line), so the colour is driven
+far up and the frame washes out in pink and yellow. When the gate drifts
+instead, the box raises a strip of picture in place of the sync tip, and the TV
+locks to that strip. Look at
+[the box alone](/app/#preset=driftingBox&vurl=https://myloveydove.com/videoskillet/sources/artifacts-fashion-film.webm)
+and the slabs of red and blue follow the left edge of the picture. Point a
+camera at the screen, as we did for Gatecrasher on the gallery, and the camera
+loop copies that torn edge into a column of folds.
+
 _The lighthouse photograph is Toni Frissell's
 [model and lighthouse](<https://commons.wikimedia.org/wiki/File:1951_Toni_Frissell_outdoor_fashion_photo_of_model_and_lighthouse_(enhanced).jpg>)
 from 1951, from the Library of Congress with no known restrictions._
@@ -93,3 +107,5 @@ _The sunglasses are
 [Pink sunglasses on swimsuit model](<https://commons.wikimedia.org/wiki/File:Pink_sunglasses_on_swimsuit_model_(6080359110).jpg>)
 by Michael Dorausch, under CC BY-SA 2.0, from Wikimedia Commons, and the clip of
 it here is under the same licence._
+
+_The gate timing clip is from ARTIFACTS by Tiffany Frances, under CC BY 3.0._

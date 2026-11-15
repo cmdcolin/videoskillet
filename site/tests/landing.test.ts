@@ -147,15 +147,15 @@ test.each(demos)('$name says which mechanism it is', demo => {
   expect(demo.says.endsWith('.')).toBe(true)
 })
 
-const riffs = gallery.flatMap(demo => demo.riffs)
+const posts = gallery.flatMap(demo => demo.posts)
 
-test('there is at least one riff to check the concept against', () => {
-  expect(riffs.length).toBeGreaterThan(0)
+test('there is at least one post link to check the concept against', () => {
+  expect(posts.length).toBeGreaterThan(0)
 })
 
-test.each(riffs)('$name is a link under its demo’s card', riff => {
-  expect(page).toContain(riff.href.replaceAll('&', '&amp;'))
-  expect(page).toContain(`>${riff.name}<`)
+test.each(posts)('$title is a link under its demo’s card', post => {
+  expect(page).toContain(`href="${post.href}"`)
+  expect(page).toContain(`>${post.title.replaceAll("'", '&#39;')}<`)
 })
 
 // A phone's script swaps each gallery link for this one, so it has to be on the
