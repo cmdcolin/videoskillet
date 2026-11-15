@@ -116,8 +116,8 @@
     "name": "Foghorn",
     "showcase": false,
     "gallery": true,
-    "says": "A premium channel through a matched descrambler box on a fading cable. The box reads its key off the sound carrier, which sinks under the snow before the picture does, so it misses lines and they come through as grey streaks. Mains hum and a drifting line oscillator bend the torn edge. Photograph by Michael Dorausch (CC BY-SA 2.0).",
-    "query": "#set=scramble:1,scrambleMode:3,decoderDb:10,rfSnow:0.14,hHold:0.08,syncSlicer:2,agc:1,chromaGain:1.5,crtSat:1.4,noiseIre:1,hDetuneHz:4,hvSagUs:14,hvRing:0.2,afpcLagLines:40,humMod:0.3&mod=rfSnow:lorenz:0.15:0.12,hDetuneHz:lorenz:0.25:0.0015,hvSagUs:lorenz:0.15:0.05&iurl=https://upload.wikimedia.org/wikipedia/commons/4/40/Pink_sunglasses_on_swimsuit_model_%286080359110%29.jpg",
+    "says": "A premium channel through a matched descrambler box on a fading cable. The box reads its key off the sound carrier, which sinks under the snow before the picture does, so it misses lines and they come through as grey streaks. Mains hum and a drifting line oscillator bend the torn edge, the colour runs unlocked through the rainbow, and a splitter reflection echoes every edge. Photograph by Michael Dorausch (CC BY-SA 2.0).",
+    "query": "#set=scramble:1,scrambleMode:3,decoderDb:10,rfSnow:0.14,hHold:0.08,syncSlicer:2,agc:1,chromaGain:1.5,crtSat:1.4,noiseIre:2,hDetuneHz:4,hvSagUs:14,hvRing:0.2,afpcLagLines:40,humMod:0.3,scDetuneKHz:0.06,burstLock:0.3,accLagLines:30,matrixClip:1,ghostGain:0.1,ghostDelayUs:1.2&mod=rfSnow:lorenz:0.15:0.12,hDetuneHz:lorenz:0.25:0.0015,hvSagUs:lorenz:0.15:0.05&iurl=https://upload.wikimedia.org/wikipedia/commons/4/40/Pink_sunglasses_on_swimsuit_model_%286080359110%29.jpg",
     "posts": ["descrambler-loses-its-key"]
   },
   {
