@@ -108,8 +108,8 @@
     "name": "Scrambled channel",
     "showcase": false,
     "gallery": true,
-    "says": "A satellite feed in VideoCipher II with no descrambler. Sound and addressing data fill the sync of every line, and the picture goes out as a negative at 1.4 times its contrast, so the set takes the brightest parts of the scene for sync and tears the picture around them while the data winds down the frame as a speckled ribbon.",
-    "query": "#preset=videoCipher&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg",
+    "says": "A satellite feed in VideoCipher II with no descrambler, on a receiver with its video-polarity switch flipped. VideoCipher fills the sync of every line with sound and addressing data and sends the picture as a negative. The flipped switch turns the picture positive again with its colours on the opposite side of the wheel, and it makes the data the deepest thing on most lines, so the set locks to the data and keeps it at the left edge. On the lines through the black swimsuits the set locks to them instead and tears the picture, and hum on the set's supply keeps the tears moving.",
+    "query": "#preset=videoCipher&set=polarityFlip:1,humMod:0.3&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg",
     "posts": ["oak-sigma-and-videocipher", "better-scramble-channel"]
   },
   {
