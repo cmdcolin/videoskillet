@@ -108,9 +108,9 @@
     "name": "Scrambled channel",
     "showcase": false,
     "gallery": true,
-    "says": "A premium channel with its sync interval cut 6 dB at the head-end. The set takes the picture's shadows for sync, so the picture tears along them, and its clamp sets black from whatever its flyback lands on, so the blanking bar comes up black, white or grey. The frame holds, and the colour floods to make up for the weakened burst.",
-    "query": "#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg",
-    "posts": ["better-scramble-channel", "oak-sigma-and-videocipher"]
+    "says": "A satellite feed in VideoCipher II with no descrambler. Sound and addressing data fill the sync of every line, and the picture goes out as a negative at 1.4 times its contrast, so the set takes the brightest parts of the scene for sync and tears the picture around them while the data winds down the frame as a speckled ribbon.",
+    "query": "#preset=videoCipher&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg",
+    "posts": ["oak-sigma-and-videocipher", "better-scramble-channel"]
   },
   {
     "name": "Foghorn",
@@ -131,7 +131,7 @@
   {
     "name": "Gatecrasher",
     "showcase": false,
-    "gallery": true,
+    "gallery": false,
     "says": "A premium channel through a 10 dB decoder box whose gate timing has drifted, watched by a camera pointed at the screen. The box raises a strip of picture in place of the sync tip, so the set locks to that strip and its AGC follows it, and the camera loop copies the torn edge into a column of folds. Clip from ARTIFACTS by Tiffany Frances (CC BY 3.0).",
     "query": "#preset=boxInALoop&vurl=https://myloveydove.com/videoskillet/sources/artifacts-fashion-film.webm",
     "posts": ["descrambler-loses-its-key"]
