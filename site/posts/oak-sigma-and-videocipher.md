@@ -92,14 +92,14 @@ to watch it tear the catalogue cover live.
 ### Flipped polarity
 
 You can flip it back to a positive! We turned **hard polarity (flips sync)** in
-**Cable / Wiring** up to 1, so the TV locks to the data and keeps the ribbon at
-the left edge. Open
+**Cable / Wiring** up to 1, so the TV locks to the scrambler's speckled ribbon
+and keeps it at the left edge. Open
 [the flipped version](/app/#preset=videoCipher&set=polarityFlip:1,humMod:0.3&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg)
 to try it.
 
 <div class="video-frame" style="--video-aspect: 754 / 480">
 <video
-  aria-label="Five seconds of the 1984 catalogue cover through VideoCipher II with the polarity flipped, as a positive picture with the speckled ribbon at the left edge."
+  aria-label="Five seconds of the 1984 catalogue cover through VideoCipher II with the polarity flipped, as a positive picture with the scrambler's speckled ribbon at the left edge."
   autoplay muted loop playsinline
   poster="/blog/scramble-videocipher-flipped-poster.webp"
   src="https://myloveydove.com/videoskillet/blog/scramble-videocipher-flipped.mp4"></video>
