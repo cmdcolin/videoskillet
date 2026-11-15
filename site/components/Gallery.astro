@@ -45,7 +45,7 @@ import { gallery } from '../../scripts/demos.mjs'
           {demo.posts.map((post, i) => (
             <>
               {i > 0 && ' · '}
-              <a href={post.href}>{post.title}</a>
+              <a href={post.href} title={post.title} set:text={post.label} />
             </>
           ))}
         </p>

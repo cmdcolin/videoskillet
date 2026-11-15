@@ -154,9 +154,21 @@ test('there is at least one post link to check the concept against', () => {
 })
 
 test.each(posts)('$title is a link under its demo’s card', post => {
-  expect(page).toContain(`href="${post.href}"`)
-  expect(page).toContain(`>${post.title.replaceAll("'", '&#39;')}<`)
+  expect(page).toContain(
+    `href="${post.href}" title="${post.title.replaceAll("'", '&#39;')}">${post.label}</a>`,
+  )
 })
+
+test.each(gallery.filter(demo => demo.posts.length > 0))(
+  '$name labels its posts blog, or blog1, blog2 when there are several',
+  demo => {
+    expect(demo.posts.map(post => post.label)).toEqual(
+      demo.posts.length === 1
+        ? ['blog']
+        : demo.posts.map((_, i) => `blog${i + 1}`),
+    )
+  },
+)
 
 // A phone's script swaps each gallery link for this one, so it has to be on the
 // card and open the same board on the camera page.

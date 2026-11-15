@@ -122,7 +122,10 @@ export const demos = listed.map(demo => {
   // it owns the address bar it writes the look into the fragment, so half the
   // links a person copies begin `#`.
   checkQuery(demo.name, demo.query)
-  const posts = (demo.posts ?? []).map(id => postLink(demo.name, id))
+  const posts = (demo.posts ?? []).map((id, i, ids) => ({
+    ...postLink(demo.name, id),
+    label: ids.length === 1 ? 'blog' : `blog${i + 1}`,
+  }))
   return {
     ...demo,
     file,

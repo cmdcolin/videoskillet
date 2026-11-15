@@ -105,7 +105,7 @@
     "query": "#set=lumaMHz:2.8,osd:1,osdHoldS:5,osdBlueS:1.5,lumaPeak:0.9,noiseIre:2,colorUnderMix:1,underJitterDeg:4,headSwitchNoise:0.4,headSwitchShiftUs:0.8,tbJitterNs:200,trackAmt:0.1,trackHunt:0.75,trackKick:0.9&mod="
   },
   {
-    "name": "Scrambled channel",
+    "name": "Spicey",
     "showcase": false,
     "gallery": true,
     "says": "A satellite feed in VideoCipher II with no descrambler, on a receiver with its video-polarity switch flipped. VideoCipher fills the sync of every line with sound and addressing data and sends the picture as a negative. The flipped switch turns the picture positive again with its colours on the opposite side of the wheel, and it makes the data the deepest thing on most lines, so the set locks to the data and keeps it at the left edge. On the lines through the black swimsuits the set locks to them instead and tears the picture, and hum on the set's supply keeps the tears moving.",
