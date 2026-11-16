@@ -22,13 +22,13 @@ captions on TV) sent the shape of their lettering down a separate wire beside
 the picture. We send B's alpha the same way, so the edge stays as crisp as the
 artist drew it.
 
-<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 1.25rem 0;">
-<figure style="margin: 0;">
-<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/Vignes_pr%C3%A8s_du_Pic_de_Vissou_-_October_2020.jpg/1280px-Vignes_pr%C3%A8s_du_Pic_de_Vissou_-_October_2020.jpg&iurlb=https://upload.wikimedia.org/wikipedia/commons/3/3a/Gluecksklee_%28transparent_background%292.png&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1"><img style="width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin: 0;" loading="lazy" src="/blog/alpha-clover-chroma.webp" alt="A four-leaf clover over an autumn vineyard on a black field. The vineyard shows faintly through the green of the leaves."></a>
+<div class="postPair">
+<figure>
+<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/Vignes_pr%C3%A8s_du_Pic_de_Vissou_-_October_2020.jpg/1280px-Vignes_pr%C3%A8s_du_Pic_de_Vissou_-_October_2020.jpg&iurlb=https://upload.wikimedia.org/wikipedia/commons/3/3a/Gluecksklee_%28transparent_background%292.png&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1"><img loading="lazy" src="/blog/alpha-clover-chroma.webp" alt="A four-leaf clover over an autumn vineyard on a black field. The vineyard shows faintly through the green of the leaves."></a>
 <figcaption>Key source on chroma</figcaption>
 </figure>
-<figure style="margin: 0;">
-<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/Vignes_pr%C3%A8s_du_Pic_de_Vissou_-_October_2020.jpg/1280px-Vignes_pr%C3%A8s_du_Pic_de_Vissou_-_October_2020.jpg&iurlb=https://upload.wikimedia.org/wikipedia/commons/3/3a/Gluecksklee_%28transparent_background%292.png&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1"><img style="width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin: 0;" loading="lazy" src="/blog/alpha-clover-alpha.webp" alt="The same clover keyed cleanly over the vineyard, its leaves solid green."></a>
+<figure>
+<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/Vignes_pr%C3%A8s_du_Pic_de_Vissou_-_October_2020.jpg/1280px-Vignes_pr%C3%A8s_du_Pic_de_Vissou_-_October_2020.jpg&iurlb=https://upload.wikimedia.org/wikipedia/commons/3/3a/Gluecksklee_%28transparent_background%292.png&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1"><img loading="lazy" src="/blog/alpha-clover-alpha.webp" alt="The same clover keyed cleanly over the vineyard, its leaves solid green."></a>
 <figcaption>Key source on B alpha</figcaption>
 </figure>
 </div>
@@ -59,13 +59,13 @@ Moving cutouts work too! We read a WebM's alpha channel frame by frame. Set
 **Fill** to loop bus (the mixer's feedback path) and this spacecraft leaves a
 trail of ghosts, as in [Chroma keying with ghosts](/blog/keyer-ghosts/).
 
-<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 1.25rem 0;">
-<figure style="margin: 0;">
-<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Beech_forest_M%C3%A1tra_in_winter.jpg/1280px-Beech_forest_M%C3%A1tra_in_winter.jpg&vurlb=https://myloveydove.com/videoskillet/sources/swift-alpha.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1,bKeyFill:2,cfbHold:5,bKeyFillHueDeg:30"><video style="width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin: 0;" autoplay muted loop playsinline aria-label="Four seconds of a gold-foiled spacecraft turning over a winter beech forest. A stepped stack of its copies trails behind it, edged in green, blue and magenta, and the forest's tint drifts between violet and green." poster="/blog/alpha-swift-hue-poster.webp" src="https://myloveydove.com/videoskillet/blog/alpha-swift-hue.mp4"></video></a>
+<div class="postPair">
+<figure>
+<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Beech_forest_M%C3%A1tra_in_winter.jpg/1280px-Beech_forest_M%C3%A1tra_in_winter.jpg&vurlb=https://myloveydove.com/videoskillet/sources/swift-alpha.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1,bKeyFill:2,cfbHold:5,bKeyFillHueDeg:30"><video autoplay muted loop playsinline aria-label="Four seconds of a gold-foiled spacecraft turning over a winter beech forest. A stepped stack of its copies trails behind it, edged in green, blue and magenta, and the forest's tint drifts between violet and green." poster="/blog/alpha-swift-hue-poster.webp" src="https://myloveydove.com/videoskillet/blog/alpha-swift-hue.mp4"></video></a>
 <figcaption>Fill to loop bus, store hue at 30°</figcaption>
 </figure>
-<figure style="margin: 0;">
-<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg/1280px-Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg&vurlb=https://myloveydove.com/videoskillet/sources/swift-alpha.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1,bKeyFill:2,cfbHold:4,bKeyFillMixA:0.1"><video style="width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin: 0;" autoplay muted loop playsinline aria-label="Four seconds of the spacecraft turning over the misty forest, trailed by a stepped stack of copies that fade into the trees." poster="/blog/alpha-swift-fade-poster.webp" src="https://myloveydove.com/videoskillet/blog/alpha-swift-fade.mp4"></video></a>
+<figure>
+<a href="/app/#iurl=https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg/1280px-Baumsilhouetten_am_Uetliberg_mit_Novembernebel_und_Sonnenstrahlen.jpg&vurlb=https://myloveydove.com/videoskillet/sources/swift-alpha.webm&set=chromaGain:1.3,crtSat:1.2,bGain:1,bGenlock:1,bKey:1,bKeySource:1,bKeyFill:2,cfbHold:4,bKeyFillMixA:0.1"><video autoplay muted loop playsinline aria-label="Four seconds of the spacecraft turning over the misty forest, trailed by a stepped stack of copies that fade into the trees." poster="/blog/alpha-swift-fade-poster.webp" src="https://myloveydove.com/videoskillet/blog/alpha-swift-fade.mp4"></video></a>
 <figcaption>Fill to loop bus, program A in fill at 0.1</figcaption>
 </figure>
 </div>
