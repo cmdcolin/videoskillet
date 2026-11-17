@@ -2,6 +2,15 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.8](https://github.com/cmdcolin/videoskillet/compare/v2.25.7...v2.25.8) - 2026-11-17
+
+### Fixes
+- *(ui)* [`0d7424a`](https://github.com/cmdcolin/videoskillet/commit/0d7424a2288001a14657887b7bccedad42808703) read the canvas when the engine sends a live take nothing
+- *(ui)* [`5e0b6d2`](https://github.com/cmdcolin/videoskillet/commit/5e0b6d2ea4e5ec56d6f422fbe7f3faca30b7cf60) keep useCapture under React Compiler
+
+### Tests
+- *(ui)* [`f50a629`](https://github.com/cmdcolin/videoskillet/commit/f50a629d54adc4eefeb2470e9c873317536bc7a7) run rectakecheck in Chrome, and check frames came off the engine
+
 ## [2.25.7](https://github.com/cmdcolin/videoskillet/compare/v2.25.6...v2.25.7) - 2026-11-17
 
 ### Features
