@@ -12,7 +12,6 @@ import type { RecentSession, SavedProfile } from './profileModel'
 // imports `firebase`.
 //
 const COLLECTION = 'users'
-const APP = 'videoskillet'
 
 // Whether this browser has been signed in before. Not a credential and not
 // trusted for anything — the real session lives in Firebase's own IndexedDB
@@ -33,6 +32,7 @@ const APPCHECK_SITE_KEY = '6LfXUr8tAAAAAAWJh1jC0NfYTmhiAmdq-Nd8c9nQ'
 
 const cloud = createCloud({
   config: FIREBASE_CONFIG,
+  app: 'videoskillet',
   collection: COLLECTION,
   listField: 'profiles',
   signedInHint: SIGNED_IN_HINT,
@@ -42,23 +42,8 @@ const cloud = createCloud({
 })
 
 export type { CloudUser } from 'skillet-shared/cloud'
-export const { wasSignedIn, warmSignIn, watchAuth, signOut } = cloud
+export const { wasSignedIn, warmSignIn, watchAuth, signIn, signOut } = cloud
 export const { putSession, dropSession, loadSdk } = cloud
-
-// Tells the sign-in alert which app the person used, since both apps share one
-// Firebase sign-in. The rules accept the marker once per person, so a repeat
-// sign-in is refused and ignored.
-export async function signIn() {
-  const user = await cloud.signIn()
-  const { db, fs } = await cloud.loadSdk()
-  await fs
-    .setDoc(fs.doc(db, 'signIns', `${APP}_${user.uid}`), {
-      app: APP,
-      at: fs.serverTimestamp(),
-    })
-    .catch(() => undefined)
-  return user
-}
 
 export interface HomeDoc {
   profiles: SavedProfile[]
