@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { countAccounts, signupAlert, signupMail, traffic } from './signup.js'
+import {
+  countAccounts,
+  signInMail,
+  signupAlert,
+  signupMail,
+  traffic,
+} from './signup.js'
 
 describe('countAccounts', () => {
   it('counts each apps collection', async () => {
@@ -53,7 +59,10 @@ describe('signupMail', () => {
   })
 })
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.useRealTimers()
+})
 
 const answer = body =>
   Promise.resolve({ ok: true, json: () => Promise.resolve(body) })
@@ -81,6 +90,23 @@ describe('traffic', () => {
     expect(calls[0][1]).toBe('Bearer t0k')
     expect(calls[0][0]).toContain('https://bender.goatcounter.com/api/v0/')
     expect(calls[0][0]).toContain('end=2026-11-11T10%3A00%3A00.000Z')
+  })
+
+  it('waits and asks again when GoatCounter answers 429', async () => {
+    vi.useFakeTimers()
+    let hits = 0
+    vi.stubGlobal('fetch', url => {
+      hits += 1
+      return hits === 1
+        ? Promise.resolve({ ok: false, status: 429 })
+        : url.includes('/stats/hits')
+          ? answer({ hits: [] })
+          : answer({ total: 2 })
+    })
+    const pending = traffic('bender', 't', new Date())
+    await vi.runAllTimersAsync()
+    expect((await pending).today).toBe(2)
+    vi.useRealTimers()
   })
 
   it('throws when GoatCounter refuses', async () => {
@@ -148,5 +174,17 @@ describe('signupAlert', () => {
     mail.mockRejectedValueOnce(new Error('454 too many logins'))
     await expect(signupAlert(deps)).rejects.toThrow('454')
     expect(marker.delete).toHaveBeenCalledOnce()
+  })
+})
+
+describe('signInMail', () => {
+  it('names the person', () => {
+    const mail = signInMail({ uid: 'u1', displayName: 'Ada', email: 'a@x.org' })
+    expect(mail.subject).toBe('New sign-in: Ada')
+    expect(mail.text).toContain('a@x.org')
+  })
+
+  it('falls back to the uid', () => {
+    expect(signInMail({ uid: 'u1' }).subject).toBe('New sign-in: u1')
   })
 })

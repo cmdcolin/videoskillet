@@ -1,3 +1,4 @@
+import { logger } from 'firebase-functions'
 import { Timestamp } from 'firebase-admin/firestore'
 
 const ALREADY_EXISTS = 6
@@ -18,7 +19,11 @@ export async function countAccounts(db) {
   return Object.fromEntries(counts)
 }
 
-const get = async (site, path, token, params) => {
+const RETRIES = 4
+const RETRY_PAUSE = 1000
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+const get = async (site, path, token, params, retries = RETRIES) => {
   const response = await fetch(
     `${counter(site)}${path}?${new URLSearchParams(params)}`,
     {
@@ -26,10 +31,14 @@ const get = async (site, path, token, params) => {
       signal: AbortSignal.timeout(10_000),
     },
   )
-  if (!response.ok) {
+  if (response.ok) {
+    return response.json()
+  } else if (response.status === 429 && retries > 0) {
+    await pause(RETRY_PAUSE)
+    return get(site, path, token, params, retries - 1)
+  } else {
     throw new Error(`GoatCounter ${path} answered ${response.status}`)
   }
-  return response.json()
 }
 
 const views = async (site, token, now, days) => {
@@ -42,21 +51,30 @@ const views = async (site, token, now, days) => {
 
 export async function traffic(site, token, at) {
   const now = new Date(Math.floor(at.getTime() / HOUR) * HOUR)
-  const [today, week, month, pages] = await Promise.all([
-    views(site, token, now, 1),
-    views(site, token, now, 7),
-    views(site, token, now, 30),
-    get(site, '/stats/hits', token, {
-      start: new Date(now.getTime() - 7 * DAY).toISOString(),
-      end: now.toISOString(),
-      limit: String(TOP_PAGES),
-    }),
-  ])
+  const today = await views(site, token, now, 1)
+  const week = await views(site, token, now, 7)
+  const month = await views(site, token, now, 30)
+  const pages = await get(site, '/stats/hits', token, {
+    start: new Date(now.getTime() - 7 * DAY).toISOString(),
+    end: now.toISOString(),
+    limit: String(TOP_PAGES),
+  })
   return {
     today,
     week,
     month,
     top: pages.hits.map(h => ({ path: h.path, count: h.count })),
+  }
+}
+
+export const signInMail = user => {
+  const who = user.displayName ?? user.email ?? user.uid
+  return {
+    subject: `New sign-in: ${who}`,
+    text: [
+      `${user.displayName ?? 'no name'} <${user.email ?? 'no email'}> ${user.uid}`,
+      'Both apps share one sign-in, so this does not say which app they used. The account alert follows if they save.',
+    ].join('\n\n'),
   }
 }
 
@@ -116,7 +134,10 @@ export async function signupAlert({
     const [user, totals, stats] = await Promise.all([
       auth.getUser(uid).catch(() => ({ uid })),
       countAccounts(db).catch(() => ({})),
-      traffic(app, token, new Date()).catch(() => undefined),
+      traffic(app, token, new Date()).catch(error => {
+        logger.error('GoatCounter traffic failed', error)
+        return undefined
+      }),
     ])
     await mail(signupMail(app, user, totals, stats)).catch(async error => {
       await db.doc(`signupAlerts/${collection}_${uid}`).delete()

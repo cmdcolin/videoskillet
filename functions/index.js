@@ -3,11 +3,12 @@ import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { defineSecret } from 'firebase-functions/params'
 import { onDocumentCreated } from 'firebase-functions/v2/firestore'
+import * as v1 from 'firebase-functions/v1'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import nodemailer from 'nodemailer'
 
 import { digest, gather } from './digest.js'
-import { APPS, signupAlert } from './signup.js'
+import { APPS, signInMail, signupAlert } from './signup.js'
 
 // Reports of recordings that failed or crashed the page (src/ui/takeLog.ts),
 // emailed once an hour. A visitor writes a report without signing in, so the
@@ -85,3 +86,10 @@ const alertOn = (collection, app) =>
 
 export const videoskilletSignup = alertOn('users', APPS.users)
 export const benderSignup = alertOn('benderUsers', APPS.benderUsers)
+
+export const signIn = v1
+  .runWith({ secrets: ['GMAIL_APP_PASSWORD'], failurePolicy: true })
+  .auth.user()
+  .onCreate(user =>
+    mailer().sendMail({ from: GMAIL, to: GMAIL, ...signInMail(user) }),
+  )
