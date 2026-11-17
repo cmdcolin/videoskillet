@@ -43,9 +43,9 @@ themselves alone.
 
 ## Decision
 
-Do not merge the scan processor. The spike stays at `76ba28e9` in the
-`.claude/worktrees/dark-effects` worktree, on top of the dark-effects batch that
-was moved off main in `08fdb0d1`. The entry is removed from `IDEAS.md`.
+Do not merge the scan processor. The spike stays at `76ba28e9` on the local
+`parked/dark-effects` branch, on top of the dark-effects batch that was moved
+off main in `08fdb0d1`. The entry is removed from `IDEAS.md`.
 
 ## Consequences
 
@@ -55,6 +55,5 @@ was moved off main in `08fdb0d1`. The entry is removed from `IDEAS.md`.
   trace's width, brightness or spacing comes from the signal, judged on still
   portraits against the 2026-11-02 renders. Layering more of the existing
   effects on top of the same traces was tried and did not change the verdict.
-- The spike commit is reachable only through that worktree's detached HEAD.
-  Removing the worktree lets `git gc` collect it, so this record is what
-  remains.
+- The spike commit is reachable only through that branch. Deleting the branch
+  lets `git gc` collect it, so this record is what remains.
