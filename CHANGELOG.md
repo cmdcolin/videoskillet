@@ -2,6 +2,44 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.7](https://github.com/cmdcolin/videoskillet/compare/v2.25.6...v2.25.7) - 2026-11-17
+
+### Features
+- *(ui)* [`dc43732`](https://github.com/cmdcolin/videoskillet/commit/dc437325c311081bc7fdb0cedd47791195c20c78) link gallery cards to blog posts instead of riffs
+- *(ui)* [`ffebf18`](https://github.com/cmdcolin/videoskillet/commit/ffebf1870948f550d0aca5573adc7c5092d4fef8) VideoCipher II on the Scrambled channel card, and Gatecrasher off the gallery
+- *(ui)* [`1938304`](https://github.com/cmdcolin/videoskillet/commit/1938304661df5e6c6d9ad20169d52517839222c5) flip the receiver's video polarity on the Scrambled channel card
+- *(ui)* [`a4e5c26`](https://github.com/cmdcolin/videoskillet/commit/a4e5c264cf6eda1722d0f1fd549b248599f32048) rename Scrambled channel to Spicey, and label gallery posts blog, blog1, blog2
+- *(ui)* [`255d1a0`](https://github.com/cmdcolin/videoskillet/commit/255d1a0325e268d218a42fee66d81f5c23c7f807) say which app a sign-in alert is for
+- *(ui)* [`59f43b9`](https://github.com/cmdcolin/videoskillet/commit/59f43b97153e3a6666a9ab4af0a5e73993273ffd) show traffic and a GoatCounter link in the sign-in alert
+
+### Fixes
+- *(docs)* [`cad32a6`](https://github.com/cmdcolin/videoskillet/commit/cad32a6efe8587642e86bbba79b6f54f9be53cbe) leave clips inside links without a play button
+- *(ui)* [`4c849df`](https://github.com/cmdcolin/videoskillet/commit/4c849dfbc32c9fdc797b6257e6d9fd78442dc400) retry GoatCounter on 429, log its failures, and mail on first sign-in
+- *(ui)* [`eb6bcbf`](https://github.com/cmdcolin/videoskillet/commit/eb6bcbfd1595510e1a4ae19d70d3412664fd9f1f) send the sign-in mail once without retries
+
+### Refactor
+- *(ui)* [`9569262`](https://github.com/cmdcolin/videoskillet/commit/9569262d3e38c66fe2435655102d814efbba327d) keep the diagram's character width private
+- *(ui)* [`f85e581`](https://github.com/cmdcolin/videoskillet/commit/f85e581772ca33434bf49fc2f63855097a96c12b) let skillet-shared write the sign-in marker
+
+### Documentation
+- [`c373d04`](https://github.com/cmdcolin/videoskillet/commit/c373d0493e826df0116c74778abcad030f79983e) a post on the descrambler that loses its key on a weak signal
+- [`b84e576`](https://github.com/cmdcolin/videoskillet/commit/b84e57652a6a6df9a6dc666f3e496436abd9750b) plain title and heading for the descrambler post
+- [`07c0f28`](https://github.com/cmdcolin/videoskillet/commit/07c0f28ef153dceb58cd71c9a72f22d9c1794aee) plainer wording in the descrambler post
+- [`d294309`](https://github.com/cmdcolin/videoskillet/commit/d294309b3270e37aa5d5ba01aee5e3c4e0f72c68) keep comb for the streaks in the descrambler post
+- [`46e39fe`](https://github.com/cmdcolin/videoskillet/commit/46e39fe6b8e9268f06bbdba008c42c90057f03fb) a moving VideoCipher II clip in the scrambler post
+- [`ef495fe`](https://github.com/cmdcolin/videoskillet/commit/ef495fe52b279169d51c7e6efc0be1641eb5d56f) blog animations as mp4 clips instead of WebPs
+- [`57dde57`](https://github.com/cmdcolin/videoskillet/commit/57dde5746eb11aef859ba9bb196f0bc89272eefd) three fashion clips with drifting sync and hum in the descrambler post
+- [`930e493`](https://github.com/cmdcolin/videoskillet/commit/930e49354732df4b4afb9cb5eeca7a640d171dfb) fix the clip grid width in the descrambler post
+- [`b38de5f`](https://github.com/cmdcolin/videoskillet/commit/b38de5f54075887c1e95f8f819855b335be34edf) keep only the pink sunglasses clip in the descrambler post
+- [`4574081`](https://github.com/cmdcolin/videoskillet/commit/45740813658dfc82779067ae5f459442bb90e63b) pink sunglasses as the descrambler hero and the Foghorn demo
+- [`98d5ae3`](https://github.com/cmdcolin/videoskillet/commit/98d5ae392f34e4cdd516f7d71170999ccf2109df) name Foghorn consistently in the descrambler post and trim its caption
+- [`a60e7dd`](https://github.com/cmdcolin/videoskillet/commit/a60e7dd4b3e22216bbcfb9ab64139758095ef739) cut the descrambler post to the basics and give Foghorn rainbow colour
+- [`5e2e27b`](https://github.com/cmdcolin/videoskillet/commit/5e2e27b7bdb7f968ef7d62364a397b597c1a5cf3) show VideoCipher II with the polarity flipped in the Oak Sigma post
+- [`d5f7157`](https://github.com/cmdcolin/videoskillet/commit/d5f715750b1421e80df6518e625bd1cf81a3948f) name the speckled ribbon as the scrambler in the flipped-polarity section
+- [`a54e2d7`](https://github.com/cmdcolin/videoskillet/commit/a54e2d73b80507ce6c4e11615be77d7e03cefb42) size side-by-side post clips to their grid column
+- [`bdd994e`](https://github.com/cmdcolin/videoskillet/commit/bdd994e6a2582d3d4dc8ce54d31cb228dd2b0640) lay out side-by-side post clips with the shared postPair class
+- [`f86dee6`](https://github.com/cmdcolin/videoskillet/commit/f86dee643fc42b9731d80db47555a35d85181e27) the scan processor spike is parked on a branch, and the two handoff folders differ
+
 ## [2.25.6](https://github.com/cmdcolin/videoskillet/compare/v2.25.5...v2.25.6) - 2026-11-13
 
 ### Features
