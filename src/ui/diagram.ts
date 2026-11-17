@@ -53,7 +53,7 @@ export function useSelectedBox(initial: string | null = null) {
 
 export type BoxPick = ReturnType<typeof useSelectedBox>
 
-export const CHAR_W = 5.8
+const CHAR_W = 5.8
 
 export const boxWidth = (name: string) =>
   Math.ceil(
