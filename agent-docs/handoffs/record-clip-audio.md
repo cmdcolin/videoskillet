@@ -26,7 +26,10 @@ In the order they matter:
      encoder's priming, and `mp4.ts` writes an edit list for the picture only.
      Only Chrome encodes AAC. Opus carries its pre-skip in `dOps`.
    - Measure what `outputLatency` returns and whether it moves the sync median.
-   - `rectakecheck.mjs` launches Firefox only, so it needs a Chrome arm first.
+   - Run `rectakecheck.mjs --browser=chrome`. Its "frames came off the engine"
+     check fails if the take fell back to reading the canvas, which the first
+     reported Chromium take (Edge 157 on Windows, v2.25.6) would have needed: 0
+     frames reached the recorder.
 2. **Editors and players on a take with held frames.** A live take holds a frame
    as one longer sample on the 1/60 s grid (ADR 0013). Import one into Resolve
    and Premiere, and open it in Photos and QuickTime: holds should keep their

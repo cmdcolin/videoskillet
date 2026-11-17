@@ -3,6 +3,7 @@
 //
 //   node scripts/rectakecheck.mjs [port] [--seconds=12] [--size=1280x800]
 //                                  [--flags=takesink%3Dblob]
+//                                  [--browser=firefox|chrome]
 //
 // Two takes through the app's own record key, each judged by ffprobe:
 //
@@ -30,7 +31,9 @@
 // at 1 Hz. A window that stopped drawing measured nothing, so it exits
 // STALL_EXIT (75) as sweep.mjs expects.
 
-import { launchFirefox } from './browser.mjs'
+import puppeteer from 'puppeteer-core'
+
+import { CHROME, launchFirefox } from './browser.mjs'
 import { flag } from './harness.mjs'
 import { appUp } from './until.mjs'
 
@@ -48,6 +51,10 @@ const [VW, VH] = flag('size', '1280x800').split('x').map(Number)
 // `--flags=takesink%3Dblob` holds the take in memory instead of streaming it
 // to a file, which is what says whether writing it costs the engine frames.
 const FLAGS = flag('flags', '')
+// Chrome's take path differs from Firefox's from the swapchain copy onward,
+// and a Chromium take that came out empty is what added this arm. Linux
+// Chrome draws no WebGPU (CLAUDE.md › Testing WebGPU), so run it on a Mac.
+const BROWSER = flag('browser', 'firefox')
 const STALL_EXIT = 75
 let stalled = false
 const FPS = 60
@@ -103,12 +110,25 @@ if (!existsSync(CLIP)) {
   ])
 }
 
-const browser = await launchFirefox({
-  defaultViewport: null,
-  protocolTimeout: 300000,
-  args: [`--width=${VW}`, `--height=${VH}`],
-  autoplay: true,
-})
+const browser = await (BROWSER === 'chrome'
+  ? puppeteer.launch({
+      browser: 'chrome',
+      executablePath: CHROME,
+      headless: false,
+      defaultViewport: null,
+      protocolTimeout: 300000,
+      args: [
+        `--window-size=${VW},${VH}`,
+        '--autoplay-policy=no-user-gesture-required',
+        '--enable-unsafe-webgpu',
+      ],
+    })
+  : launchFirefox({
+      defaultViewport: null,
+      protocolTimeout: 300000,
+      args: [`--width=${VW}`, `--height=${VH}`],
+      autoplay: true,
+    }))
 const out = mkdtempSync(join(tmpdir(), 'rectakecheck-'))
 
 // Stand in for the download the hook ends with: keep the Blob, and let no
@@ -183,6 +203,16 @@ async function take(label, { sound }) {
     },
     SECONDS * 1000,
     sound,
+  )
+  // The take's own note says how its frames arrived. One that fell back to
+  // reading the canvas still makes a file, so the file alone would pass.
+  const note = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('videoskillet_take') ?? '{}'),
+  )
+  check(
+    `${label}: frames came off the engine`,
+    note.readback === 'engine' && note.placed > 0,
+    `readback ${note.readback}, ${note.placed} placed of ${note.rendered} rendered${note.readError === undefined ? '' : `, ${note.readError}`}`,
   )
   await page.keyboard.press('r')
   const wall = (Date.now() - t0) / 1000
