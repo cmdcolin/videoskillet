@@ -156,6 +156,7 @@ interface HeldGpu {
   device: GPUDevice
   format: GPUTextureFormat
   live: boolean
+  adapter?: string
 }
 
 interface GpuGlobals {
@@ -174,6 +175,10 @@ interface GpuGlobals {
 // the widening is an assignment rather than an assertion because the slots are
 // optional until something writes one.
 const gpuGlobals: typeof globalThis & Partial<GpuGlobals> = globalThis
+
+// The adapter under the device this tab is using, as `adapterLabel` spells
+// it, or '' before there is one.
+export const heldAdapter = (): string => gpuGlobals.ntscGpu?.adapter ?? ''
 
 // Let go of a device the next engine must not inherit: the caller is saying it is
 // the *device* that has to go, not just the engine on top of it (a loss, a hang, a
@@ -398,7 +403,7 @@ export async function initGpu(
     `${builds} in this page, ${sessions} in this tab, ${adapterInfo}`,
   )
   const format = navigator.gpu.getPreferredCanvasFormat()
-  const stash: HeldGpu = { device, format, live: true }
+  const stash: HeldGpu = { device, format, live: true, adapter: adapterInfo }
   gpuGlobals.ntscGpu = stash
   // A device the driver takes away must stop being offered to the next engine,
   // and this is the only witness that fires whether or not anything is watching

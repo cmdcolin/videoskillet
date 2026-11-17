@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { heldAdapter } from '../core/gpu/context'
 import { fileName, save } from './download'
 import { isSupported, startRecording } from './record'
 import {
@@ -7,6 +8,7 @@ import {
   noteTake,
   reportLostTake,
   reportTakeFailed,
+  reportTakeRescued,
   takeLive,
 } from './takeLog'
 import { sweepTakes } from './takeSink'
@@ -23,13 +25,23 @@ import type { RefObject } from 'react'
 // a file whose timing disagrees with what produced it.
 const FPS = { num: 60, den: 1 }
 
-// What a live take needs of the engine: its rendered frames.
+// What a live take needs of the engine: its rendered frames, and how many it
+// has rendered.
 interface FrameSource {
   setFrameSink: (
     sink: FrameSink | null,
     size: { width: number; height: number },
   ) => void
+  frameNo: () => number
 }
+
+// How long a live take waits for a frame off the engine before it reads the
+// canvas instead. The engine's first frame lands a frame or two after the
+// take starts, and a take that has none by now is one the engine is not
+// feeding: none attached yet, a copy the browser refuses, or a GPU that has
+// stopped. Reading the canvas costs the page frames, which is better than a
+// file with nothing in it.
+const ENGINE_GRACE_MS = 1000
 
 // The sizes a profile's still is tried at, largest first. 5:4, which is what the
 // home page's cards are. A card shows its still about 320px wide, and a picture
@@ -51,6 +63,24 @@ function mirrorOf(src: HTMLCanvasElement): HTMLCanvasElement {
   canvas.height = src.height
   canvas.getContext('2d')?.drawImage(src, 0, 0)
   return canvas
+}
+
+const messageOf = (e: unknown) => (e instanceof Error ? e.message : String(e))
+
+// Attach a take to an engine, and say why if that threw. Outside the hook for
+// the same reason `letGo` is.
+function hand(
+  source: FrameSource,
+  sink: FrameSink,
+  size: { width: number; height: number },
+) {
+  let failure = ''
+  try {
+    source.setFrameSink(sink, size)
+  } catch (e) {
+    failure = messageOf(e)
+  }
+  return failure
 }
 
 // Outside the hook because React Compiler cannot optimise a try/catch holding
@@ -123,6 +153,8 @@ export function useCapture(
   const startingRef = useRef<{ off: boolean } | null>(null)
   const rafRef = useRef(0)
   const noteRef = useRef<TakeNote | null>(null)
+  // How a live take's frames are reaching it, for the take's note.
+  const feedRef = useRef<() => Partial<TakeNote>>(() => ({}))
   const startRef = useRef(0)
   // The engine a live take is attached to, and how to let it go.
   const detachRef = useRef<(() => void) | null>(null)
@@ -149,6 +181,7 @@ export function useCapture(
         ? ''
         : `${canvasRef.current.width}x${canvasRef.current.height}`,
     ...(r.errorName() === '' ? {} : { error: r.errorName() }),
+    ...feedRef.current(),
   })
 
   // The encoder and its rAF pump are browser objects that outlive React, so a
@@ -315,6 +348,12 @@ export function useCapture(
           coded: '',
           canvas: `${width}x${height}`,
           configs: 0,
+          readback: fromEngine ? 'engine' : 'canvas',
+          clock: rec.clock,
+          attached: 0,
+          rendered: 0,
+          placed: 0,
+          ...(heldAdapter() === '' ? {} : { gpu: heldAdapter() }),
           stage: 'recording',
           hidden: false,
         }
@@ -324,17 +363,65 @@ export function useCapture(
         // replaces the engine mid-take, and the new one is attached on the next
         // frame; the take holds its last frame across the gap.
         let source: FrameSource | null = null
-        const sink: FrameSink = { frame: (f, at) => rec.place(f, at) }
+        let readback = noteRef.current.readback
+        let attached = 0
+        // Frames rendered by engines the take has let go of, and where the
+        // current one's counter stood when it was attached.
+        let rendered = 0
+        let attachedAt = 0
+        let readError = ''
+        // Where a clocked take's frame count starts: the click, or the moment a
+        // live take fell back to the canvas, and the frames it had by then.
+        let clockFrom = start
+        let clockBase = 0
+        const sink: FrameSink = {
+          frame: (f, at) => rec.place(f, at),
+          fail: m => {
+            if (readError === '') readError = m
+          },
+        }
         const size = { width, height }
+        const renderedNow = () =>
+          rendered + (source === null ? 0 : source.frameNo() - attachedAt)
+        feedRef.current = () => ({
+          readback,
+          attached,
+          rendered: renderedNow(),
+          placed: rec.placed(),
+          ...(readError === '' ? {} : { readError }),
+        })
+        const release = () => {
+          rendered = renderedNow()
+          letGo(source, size)
+          source = null
+        }
+        detachRef.current = release
+        const fallBack = () => {
+          if (readback === 'engine') {
+            release()
+            readback = 'canvas'
+            clockFrom = performance.now()
+            clockBase = rec.frames()
+            if (noteRef.current !== null) {
+              reportTakeRescued({ ...noteRef.current, ...progress(rec) })
+            }
+          }
+        }
         const attach = () => {
           const next = opts.engine?.() ?? null
-          if (next === source) return
-          letGo(source, size)
-          next?.setFrameSink(sink, size)
-          source = next
-          detachRef.current = () => {
-            letGo(source, size)
-            source = null
+          if (next !== source) {
+            release()
+            if (next !== null) {
+              const failure = hand(next, sink, size)
+              if (failure === '') {
+                source = next
+                attachedAt = next.frameNo()
+                attached++
+              } else {
+                if (readError === '') readError = `attach: ${failure}`
+                fallBack()
+              }
+            }
           }
         }
         if (fromEngine) attach()
@@ -358,13 +445,21 @@ export function useCapture(
             void stop()
             return
           }
-          if (fromEngine) {
+          if (readback === 'engine') {
             attach()
-          } else if (opts.clock === true) {
+            if (
+              r.encoded() === 0 &&
+              performance.now() - start >= ENGINE_GRACE_MS
+            ) {
+              fallBack()
+            }
+          } else if (opts.clock === true || fromEngine) {
             const due =
+              clockBase +
               Math.floor(
-                ((performance.now() - start) / 1000) * (fps.num / fps.den),
-              ) + 1
+                ((performance.now() - clockFrom) / 1000) * (fps.num / fps.den),
+              ) +
+              1
             if (r.frames() < due) {
               if (r.busy()) r.hold()
               else r.frame(live)

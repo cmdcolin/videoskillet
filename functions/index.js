@@ -9,7 +9,7 @@ import nodemailer from 'nodemailer'
 import { digest, gather } from './digest.js'
 import { APPS, signInMail, signupAlert, trafficOrFailure } from './signup.js'
 
-// Reports of recordings that failed or crashed the page (src/ui/takeLog.ts),
+// Reports of recordings that failed, crashed the page or fell back (src/ui/takeLog.ts),
 // emailed once an hour. A visitor writes a report without signing in, so the
 // hourly batch is what bounds the mail a flood of them could send.
 

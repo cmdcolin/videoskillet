@@ -37,7 +37,9 @@ const report = (over = {}) => ({
 describe('digest', () => {
   it('names the device and how far the take got', () => {
     const { subject, text } = digest([report()], 1)
-    expect(subject).toBe('videoskillet: 1 recording failed or crashed')
+    expect(subject).toBe(
+      'videoskillet: 1 recording failed, crashed or fell back',
+    )
     expect(text).toContain('XQ-DQ54')
     expect(text).toContain('take lost  /cam/  XQ-DQ54')
     expect(text).toContain('210 frames, 40 held, queue 3')
@@ -71,8 +73,35 @@ describe('digest', () => {
 
   it('counts the reports it leaves out', () => {
     const { subject, text } = digest([report(), report()], 7)
-    expect(subject).toBe('videoskillet: 7 recordings failed or crashed')
+    expect(subject).toBe(
+      'videoskillet: 7 recordings failed, crashed or fell back',
+    )
     expect(text).toContain('…and 5 more')
+  })
+
+  it('says how a live take read its frames, and what went wrong', () => {
+    const { text } = digest(
+      [
+        report({
+          kind: 'rescued',
+          page: '/app/',
+          readback: 'canvas',
+          clock: 'audio',
+          attached: 1,
+          rendered: 62,
+          placed: 0,
+          readError: 'map: device lost',
+          gpu: 'vendor=nvidia arch=ampere',
+        }),
+      ],
+      1,
+    )
+    expect(text).toContain('take rescued  /app/')
+    expect(text).toContain(
+      '  read from the canvas, 1 engine attached, 62 rendered, 0 placed, audio clock',
+    )
+    expect(text).toContain('  readback: map: device lost')
+    expect(text).toContain('  vendor=nvidia arch=ampere')
   })
 
   it('shows a failure message and a sparse report', () => {

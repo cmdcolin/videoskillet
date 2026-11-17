@@ -4,7 +4,7 @@ import { FrameRead } from './frameread'
 
 // A staging buffer that maps the way WebGPU does: a buffer still mapped
 // refuses a second map.
-function stagingBuffer(size: number) {
+function stagingBuffer(size: number, refuse: () => boolean = () => false) {
   let mapState: GPUBufferMapState = 'unmapped'
   const buffer: GPUBuffer = {
     __brand: 'GPUBuffer',
@@ -15,6 +15,7 @@ function stagingBuffer(size: number) {
       return mapState
     },
     mapAsync: () => {
+      if (refuse()) return Promise.reject(new Error('device lost'))
       const free = mapState === 'unmapped'
       if (free) mapState = 'mapped'
       return free
@@ -55,6 +56,20 @@ const presented: GPUTexture = {
   destroy: () => undefined,
 }
 
+const deviceWith = (refuse?: () => boolean) => ({
+  createBuffer: ({ size }: GPUBufferDescriptor) => stagingBuffer(size, refuse),
+  createTexture: unused,
+  createShaderModule: unused,
+  createRenderPipeline: unused,
+  createSampler: unused,
+  createBindGroup: unused,
+})
+
+const enc = {
+  copyTextureToBuffer: () => undefined,
+  beginRenderPass: unused,
+}
+
 describe('FrameRead', () => {
   let failFrames = 0
   beforeEach(() => {
@@ -85,28 +100,13 @@ describe('FrameRead', () => {
   it('returns a buffer to the pool when a frame cannot be built', async () => {
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
     let received = 0
-    const read = new FrameRead(
-      {
-        createBuffer: ({ size }) => stagingBuffer(size),
-        createTexture: unused,
-        createShaderModule: unused,
-        createRenderPipeline: unused,
-        createSampler: unused,
-        createBindGroup: unused,
+    const failures: string[] = []
+    const read = new FrameRead(deviceWith(), WIDTH, HEIGHT, 'bgra8unorm', {
+      frame: () => {
+        received += 1
       },
-      WIDTH,
-      HEIGHT,
-      'bgra8unorm',
-      {
-        frame: () => {
-          received += 1
-        },
-      },
-    )
-    const enc = {
-      copyTextureToBuffer: () => undefined,
-      beginRenderPass: unused,
-    }
+      fail: m => failures.push(m),
+    })
     failFrames = 3
     for (let frame = 0; frame < 6; frame++) {
       const buf = read.copy(enc, presented)
@@ -118,5 +118,48 @@ describe('FrameRead', () => {
     }
     expect(received).toBe(3)
     expect(logged).toHaveBeenCalledTimes(3)
+    expect(failures).toEqual(Array(3).fill('VideoFrame refused the buffer'))
+  })
+
+  it('returns a buffer to the pool and says why when its map is refused', async () => {
+    let refusals = 3
+    let received = 0
+    const failures: string[] = []
+    const read = new FrameRead(
+      deviceWith(() => refusals-- > 0),
+      WIDTH,
+      HEIGHT,
+      'bgra8unorm',
+      {
+        frame: () => {
+          received += 1
+        },
+        fail: m => failures.push(m),
+      },
+    )
+    for (let frame = 0; frame < 6; frame++) {
+      const buf = read.copy(enc, presented)
+      expect(buf, `frame ${frame} found no free buffer`).not.toBeNull()
+      if (buf !== null) read.flush(buf, frame)
+      await vi.waitFor(() => expect(failures.length + received).toBe(frame + 1))
+    }
+    expect(received).toBe(3)
+    expect(failures).toEqual(Array(3).fill('map: device lost'))
+  })
+
+  it('says nothing once it is destroyed', async () => {
+    const failures: string[] = []
+    const read = new FrameRead(
+      deviceWith(() => true),
+      WIDTH,
+      HEIGHT,
+      'bgra8unorm',
+      { frame: unused, fail: m => failures.push(m) },
+    )
+    const buf = read.copy(enc, presented)
+    read.destroy()
+    if (buf !== null) read.flush(buf, 0)
+    await new Promise(r => setTimeout(r, 0))
+    expect(failures).toEqual([])
   })
 })

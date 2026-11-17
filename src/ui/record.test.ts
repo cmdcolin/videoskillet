@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { candidatesFor, codecFor } from './record'
+import { candidatesFor, codecFor, startRecording } from './record'
 
 describe('H.264 level selection', () => {
   it('spells profile and level into the codec string', () => {
@@ -32,5 +32,78 @@ describe('H.264 level selection', () => {
 
   it('has nothing to offer a picture past the top level', () => {
     expect(candidatesFor(16384, 16384)).toEqual([])
+  })
+})
+
+describe('a live take', () => {
+  const encoded: number[] = []
+  let refuse = 0
+  beforeEach(() => {
+    encoded.length = 0
+    vi.stubGlobal('location', { search: '' })
+    vi.stubGlobal(
+      'VideoEncoder',
+      class {
+        static isConfigSupported = () => Promise.resolve({ supported: true })
+        state = 'unconfigured'
+        encodeQueueSize = 0
+        configure() {
+          this.state = 'configured'
+        }
+        encode(frame: { timestamp: number }) {
+          encoded.push(frame.timestamp)
+        }
+        close() {
+          this.state = 'closed'
+        }
+      },
+    )
+    vi.stubGlobal(
+      'VideoFrame',
+      class {
+        timestamp: number
+        constructor(_: unknown, init: { timestamp: number }) {
+          if (refuse > 0) {
+            refuse--
+            throw new Error('refused')
+          }
+          this.timestamp = init.timestamp
+        }
+        closed = false
+        close() {
+          this.closed = true
+        }
+      },
+    )
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  const frame = () =>
+    new VideoFrame(new Uint8Array(4), {
+      format: 'RGBX',
+      codedWidth: 1,
+      codedHeight: 1,
+      timestamp: 0,
+    })
+
+  it('starts at its first encoded frame, not at one that threw', async () => {
+    const rec = await startRecording({
+      width: 64,
+      height: 64,
+      fps: { num: 60, den: 1 },
+      live: true,
+    })
+    const fresh = frame()
+    refuse = 1
+    expect(() => rec.place(fresh, 1000)).toThrow('refused')
+    rec.place(frame(), 1500)
+    rec.place(frame(), 1516.7)
+    expect(rec.placed()).toBe(3)
+    expect(encoded).toEqual([0, 16667])
+    expect(rec.frames()).toBe(2)
+    expect(rec.held()).toBe(0)
+    rec.abort()
   })
 })

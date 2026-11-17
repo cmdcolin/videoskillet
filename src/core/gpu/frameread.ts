@@ -23,10 +23,15 @@ import rescaleSrc from './shaders/rescale.wgsl?raw'
 
 const POOL = 3
 
+const messageOf = (e: unknown) => (e instanceof Error ? e.message : String(e))
+
 export interface FrameSink {
   // Each frame that made it off the GPU, and when it was rendered
   // (performance.now()). The sink owns the frame and closes it.
   frame: (frame: VideoFrame, renderedAt: number) => void
+  // Why a frame did not make it: the map was refused, or building or taking
+  // the frame threw.
+  fail: (message: string) => void
 }
 
 type ReadDevice = Pick<
@@ -94,6 +99,9 @@ export class FrameRead {
     return this.copied
   }
 
+  // A refused map goes back to the pool like a failed frame does. Three of
+  // them would otherwise empty it, and the take would get no frames and no
+  // word of why.
   flush(buf: GPUBuffer, renderedAt: number): void {
     void buf
       .mapAsync(GPUMapMode.READ)
@@ -101,12 +109,16 @@ export class FrameRead {
         () => {
           if (!this.closed) this.sink.frame(this.frameOf(buf), renderedAt)
         },
-        // A destroyed buffer or a lost device rejects the map, and both mean the
-        // recording is going away.
-        () => {},
+        (e: unknown) => {
+          if (!this.closed) {
+            this.free.push(buf)
+            this.sink.fail(`map: ${messageOf(e)}`)
+          }
+        },
       )
       .catch((e: unknown) => {
         console.error('frame readback failed', e)
+        if (!this.closed) this.sink.fail(messageOf(e))
       })
   }
 

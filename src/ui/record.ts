@@ -137,6 +137,9 @@ export interface Recorder {
   // Whether the platform offers a hardware encoder for this config, or null
   // where the browser will not say.
   hardware: boolean | null
+  // What a live take places its frames by: the sound's clock, or the wall
+  // clock when the take is silent.
+  clock: 'audio' | 'wall'
   // Hand over one rendered frame. The timestamp is derived from how many have
   // been taken, never from the clock: the offline render's whole point.
   frame: (source: CanvasImageSource) => void
@@ -162,6 +165,8 @@ export interface Recorder {
   // recording abandoned by a device loss or an unmount has to let it go.
   abort: () => void
   frames: () => number
+  // Frames handed to `place`, whether or not they were encoded.
+  placed: () => number
   // Frame periods covered by `hold`.
   held: () => number
   // The deepest the encoder's queue has been.
@@ -220,6 +225,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   let avcc: Uint8Array<ArrayBuffer> | null = null
   let bytes = 0
   let count = 0
+  let placed = 0
   let held = 0
   let deepest = 0
   let encoded = 0
@@ -352,7 +358,9 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   return {
     codec,
     hardware,
+    clock: sound === null ? 'wall' : 'audio',
     frames: () => count,
+    placed: () => placed,
     held: () => held,
     deepest: () => deepest,
     encoded: () => encoded,
@@ -371,27 +379,28 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       count++
     },
     place: (frame, renderedAt) => {
+      placed++
       if (closed || encoder.state !== 'configured') {
         frame.close()
         return
       }
       clock.sample()
       const t = clock.at(renderedAt)
-      if (origin === null) {
-        origin = t
-        sound?.origin(Math.round(t * sound.context.sampleRate))
-      }
-      const slot = Math.round((t - origin) * rate)
+      const slot = origin === null ? 0 : Math.round((t - origin) * rate)
       if (slot <= last || busy()) {
         frame.close()
         return
       }
-      const stamped = new VideoFrame(frame, {
-        timestamp: Math.round(slot * period),
-        duration: Math.round(period),
-        visibleRect: { x: 0, y: 0, width, height },
-      })
-      frame.close()
+      let stamped: VideoFrame
+      try {
+        stamped = new VideoFrame(frame, {
+          timestamp: Math.round(slot * period),
+          duration: Math.round(period),
+          visibleRect: { x: 0, y: 0, width, height },
+        })
+      } finally {
+        frame.close()
+      }
       encoder.encode(stamped, {
         keyFrame:
           last < 0 || Math.floor(slot / keyEvery) > Math.floor(last / keyEvery),
@@ -399,6 +408,12 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       encoded++
       deepest = Math.max(deepest, encoder.encodeQueueSize)
       stamped.close()
+      // The take starts at its first encoded frame, so a frame that threw on
+      // the way leaves `frame` free to start it instead.
+      if (origin === null) {
+        origin = t
+        sound?.origin(Math.round(t * sound.context.sampleRate))
+      }
       held += Math.max(0, slot - last - 1)
       last = slot
       count = slot + 1

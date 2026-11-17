@@ -549,12 +549,24 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       hidden: false,
       model: 'XQ-DQ54',
       memory: 8,
+      readback: 'engine',
+      clock: 'audio',
+      attached: 1,
+      rendered: 180,
+      placed: 3,
+      readError: 'map: device lost',
+      gpu: 'vendor=nvidia arch=ampere',
       sat: serverTimestamp(),
       ...over,
     })
 
     it('takes a report from a visitor who never signed in', async () => {
       await assertSucceeds(asAnon().collection('takeReports').add(report()))
+      await assertSucceeds(
+        asAnon()
+          .collection('takeReports')
+          .add(report({ kind: 'rescued', readback: 'canvas' })),
+      )
       await assertSucceeds(
         asAnon().collection('takeReports').add({
           kind: 'failed',
@@ -578,6 +590,10 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       await add({ error: 'x'.repeat(33) })
       await add({ coded: 'x'.repeat(17) })
       await add({ hidden: 'no' })
+      await add({ readback: 'x'.repeat(9) })
+      await add({ readError: 'x'.repeat(101) })
+      await add({ gpu: 'x'.repeat(101) })
+      await add({ placed: '3' })
       await add({ sat: 1_700_000_000_000 })
     })
 

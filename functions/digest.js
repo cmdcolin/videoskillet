@@ -27,8 +27,9 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
 const size = n =>
   n >= 1e9 ? `${(n / 1e9).toFixed(2)} GB` : `${Math.round(n / 1e6)} MB`
 
-// `lost` is a take whose note outlived its tab, and `failed` one the encoder
-// declined; the model is only ever there on Chrome. Spelled out because
+// `lost` is a take whose note outlived its tab, `failed` one the encoder
+// declined, and `rescued` a live take the engine sent no frames, which went on
+// by reading the canvas; the model is only ever there on Chrome. Spelled out because
 // `lost  unknown device` read as a lost GPU device, which is a different fault
 // with its own page of documentation.
 const head = r =>
@@ -46,17 +47,24 @@ const block = r =>
       : [
           `  ${r.encoded} encoded, ${r.chunks ?? '?'} chunks back${r.bytes === undefined ? '' : `, ${size(r.bytes)} ${r.streamed === true ? 'to a file' : 'in memory'}`}, coded ${r.coded || '?'} in ${plural(r.configs ?? 0, 'config')}, canvas ${r.canvas || '?'}`,
         ]),
+    ...(r.readback === undefined
+      ? []
+      : [
+          `  read from the ${r.readback}, ${plural(r.attached ?? 0, 'engine')} attached, ${r.rendered ?? '?'} rendered, ${r.placed ?? '?'} placed, ${r.clock ?? '?'} clock`,
+        ]),
+    ...(r.readError === undefined ? [] : [`  readback: ${r.readError}`]),
     ...(r.message === undefined
       ? []
       : [`  ${r.error === undefined ? '' : `${r.error}: `}${r.message}`]),
     ...(r.memory === undefined ? [] : [`  ${r.memory} GB memory`]),
+    ...(r.gpu === undefined ? [] : [`  ${r.gpu}`]),
     `  ${r.browser} (v${r.version})`,
   ].join('\n')
 
 export function digest(reports, total) {
   const more = total - reports.length
   return {
-    subject: `videoskillet: ${plural(total, 'recording')} failed or crashed`,
+    subject: `videoskillet: ${plural(total, 'recording')} failed, crashed or fell back`,
     text: [
       ...reports.map(block),
       ...(more > 0 ? [`…and ${more} more in the takeReports collection.`] : []),

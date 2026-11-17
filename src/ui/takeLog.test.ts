@@ -8,6 +8,7 @@ import {
   noteTake,
   reportLostTake,
   reportTakeFailed,
+  reportTakeRescued,
 } from './takeLog'
 
 import type { putTakeReport as put } from './cloud'
@@ -31,6 +32,11 @@ const NOTE: TakeNote = {
   coded: '816x1088',
   canvas: '822x1096',
   configs: 1,
+  readback: 'canvas',
+  clock: 'wall',
+  attached: 0,
+  rendered: 0,
+  placed: 0,
   stage: 'recording',
   hidden: false,
 }
@@ -160,5 +166,28 @@ describe('takeLog', () => {
       configs: 1,
       error: 'OperationError',
     })
+  })
+  it('reports a take the engine fed nothing, with how far its frames got', async () => {
+    reportTakeRescued({
+      ...NOTE,
+      readback: 'canvas',
+      clock: 'audio',
+      attached: 1,
+      rendered: 62,
+      placed: 0,
+      readError: `map: ${'x'.repeat(200)}`,
+      gpu: 'vendor=nvidia arch=ampere',
+    })
+    await settle()
+    expect(sent()).toMatchObject({
+      kind: 'rescued',
+      readback: 'canvas',
+      clock: 'audio',
+      attached: 1,
+      rendered: 62,
+      placed: 0,
+      gpu: 'vendor=nvidia arch=ampere',
+    })
+    expect(sent().readError).toHaveLength(100)
   })
 })

@@ -4,7 +4,8 @@ import { readRecord, readStored, removeStored, writeJSON } from './storage'
 
 // A recording in progress keeps a note of how far it has got, and the next
 // page load reports a note it finds to the `takeReports` collection, which
-// functions/ emails out hourly. A crashed tab runs no code, so a note left
+// functions/ emails out hourly. A take that fails, or that the engine sends no
+// frames, is reported as it happens. A crashed tab runs no code, so a note left
 // behind is the only trace of a take that killed it. /privacy/ says what a
 // report carries.
 const KEY = 'videoskillet_take'
@@ -20,6 +21,10 @@ const STRINGS: Record<string, number> = {
   coded: 16,
   canvas: 16,
   model: 64,
+  readback: 8,
+  clock: 8,
+  readError: 100,
+  gpu: 100,
 }
 // The flags, which are reported the same way the numbers are.
 const BOOLEANS = new Set(['hidden', 'streamed'])
@@ -37,6 +42,9 @@ const NUMBERS = new Set([
   'bytes',
   'configs',
   'memory',
+  'attached',
+  'rendered',
+  'placed',
 ])
 
 // Only the fields the rule admits, at the types and lengths it admits. A note
@@ -78,6 +86,23 @@ export interface TakeNote {
   coded: string
   canvas: string
   configs: number
+  // How a live take's frames reach the recorder: copied off the GPU by the
+  // engine, or read from the canvas, which a take falls back to when the
+  // engine sends nothing.
+  readback: 'engine' | 'canvas'
+  // What a live take places its frames by.
+  clock: 'audio' | 'wall'
+  // Engines the take was attached to, the frames they rendered while it was,
+  // and the frames that reached the recorder from them. A take whose engine
+  // never attached, never rendered, or rendered without delivering stops at a
+  // different one of these.
+  attached: number
+  rendered: number
+  placed: number
+  // The first reason a frame failed to come off the GPU.
+  readError?: string
+  // The GPU adapter the engine runs on, as the console trace names it.
+  gpu?: string
   // The DOMException name of the encoder's error, which Chrome reports when
   // its message says nothing.
   error?: string
@@ -142,7 +167,10 @@ async function device(): Promise<Record<string, string | number>> {
   }
 }
 
-function send(kind: 'lost' | 'failed', params: Record<string, unknown>) {
+function send(
+  kind: 'lost' | 'failed' | 'rescued',
+  params: Record<string, unknown>,
+) {
   void device().then(d => {
     const report = fields({ ...params, ...d })
     void putTakeReport({
@@ -172,4 +200,10 @@ export function reportLostTake() {
 
 export function reportTakeFailed(message: string, note: TakeNote | null) {
   send('failed', { ...note, message })
+}
+
+// A live take the engine sent no frames, which went on by reading the canvas.
+// The take is fine, so this is the only word of why the engine was not.
+export function reportTakeRescued(note: TakeNote) {
+  send('rescued', { ...note })
 }
