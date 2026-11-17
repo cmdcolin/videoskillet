@@ -416,7 +416,7 @@ export function useCapture(
               if (failure === '') {
                 source = next
                 attachedAt = next.frameNo()
-                attached++
+                attached += 1
               } else {
                 if (readError === '') readError = `attach: ${failure}`
                 fallBack()
