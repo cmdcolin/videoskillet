@@ -7,7 +7,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler'
 import nodemailer from 'nodemailer'
 
 import { digest, gather } from './digest.js'
-import { APPS, signInMail, signupAlert } from './signup.js'
+import { APPS, signInMail, signupAlert, trafficOrFailure } from './signup.js'
 
 // Reports of recordings that failed or crashed the page (src/ui/takeLog.ts),
 // emailed once an hour. A visitor writes a report without signing in, so the
@@ -87,17 +87,24 @@ export const videoskilletSignup = alertOn('users', APPS.users)
 export const benderSignup = alertOn('benderUsers', APPS.benderUsers)
 
 export const signInAlert = onDocumentCreated(
-  { document: 'signIns/{id}', secrets: [PASSWORD], timeoutSeconds: 60 },
+  {
+    document: 'signIns/{id}',
+    secrets: [PASSWORD, ...Object.values(COUNTER_TOKENS)],
+    timeoutSeconds: 60,
+  },
   async event => {
     const { app } = event.data.data()
     const uid = event.params.id.slice(app.length + 1)
-    const user = await getAuth()
-      .getUser(uid)
-      .catch(() => ({ uid }))
+    const [user, stats] = await Promise.all([
+      getAuth()
+        .getUser(uid)
+        .catch(() => ({ uid })),
+      trafficOrFailure(app, COUNTER_TOKENS[app].value(), new Date()),
+    ])
     await mailer().sendMail({
       from: GMAIL,
       to: GMAIL,
-      ...signInMail(app, user),
+      ...signInMail(app, user, stats),
     })
   },
 )

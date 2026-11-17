@@ -44,18 +44,23 @@ describe('signupMail', () => {
   })
 
   it('names a user with no profile by uid', () => {
-    const { subject } = signupMail('bender', { uid: 'u1' }, {}, undefined)
+    const { subject } = signupMail('bender', { uid: 'u1' }, {}, { failed: 'x' })
     expect(subject).toBe('bender: u1 saved for the first time (? accounts)')
   })
 
-  it('still reports the signup when traffic is missing', () => {
+  it('still reports the signup and says why traffic is missing', () => {
     const { text } = signupMail(
       'bender',
       { uid: 'u1' },
       { bender: 1 },
-      undefined,
+      { failed: 'GoatCounter /stats/total answered 429' },
     )
-    expect(text).toContain('no overview this time')
+    expect(text).toContain('unavailable: GoatCounter /stats/total answered 429')
+  })
+
+  it('links the apps GoatCounter dashboard', () => {
+    const { text } = signupMail('bender', { uid: 'u1' }, {}, { failed: 'x' })
+    expect(text).toContain('https://bender.goatcounter.com')
   })
 })
 
@@ -178,17 +183,28 @@ describe('signupAlert', () => {
 })
 
 describe('signInMail', () => {
-  it('names the app and the person', () => {
-    const mail = signInMail('bender', {
-      uid: 'u1',
-      displayName: 'Ada',
-      email: 'a@x.org',
-    })
+  const stats = {
+    today: 3,
+    week: 20,
+    month: 90,
+    top: [{ path: '/', count: 15 }],
+  }
+
+  it('names the app, the person and the traffic', () => {
+    const mail = signInMail(
+      'bender',
+      { uid: 'u1', displayName: 'Ada', email: 'a@x.org' },
+      stats,
+    )
     expect(mail.subject).toBe('bender: Ada signed in for the first time')
     expect(mail.text).toContain('a@x.org')
+    expect(mail.text).toContain('last 7 days    20')
+    expect(mail.text).toContain('https://bender.goatcounter.com')
   })
 
-  it('falls back to the uid', () => {
-    expect(signInMail('bender', { uid: 'u1' }).subject).toContain('u1')
+  it('falls back to the uid and reports a traffic failure', () => {
+    const mail = signInMail('bender', { uid: 'u1' }, { failed: 'down' })
+    expect(mail.subject).toContain('u1')
+    expect(mail.text).toContain('unavailable: down')
   })
 })

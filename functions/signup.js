@@ -67,11 +67,42 @@ export async function traffic(site, token, at) {
   }
 }
 
-export const signInMail = (app, user) => {
+const dashboard = app => `https://${app}.goatcounter.com`
+
+export async function trafficOrFailure(app, token, at) {
+  try {
+    return await traffic(app, token, at)
+  } catch (error) {
+    logger.error('GoatCounter traffic failed', error)
+    return { failed: error.message }
+  }
+}
+
+const trafficText = (app, stats) =>
+  [
+    stats.failed === undefined
+      ? [
+          'Visitors',
+          `  last 24 hours  ${stats.today}`,
+          `  last 7 days    ${stats.week}`,
+          `  last 30 days   ${stats.month}`,
+          '',
+          'Top pages, last 7 days',
+          ...stats.top.map(p => `  ${String(p.count).padStart(6)}  ${p.path}`),
+        ].join('\n')
+      : `Traffic overview unavailable: ${stats.failed}`,
+    `GoatCounter: ${dashboard(app)}`,
+  ].join('\n\n')
+
+export const signInMail = (app, user, stats) => {
   const who = user.displayName ?? user.email ?? user.uid
   return {
     subject: `${app}: ${who} signed in for the first time`,
-    text: `${user.displayName ?? 'no name'} <${user.email ?? 'no email'}> ${user.uid}\n\nThe account alert follows if they save.`,
+    text: [
+      `${user.displayName ?? 'no name'} <${user.email ?? 'no email'}> ${user.uid}`,
+      trafficText(app, stats),
+      'The account alert follows if they save.',
+    ].join('\n\n'),
   }
 }
 
@@ -84,19 +115,7 @@ export const signupMail = (app, user, totals, stats) => {
         `New ${app} account: ${user.displayName ?? 'no name'} <${user.email ?? 'no email'}> ${user.uid}`,
         ...Object.entries(totals).map(([name, n]) => `${name} accounts: ${n}`),
       ].join('\n'),
-      stats === undefined
-        ? 'Traffic: GoatCounter is not reachable, so there is no overview this time.'
-        : [
-            'Visitors',
-            `  last 24 hours  ${stats.today}`,
-            `  last 7 days    ${stats.week}`,
-            `  last 30 days   ${stats.month}`,
-            '',
-            'Top pages, last 7 days',
-            ...stats.top.map(
-              p => `  ${String(p.count).padStart(6)}  ${p.path}`,
-            ),
-          ].join('\n'),
+      trafficText(app, stats),
       'An account counts from its first save, so someone who signs in and saves nothing is not counted.',
     ].join('\n\n'),
   }
@@ -131,10 +150,7 @@ export async function signupAlert({
     const [user, totals, stats] = await Promise.all([
       auth.getUser(uid).catch(() => ({ uid })),
       countAccounts(db).catch(() => ({})),
-      traffic(app, token, new Date()).catch(error => {
-        logger.error('GoatCounter traffic failed', error)
-        return undefined
-      }),
+      trafficOrFailure(app, token, new Date()),
     ])
     await mail(signupMail(app, user, totals, stats)).catch(async error => {
       await db.doc(`signupAlerts/${collection}_${uid}`).delete()
