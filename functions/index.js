@@ -88,7 +88,7 @@ export const videoskilletSignup = alertOn('users', APPS.users)
 export const benderSignup = alertOn('benderUsers', APPS.benderUsers)
 
 export const signIn = v1
-  .runWith({ secrets: ['GMAIL_APP_PASSWORD'], failurePolicy: true })
+  .runWith({ secrets: ['GMAIL_APP_PASSWORD'] })
   .auth.user()
   .onCreate(user =>
     mailer().sendMail({ from: GMAIL, to: GMAIL, ...signInMail(user) }),
