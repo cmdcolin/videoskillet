@@ -485,6 +485,45 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
     })
   })
 
+  describe('signIns', () => {
+    const marker = (app: string) => ({ app, at: serverTimestamp() })
+
+    it('lets a person mark their own sign-in once, as either app', async () => {
+      await assertSucceeds(
+        asOwner()
+          .doc(`signIns/videoskillet_${OWNER}`)
+          .set(marker('videoskillet')),
+      )
+      await assertSucceeds(
+        asOwner().doc(`signIns/bender_${OWNER}`).set(marker('bender')),
+      )
+    })
+
+    it('refuses a repeat, someone elses uid, a mismatched app and no sign-in', async () => {
+      await env.withSecurityRulesDisabled(async ctx => {
+        await ctx
+          .firestore()
+          .doc(`signIns/bender_${OWNER}`)
+          .set({ app: 'bender' })
+      })
+      await assertFails(
+        asOwner().doc(`signIns/bender_${OWNER}`).set(marker('bender')),
+      )
+      await assertFails(
+        asOwner().doc('signIns/bender_someone-else').set(marker('bender')),
+      )
+      await assertFails(
+        asOwner().doc(`signIns/bender_${OWNER}x`).set(marker('bender')),
+      )
+      await assertFails(
+        asOwner().doc(`signIns/videoskillet_${OWNER}`).set(marker('bender')),
+      )
+      await assertFails(
+        asAnon().doc(`signIns/bender_${OWNER}`).set(marker('bender')),
+      )
+    })
+  })
+
   describe('takeReports', () => {
     const report = (over: object = {}) => ({
       kind: 'lost',

@@ -178,13 +178,17 @@ describe('signupAlert', () => {
 })
 
 describe('signInMail', () => {
-  it('names the person', () => {
-    const mail = signInMail({ uid: 'u1', displayName: 'Ada', email: 'a@x.org' })
-    expect(mail.subject).toBe('New sign-in: Ada')
+  it('names the app and the person', () => {
+    const mail = signInMail('bender', {
+      uid: 'u1',
+      displayName: 'Ada',
+      email: 'a@x.org',
+    })
+    expect(mail.subject).toBe('bender: Ada signed in for the first time')
     expect(mail.text).toContain('a@x.org')
   })
 
   it('falls back to the uid', () => {
-    expect(signInMail({ uid: 'u1' }).subject).toBe('New sign-in: u1')
+    expect(signInMail('bender', { uid: 'u1' }).subject).toContain('u1')
   })
 })

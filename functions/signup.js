@@ -1,5 +1,5 @@
-import { logger } from 'firebase-functions'
 import { Timestamp } from 'firebase-admin/firestore'
+import { logger } from 'firebase-functions'
 
 const ALREADY_EXISTS = 6
 const HOUR = 60 * 60 * 1000
@@ -67,14 +67,11 @@ export async function traffic(site, token, at) {
   }
 }
 
-export const signInMail = user => {
+export const signInMail = (app, user) => {
   const who = user.displayName ?? user.email ?? user.uid
   return {
-    subject: `New sign-in: ${who}`,
-    text: [
-      `${user.displayName ?? 'no name'} <${user.email ?? 'no email'}> ${user.uid}`,
-      'Both apps share one sign-in, so this does not say which app they used. The account alert follows if they save.',
-    ].join('\n\n'),
+    subject: `${app}: ${who} signed in for the first time`,
+    text: `${user.displayName ?? 'no name'} <${user.email ?? 'no email'}> ${user.uid}\n\nThe account alert follows if they save.`,
   }
 }
 

@@ -201,6 +201,15 @@ service cloud.firestore {
              && d.sat == request.time;
     }
 
+    match /signIns/{id} {
+      allow create: if request.auth != null
+        && (id == 'videoskillet_' + request.auth.uid
+            || id == 'bender_' + request.auth.uid)
+        && request.resource.data.keys().hasOnly(['app', 'at'])
+        && id.matches(request.resource.data.app + '_.*')
+        && request.resource.data.at == request.time;
+    }
+
     match /takeReports/{reportId} {
       allow create: if isValidTakeReport();
     }

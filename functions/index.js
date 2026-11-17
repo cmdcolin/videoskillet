@@ -3,7 +3,6 @@ import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { defineSecret } from 'firebase-functions/params'
 import { onDocumentCreated } from 'firebase-functions/v2/firestore'
-import * as v1 from 'firebase-functions/v1'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import nodemailer from 'nodemailer'
 
@@ -87,9 +86,18 @@ const alertOn = (collection, app) =>
 export const videoskilletSignup = alertOn('users', APPS.users)
 export const benderSignup = alertOn('benderUsers', APPS.benderUsers)
 
-export const signIn = v1
-  .runWith({ secrets: ['GMAIL_APP_PASSWORD'] })
-  .auth.user()
-  .onCreate(user =>
-    mailer().sendMail({ from: GMAIL, to: GMAIL, ...signInMail(user) }),
-  )
+export const signInAlert = onDocumentCreated(
+  { document: 'signIns/{id}', secrets: [PASSWORD], timeoutSeconds: 60 },
+  async event => {
+    const { app } = event.data.data()
+    const uid = event.params.id.slice(app.length + 1)
+    const user = await getAuth()
+      .getUser(uid)
+      .catch(() => ({ uid }))
+    await mailer().sendMail({
+      from: GMAIL,
+      to: GMAIL,
+      ...signInMail(app, user),
+    })
+  },
+)
