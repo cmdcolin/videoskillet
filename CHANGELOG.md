@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.9](https://github.com/cmdcolin/videoskillet/compare/v2.25.8...v2.25.9) - 2026-11-20
+
+### Fixes
+- *(ui)* [`9b3fbb4`](https://github.com/cmdcolin/videoskillet/commit/9b3fbb47a497e57161b0b8e095cbd408abed2f16) say why an engine rendered nothing for a live take
+
 ## [2.25.8](https://github.com/cmdcolin/videoskillet/compare/v2.25.7...v2.25.8) - 2026-11-17
 
 ### Fixes
