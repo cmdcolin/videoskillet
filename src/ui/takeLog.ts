@@ -25,9 +25,10 @@ const STRINGS: Record<string, number> = {
   clock: 8,
   readError: 100,
   gpu: 100,
+  renderError: 100,
 }
 // The flags, which are reported the same way the numbers are.
-const BOOLEANS = new Set(['hidden', 'streamed'])
+const BOOLEANS = new Set(['hidden', 'streamed', 'throttled'])
 
 const NUMBERS = new Set([
   'width',
@@ -45,6 +46,8 @@ const NUMBERS = new Set([
   'attached',
   'rendered',
   'placed',
+  'engineFps',
+  'renderErrors',
 ])
 
 // Only the fields the rule admits, at the types and lengths it admits. A note
@@ -101,6 +104,14 @@ export interface TakeNote {
   placed: number
   // The first reason a frame failed to come off the GPU.
   readError?: string
+  // The rate the first engine presented at when the take attached to it,
+  // whether its loop was dropping frames for a GPU that was behind, and the
+  // renders that threw since, with the last one's message. These say why an
+  // engine rendered nothing: a slow GPU, or a render that fails.
+  engineFps?: number
+  throttled?: boolean
+  renderErrors?: number
+  renderError?: string
   // The GPU adapter the engine runs on, as the console trace names it.
   gpu?: string
   // The DOMException name of the encoder's error, which Chrome reports when

@@ -556,6 +556,10 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       placed: 3,
       readError: 'map: device lost',
       gpu: 'vendor=nvidia arch=ampere',
+      engineFps: 12,
+      throttled: true,
+      renderErrors: 3,
+      renderError: 'getCurrentTexture refused',
       sat: serverTimestamp(),
       ...over,
     })
@@ -594,6 +598,10 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       await add({ readError: 'x'.repeat(101) })
       await add({ gpu: 'x'.repeat(101) })
       await add({ placed: '3' })
+      await add({ engineFps: '12' })
+      await add({ throttled: 'yes' })
+      await add({ renderErrors: '3' })
+      await add({ renderError: 'x'.repeat(101) })
       await add({ sat: 1_700_000_000_000 })
     })
 

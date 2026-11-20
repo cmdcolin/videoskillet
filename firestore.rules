@@ -172,7 +172,8 @@ service cloud.firestore {
                 'encoded', 'chunks', 'bytes', 'configs', 'coded', 'canvas', 'error',
                 'stage', 'hidden', 'streamed', 'message', 'model', 'memory',
                 'readback', 'clock', 'attached', 'rendered', 'placed',
-                'readError', 'gpu', 'sat'])
+                'readError', 'gpu', 'engineFps', 'throttled', 'renderErrors',
+                'renderError', 'sat'])
              && d.kind in ['lost', 'failed', 'rescued']
              && d.version is string && d.version.size() <= 32
              && d.browser is string && d.browser.size() <= 200
@@ -189,6 +190,7 @@ service cloud.firestore {
              && optString(d, 'clock', 8)
              && optString(d, 'readError', 100)
              && optString(d, 'gpu', 100)
+             && optString(d, 'renderError', 100)
              && optNumber(d, 'width')
              && optNumber(d, 'height')
              && optNumber(d, 'fps')
@@ -204,8 +206,11 @@ service cloud.firestore {
              && optNumber(d, 'attached')
              && optNumber(d, 'rendered')
              && optNumber(d, 'placed')
+             && optNumber(d, 'engineFps')
+             && optNumber(d, 'renderErrors')
              && (!('hidden' in d) || d.hidden is bool)
              && (!('streamed' in d) || d.streamed is bool)
+             && (!('throttled' in d) || d.throttled is bool)
              && d.sat == request.time;
     }
 

@@ -42,7 +42,7 @@ import type { FaultPlan } from '../signal/fault'
 import type { GlidePlan } from '../signal/glide'
 import type { StabPlan } from '../signal/stab'
 import type { FrameSink } from './frameread'
-import type { FrozenKind } from './renderloop'
+import type { FrozenKind, RenderHealth } from './renderloop'
 import type { PullOpener, Relay, WrapHealth } from './videopump'
 
 export interface DestroyOptions {
@@ -241,6 +241,9 @@ export interface EngineApi {
   // on a healthy loop.
   kick: () => void
   frameNo: () => number
+  // Whether the render loop is dropping frames for a slow GPU, and how many
+  // renders have thrown, with the last one's message.
+  renderHealth: () => RenderHealth
   // Each rendered frame to a live take, at the take's size; null stops.
   setFrameSink: (
     sink: FrameSink | null,

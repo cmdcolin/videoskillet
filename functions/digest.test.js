@@ -92,6 +92,10 @@ describe('digest', () => {
           placed: 0,
           readError: 'map: device lost',
           gpu: 'vendor=nvidia arch=ampere',
+          engineFps: 12,
+          throttled: true,
+          renderErrors: 1,
+          renderError: 'getCurrentTexture refused',
         }),
       ],
       1,
@@ -101,6 +105,10 @@ describe('digest', () => {
       '  read from the canvas, 1 engine attached, 62 rendered, 0 placed, audio clock',
     )
     expect(text).toContain('  readback: map: device lost')
+    expect(text).toContain(
+      '  engine at 12 fps when attached, dropping frames for a slow GPU, 1 render error',
+    )
+    expect(text).toContain('  render: getCurrentTexture refused')
     expect(text).toContain('  vendor=nvidia arch=ampere')
   })
 

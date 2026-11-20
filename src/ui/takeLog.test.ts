@@ -177,6 +177,10 @@ describe('takeLog', () => {
       placed: 0,
       readError: `map: ${'x'.repeat(200)}`,
       gpu: 'vendor=nvidia arch=ampere',
+      engineFps: 12,
+      throttled: true,
+      renderErrors: 3,
+      renderError: `render: ${'x'.repeat(200)}`,
     })
     await settle()
     expect(sent()).toMatchObject({
@@ -187,7 +191,11 @@ describe('takeLog', () => {
       rendered: 62,
       placed: 0,
       gpu: 'vendor=nvidia arch=ampere',
+      engineFps: 12,
+      throttled: true,
+      renderErrors: 3,
     })
     expect(sent().readError).toHaveLength(100)
+    expect(sent().renderError).toHaveLength(100)
   })
 })

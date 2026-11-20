@@ -116,7 +116,7 @@ import type { FeedSource } from './feedgates'
 import type { FrameSink } from './frameread'
 import type { StoreFrame } from './framestore'
 import type { ParamName } from './prelude'
-import type { FrozenKind } from './renderloop'
+import type { FrozenKind, RenderHealth } from './renderloop'
 import type { PullOpener, Relay, WrapHealth } from './videopump'
 
 const N = SAMPLES_PER_LINE * LINES
@@ -2055,6 +2055,10 @@ export class Engine implements EngineApi {
             sink,
           )
     if (!this.destroyed) this.configureSurface()
+  }
+
+  renderHealth(): RenderHealth {
+    return this.loop.health
   }
 
   // Frame counter, for the diagnostic recorder and the verification harness.

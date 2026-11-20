@@ -53,6 +53,12 @@ const block = r =>
           `  read from the ${r.readback}, ${plural(r.attached ?? 0, 'engine')} attached, ${r.rendered ?? '?'} rendered, ${r.placed ?? '?'} placed, ${r.clock ?? '?'} clock`,
         ]),
     ...(r.readError === undefined ? [] : [`  readback: ${r.readError}`]),
+    ...(r.engineFps === undefined
+      ? []
+      : [
+          `  engine at ${r.engineFps} fps when attached, ${r.throttled === true ? 'dropping frames for a slow GPU' : 'not throttled'}, ${plural(r.renderErrors ?? 0, 'render error')}`,
+        ]),
+    ...(r.renderError === undefined ? [] : [`  render: ${r.renderError}`]),
     ...(r.message === undefined
       ? []
       : [`  ${r.error === undefined ? '' : `${r.error}: `}${r.message}`]),

@@ -13,7 +13,9 @@ import {
 } from './takeLog'
 import { sweepTakes } from './takeSink'
 
+import type { FrameStats } from '../core/controls'
 import type { FrameSink } from '../core/gpu/frameread'
+import type { RenderHealth } from '../core/gpu/renderloop'
 import type { InputTap } from '../core/signal/audiostate'
 import type { Recorder } from './record'
 import type { TakeNote } from './takeLog'
@@ -25,14 +27,16 @@ import type { RefObject } from 'react'
 // a file whose timing disagrees with what produced it.
 const FPS = { num: 60, den: 1 }
 
-// What a live take needs of the engine: its rendered frames, and how many it
-// has rendered.
+// What a live take needs of the engine: its rendered frames, how many it has
+// rendered, and how its render loop is doing.
 interface FrameSource {
   setFrameSink: (
     sink: FrameSink | null,
     size: { width: number; height: number },
   ) => void
   frameNo: () => number
+  getStats: () => FrameStats
+  renderHealth: () => RenderHealth
 }
 
 // How long a live take waits for a frame off the engine before it reads the
@@ -369,6 +373,11 @@ export function useCapture(
         // current one's counter stood when it was attached.
         let rendered = 0
         let attachedAt = 0
+        // The engine last attached, kept after it is let go so a report can
+        // say how its loop was doing, and its render errors when attached.
+        let watched: FrameSource | null = null
+        let errorsAt = 0
+        let engineFps = 0
         let readError = ''
         // Where a clocked take's frame count starts: the click, or the moment a
         // live take fell back to the canvas, and the frames it had by then.
@@ -383,12 +392,23 @@ export function useCapture(
         const size = { width, height }
         const renderedNow = () =>
           rendered + (source === null ? 0 : source.frameNo() - attachedAt)
+        const loopNote = (engine: FrameSource) => {
+          const health = engine.renderHealth()
+          const renderErrors = health.errors - errorsAt
+          return {
+            engineFps,
+            throttled: health.throttled,
+            renderErrors,
+            ...(renderErrors === 0 ? {} : { renderError: health.error }),
+          }
+        }
         feedRef.current = () => ({
           readback,
           attached,
           rendered: renderedNow(),
           placed: rec.placed(),
           ...(readError === '' ? {} : { readError }),
+          ...(watched === null ? {} : loopNote(watched)),
         })
         const release = () => {
           rendered = renderedNow()
@@ -415,7 +435,10 @@ export function useCapture(
               const failure = hand(next, sink, size)
               if (failure === '') {
                 source = next
+                watched = next
                 attachedAt = next.frameNo()
+                errorsAt = next.renderHealth().errors
+                if (attached === 0) engineFps = Math.round(next.getStats().fps)
                 attached += 1
               } else {
                 if (readError === '') readError = `attach: ${failure}`

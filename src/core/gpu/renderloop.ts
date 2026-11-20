@@ -126,6 +126,12 @@ interface RenderLoopHost {
   frameNo: () => number
 }
 
+export interface RenderHealth {
+  throttled: boolean
+  errors: number
+  error: string
+}
+
 // Drives one render callback at display rate and keeps it alive across the
 // Firefox/Linux failure modes that freeze a naive rAF loop: rAF silently
 // ceasing to fire while the tab is visible, and the GPU device wedging without
@@ -146,6 +152,7 @@ export class RenderLoop {
   private presented = 0
   private gens = { render: 0, probe: 0 }
   private renderErrors = 0
+  private lastRenderError = ''
   private watchdogId = 0
   private hangStrikes = 0
   private probing = false
@@ -213,6 +220,17 @@ export class RenderLoop {
 
   get running(): boolean {
     return this.live
+  }
+
+  // Whether the loop is dropping frames for a GPU that is behind, and the
+  // renders that threw, for a take's report. A take whose engine rendered
+  // nothing reads one of these to say which.
+  get health(): RenderHealth {
+    return {
+      throttled: this.throttled,
+      errors: this.renderErrors,
+      error: this.lastRenderError,
+    }
   }
 
   // Has this device ever completed submitted work? Deliberately not reset by
@@ -487,6 +505,7 @@ export class RenderLoop {
       if (this.host.render()) this.presented += 1
     } catch (e) {
       this.renderErrors += 1
+      this.lastRenderError = e instanceof Error ? e.message : String(e)
       if (this.renderErrors <= 3 || this.renderErrors % 120 === 0) {
         trace.add(
           'renderError',

@@ -68,8 +68,11 @@ function fakeRecorder() {
 
 // An engine that renders a frame per refresh and, when `feeds`, hands each to
 // the take.
-function fakeEngine(feeds: boolean, attachFails = false) {
+// `throws` makes each render fail before it counts the frame, as a render
+// that throws under the loop does.
+function fakeEngine(feeds: boolean, attachFails = false, throws = false) {
   let frame = 0
+  let errors = 0
   let sink: FrameSink | null = null
   return {
     setFrameSink: vi.fn((next: FrameSink | null) => {
@@ -77,18 +80,28 @@ function fakeEngine(feeds: boolean, attachFails = false) {
       sink = next
     }),
     frameNo: () => frame,
+    getStats: () => ({ fps: 59.7, lock: 1 }),
+    renderHealth: () => ({
+      throttled: false,
+      errors,
+      error: errors === 0 ? '' : 'getCurrentTexture refused',
+    }),
     render: () => {
-      frame++
-      if (feeds && sink !== null)
-        sink.frame(
-          new VideoFrame(new Uint8Array(4), {
-            format: 'RGBX',
-            codedWidth: 1,
-            codedHeight: 1,
-            timestamp: 0,
-          }),
-          0,
-        )
+      if (throws) {
+        errors++
+      } else {
+        frame++
+        if (feeds && sink !== null)
+          sink.frame(
+            new VideoFrame(new Uint8Array(4), {
+              format: 'RGBX',
+              codedWidth: 1,
+              codedHeight: 1,
+              timestamp: 0,
+            }),
+            0,
+          )
+      }
     },
   }
 }
@@ -177,11 +190,32 @@ describe('useCapture, a live take', () => {
       placed: 0,
     })
     expect(rescued()?.rendered).toBeGreaterThan(50)
+    expect(rescued()).toMatchObject({
+      engineFps: 60,
+      throttled: false,
+      renderErrors: 0,
+    })
+    expect(rescued()?.renderError).toBeUndefined()
     expect(engine.setFrameSink).toHaveBeenLastCalledWith(
       null,
       expect.anything(),
     )
     expect(recorder.current?.encoded()).toBeGreaterThan(0)
+  })
+
+  it('says when the engine rendered nothing because its renders threw', async () => {
+    const engine = fakeEngine(true, false, true)
+    const { result } = take(() => engine)
+    await start(result)
+    await refreshes(90, engine)
+    expect(rescued()).toMatchObject({
+      readback: 'canvas',
+      attached: 1,
+      rendered: 0,
+      placed: 0,
+      renderError: 'getCurrentTexture refused',
+    })
+    expect(rescued()?.renderErrors).toBeGreaterThan(50)
   })
 
   it('reads the canvas when no engine is there to attach', async () => {
