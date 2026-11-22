@@ -283,18 +283,22 @@ export function useCapture(
     setRecording(false)
     if (rec === null) return
     jot(noteRef, { stage: 'finishing', ...progress(rec) })
+    let failure = ''
     try {
       deliver(await rec.finish(), fileName(name, 'mp4'))
+    } catch (e) {
+      failure = messageOf(e)
+    }
+    if (failure === '') {
       const fallback = rec.fallback()
       if (fallback !== null && noteRef.current !== null)
         reportTakeRetried(
           { ...noteRef.current, ...progress(rec) },
           fallback.error,
         )
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e)
-      reportTakeFailed(message, noteRef.current)
-      onError(`recording failed: ${message}`)
+    } else {
+      reportTakeFailed(failure, noteRef.current)
+      onError(`recording failed: ${failure}`)
     }
     endNote(noteRef)
   }

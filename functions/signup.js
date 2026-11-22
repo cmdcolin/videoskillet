@@ -19,6 +19,13 @@ export async function countAccounts(db) {
   return Object.fromEntries(counts)
 }
 
+class CounterError extends Error {
+  constructor(path, status) {
+    super(`GoatCounter ${path} answered ${status}`)
+    this.status = status
+  }
+}
+
 const RETRIES = 4
 const RETRY_PAUSE = 1000
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -37,16 +44,24 @@ const get = async (site, path, token, params, retries = RETRIES) => {
     await pause(RETRY_PAUSE)
     return get(site, path, token, params, retries - 1)
   } else {
-    throw new Error(`GoatCounter ${path} answered ${response.status}`)
+    throw new CounterError(path, response.status)
   }
 }
 
 const views = async (site, token, now, days) => {
-  const { total } = await get(site, '/stats/total', token, {
-    start: new Date(now.getTime() - days * DAY).toISOString(),
-    end: now.toISOString(),
-  })
-  return total
+  try {
+    const { total } = await get(site, '/stats/total', token, {
+      start: new Date(now.getTime() - days * DAY).toISOString(),
+      end: now.toISOString(),
+    })
+    return total
+  } catch (error) {
+    if (error instanceof CounterError && error.status === 404) {
+      return 0
+    } else {
+      throw error
+    }
+  }
 }
 
 export async function traffic(site, token, at) {
