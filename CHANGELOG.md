@@ -2,6 +2,14 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.10](https://github.com/cmdcolin/videoskillet/compare/v2.25.9...v2.25.10) - 2026-11-22
+
+### Fixes
+- *(ui)* [`83330c0`](https://github.com/cmdcolin/videoskillet/commit/83330c03b010d4b5b5559f5a3bd43e5ca8a44635) fall back to a lesser encoder setting when a take's encoder fails early
+
+### Other Changes
+- [`ea779d0`](https://github.com/cmdcolin/videoskillet/commit/ea779d0b035d41ffc2fed8f387b5428bc1dbd06a) GoatCounter
+
 ## [2.25.9](https://github.com/cmdcolin/videoskillet/compare/v2.25.8...v2.25.9) - 2026-11-20
 
 ### Fixes
