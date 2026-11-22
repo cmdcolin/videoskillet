@@ -9,6 +9,7 @@ import {
   reportLostTake,
   reportTakeFailed,
   reportTakeRescued,
+  reportTakeRetried,
 } from './takeLog'
 
 import type { putTakeReport as put } from './cloud'
@@ -167,6 +168,19 @@ describe('takeLog', () => {
       error: 'OperationError',
     })
   })
+  it('reports a take that fell back, with the setting and the first error', async () => {
+    reportTakeRetried(
+      { ...NOTE, fallback: 'constant' },
+      'OperationError: Encoding error.',
+    )
+    await settle()
+    expect(sent()).toMatchObject({
+      kind: 'retried',
+      fallback: 'constant',
+      message: 'OperationError: Encoding error.',
+    })
+  })
+
   it('reports a take the engine fed nothing, with how far its frames got', async () => {
     reportTakeRescued({
       ...NOTE,

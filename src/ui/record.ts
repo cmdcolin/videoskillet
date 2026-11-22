@@ -195,6 +195,9 @@ export interface Recorder {
   // platform encode is always "Encoding error.", so the name is most of what
   // a report learns.
   errorName: () => string
+  // The setting the take fell back to after the encoder failed before its
+  // first chunk, and the first failure's error, or null.
+  fallback: () => { step: Step; error: string } | null
 }
 
 export function isSupported(): boolean {
@@ -216,10 +219,69 @@ export function isSupported(): boolean {
 // picture is not a picture anybody can tell was cropped.
 const even = (n: number): number => Math.max(2, n - (n % 2))
 
+// What a take gives up, one more at a time, each time the platform encoder
+// fails before it hands back a chunk: the bitrate floor, then variable
+// bitrate, then the rows and columns past a multiple of 16. Chrome reports
+// every such failure as "Encoding error." whatever MediaCodec said, and these
+// are the suspects in a phone that failed that way.
+type Step = '' | 'bitrate' | 'constant' | 'aligned'
+
+interface Setting {
+  step: Step
+  width: number
+  height: number
+  bitrate: number
+  bitrateMode: VideoEncoderBitrateMode
+}
+
+const aligned = (n: number): number => Math.max(16, n - (n % 16))
+
+const sameSetting = (a: Setting, b: Setting) =>
+  a.width === b.width &&
+  a.height === b.height &&
+  a.bitrate === b.bitrate &&
+  a.bitrateMode === b.bitrateMode
+
+export const settingsFor = (
+  width: number,
+  height: number,
+  rate: number,
+): Setting[] => {
+  const first: Setting = {
+    step: '',
+    width,
+    height,
+    bitrate: bitrateFor(width, height, rate),
+    bitrateMode: 'variable',
+  }
+  const unfloored: Setting = {
+    ...first,
+    step: 'bitrate',
+    bitrate: Math.min(MAX_BITRATE, width * height * rate * BITS_PER_PIXEL),
+  }
+  const constant: Setting = {
+    ...unfloored,
+    step: 'constant',
+    bitrateMode: 'constant',
+  }
+  const cropped: Setting = {
+    ...constant,
+    step: 'aligned',
+    width: aligned(width),
+    height: aligned(height),
+  }
+  const all = [first, unfloored, constant, cropped]
+  return all.filter((s, i) => {
+    const before = all[i - 1]
+    return before === undefined || !sameSetting(s, before)
+  })
+}
+
+const describe = (name: string, message: string) =>
+  name === '' ? message : `${name}: ${message}`
+
 export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   const { fps } = spec
-  const width = even(spec.width)
-  const height = even(spec.height)
   const rate = fps.num / fps.den
   const samples: Sample[] = []
   let avcc: Uint8Array<ArrayBuffer> | null = null
@@ -236,11 +298,12 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   let failureName = ''
   let closed = false
 
-  const configFor = (codec: string): VideoEncoderConfig => ({
+  const configFor = (codec: string, s: Setting): VideoEncoderConfig => ({
     codec,
-    width,
-    height,
-    bitrate: bitrateFor(width, height, rate),
+    width: s.width,
+    height: s.height,
+    bitrate: s.bitrate,
+    bitrateMode: s.bitrateMode,
     framerate: rate,
     // Length-prefixed NAL units with the parameter sets out of band, which is
     // what an MP4 sample table wants; 'annexb' would inline them and the file
@@ -256,24 +319,129 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   // one the platform encoder implements, and `configure` reports that by
   // throwing — which would surface as a failed recording rather than as a
   // choice this function could have made differently.
-  let codec = ''
-  for (const candidate of candidatesFor(width, height)) {
-    const { supported } = await VideoEncoder.isConfigSupported(
-      configFor(candidate),
-    )
-    if (supported === true) {
-      codec = candidate
-      break
+  const supportedCodec = async (s: Setting) => {
+    let found = ''
+    for (const candidate of candidatesFor(s.width, s.height)) {
+      const { supported } = await VideoEncoder.isConfigSupported(
+        configFor(candidate, s),
+      )
+      if (supported === true) {
+        found = candidate
+        break
+      }
     }
-  }
-  if (codec === '') {
-    throw new Error(
-      `no supported H.264 level for ${width}x${height} at ${Math.round(rate)}fps`,
-    )
+    return found
   }
 
+  const output: EncodedVideoChunkOutputCallback = (chunk, meta) => {
+    // The parameter sets arrive once, on the first chunk. Kept rather than
+    // re-read, because later chunks carry no metadata at all and a file
+    // without an avcC record is a file nothing can decode.
+    // `description` is typed as a union of every buffer-ish thing, because
+    // the spec allows any of them. Copied rather than wrapped either way: it
+    // belongs to the encoder, which is about to be closed.
+    const config = meta?.decoderConfig
+    if (config !== undefined) {
+      configs++
+      if (config.codedWidth !== undefined && config.codedHeight !== undefined)
+        coded = `${config.codedWidth}x${config.codedHeight}`
+    }
+    const description = config?.description
+    if (avcc === null && description !== undefined) {
+      avcc = (
+        ArrayBuffer.isView(description)
+          ? new Uint8Array(
+              description.buffer,
+              description.byteOffset,
+              description.byteLength,
+            )
+          : new Uint8Array(description)
+      ).slice()
+    }
+    const data = new Uint8Array(chunk.byteLength)
+    chunk.copyTo(data)
+    chunks++
+    bytes += data.length
+    sink.write(data)
+    // Presentation time in frame periods, off the frame's own timestamp: the
+    // encoder hands chunks over in decode order. The first frame starts the
+    // picture at 0, so after an encoder that failed it stays up across the
+    // frames that encoder lost, as a held frame does, and the sound keeps
+    // its place.
+    samples.push({
+      size: data.length,
+      key: chunk.type === 'key',
+      pts:
+        samples.length === 0
+          ? 0
+          : Math.round((chunk.timestamp * fps.num) / (1e6 * fps.den)),
+    })
+  }
+
+  const settings = settingsFor(even(spec.width), even(spec.height), rate)
+  let attempt = 0
+  let firstError = ''
+  let needsKey = false
+
+  const open = (codec: string, s: Setting) => {
+    avcc = null
+    configs = 0
+    coded = ''
+    const next = new VideoEncoder({
+      output,
+      error: e => {
+        const name = e instanceof Error ? e.name : ''
+        const message = e instanceof Error ? e.message : String(e)
+        if (chunks === 0 && !closed && attempt < settings.length - 1) {
+          if (firstError === '') firstError = describe(name, message)
+          void fallBack(name, message)
+        } else {
+          failure = message
+          failureName = name
+        }
+      },
+    })
+    next.configure(configFor(codec, s))
+    return next
+  }
+
+  // Frames handed over while the next encoder is set up are dropped, and
+  // `place` and `frame` see a closed encoder until then.
+  const fallBack = async (name: string, message: string) => {
+    let found = false
+    for (const s of settings.slice(attempt + 1)) {
+      attempt++
+      const next = await supportedCodec(s)
+      if (next !== '') {
+        if (!closed) {
+          setting = s
+          width = s.width
+          height = s.height
+          encoder = open(next, s)
+          needsKey = true
+        }
+        found = true
+        break
+      }
+    }
+    if (!found) {
+      failure = message
+      failureName = name
+    }
+  }
+
+  const first = settings[0]
+  const codec = first === undefined ? '' : await supportedCodec(first)
+  if (first === undefined || codec === '') {
+    throw new Error(
+      `no supported H.264 level for ${even(spec.width)}x${even(spec.height)} at ${Math.round(rate)}fps`,
+    )
+  }
+  let setting = first
+  let { width, height } = first
+
   const hardware = await VideoEncoder.isConfigSupported({
-    ...configFor(codec),
+    ...configFor(codec, first),
     hardwareAcceleration: 'prefer-hardware',
   }).then(
     r => r.supported === true,
@@ -283,52 +451,8 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   // Where the picture goes as it is encoded: a file where the browser has one
   // to write, and a Blob where it does not.
   const sink = (await fileSink()) ?? blobSink()
-  const encoder = new VideoEncoder({
-    output: (chunk, meta) => {
-      // The parameter sets arrive once, on the first chunk. Kept rather than
-      // re-read, because later chunks carry no metadata at all and a file
-      // without an avcC record is a file nothing can decode.
-      // `description` is typed as a union of every buffer-ish thing, because
-      // the spec allows any of them. Copied rather than wrapped either way: it
-      // belongs to the encoder, which is about to be closed.
-      const config = meta?.decoderConfig
-      if (config !== undefined) {
-        configs++
-        if (config.codedWidth !== undefined && config.codedHeight !== undefined)
-          coded = `${config.codedWidth}x${config.codedHeight}`
-      }
-      const description = config?.description
-      if (avcc === null && description !== undefined) {
-        avcc = (
-          ArrayBuffer.isView(description)
-            ? new Uint8Array(
-                description.buffer,
-                description.byteOffset,
-                description.byteLength,
-              )
-            : new Uint8Array(description)
-        ).slice()
-      }
-      const data = new Uint8Array(chunk.byteLength)
-      chunk.copyTo(data)
-      chunks++
-      bytes += data.length
-      sink.write(data)
-      // Presentation time in frame periods, off the frame's own timestamp: the
-      // encoder hands chunks over in decode order.
-      samples.push({
-        size: data.length,
-        key: chunk.type === 'key',
-        pts: Math.round((chunk.timestamp * fps.num) / (1e6 * fps.den)),
-      })
-    },
-    error: e => {
-      failure = e instanceof Error ? e.message : String(e)
-      failureName = e instanceof Error ? e.name : ''
-    },
-  })
+  let encoder = open(codec, first)
 
-  encoder.configure(configFor(codec))
   // A take whose sound cannot be encoded is still a take, silent. So is one
   // whose context is not running: its clock stands still, and every frame would
   // land in the first period.
@@ -358,6 +482,8 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   return {
     codec,
     hardware,
+    fallback: () =>
+      setting.step === '' ? null : { step: setting.step, error: firstError },
     clock: sound === null ? 'wall' : 'audio',
     frames: () => count,
     placed: () => placed,
@@ -403,8 +529,11 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       }
       encoder.encode(stamped, {
         keyFrame:
-          last < 0 || Math.floor(slot / keyEvery) > Math.floor(last / keyEvery),
+          needsKey ||
+          last < 0 ||
+          Math.floor(slot / keyEvery) > Math.floor(last / keyEvery),
       })
+      needsKey = false
       encoded++
       deepest = Math.max(deepest, encoder.encodeQueueSize)
       stamped.close()
@@ -431,7 +560,8 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
         // the other way to fail this encoder asynchronously.
         visibleRect: { x: 0, y: 0, width, height },
       })
-      encoder.encode(frame, { keyFrame: count % keyEvery === 0 })
+      encoder.encode(frame, { keyFrame: needsKey || count % keyEvery === 0 })
+      needsKey = false
       encoded++
       deepest = Math.max(deepest, encoder.encodeQueueSize)
       // Closed at once rather than left to the collector: a VideoFrame holds a

@@ -173,8 +173,8 @@ service cloud.firestore {
                 'stage', 'hidden', 'streamed', 'message', 'model', 'memory',
                 'readback', 'clock', 'attached', 'rendered', 'placed',
                 'readError', 'gpu', 'engineFps', 'throttled', 'renderErrors',
-                'renderError', 'sat'])
-             && d.kind in ['lost', 'failed', 'rescued']
+                'renderError', 'fallback', 'sat'])
+             && d.kind in ['lost', 'failed', 'rescued', 'retried']
              && d.version is string && d.version.size() <= 32
              && d.browser is string && d.browser.size() <= 200
              && optString(d, 'page', 64)
@@ -191,6 +191,7 @@ service cloud.firestore {
              && optString(d, 'readError', 100)
              && optString(d, 'gpu', 100)
              && optString(d, 'renderError', 100)
+             && optString(d, 'fallback', 16)
              && optNumber(d, 'width')
              && optNumber(d, 'height')
              && optNumber(d, 'fps')

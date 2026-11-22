@@ -26,6 +26,7 @@ const STRINGS: Record<string, number> = {
   readError: 100,
   gpu: 100,
   renderError: 100,
+  fallback: 16,
 }
 // The flags, which are reported the same way the numbers are.
 const BOOLEANS = new Set(['hidden', 'streamed', 'throttled'])
@@ -114,6 +115,8 @@ export interface TakeNote {
   renderError?: string
   // The GPU adapter the engine runs on, as the console trace names it.
   gpu?: string
+  // The setting a take fell back to after its encoder failed before any chunk.
+  fallback?: string
   // The DOMException name of the encoder's error, which Chrome reports when
   // its message says nothing.
   error?: string
@@ -179,7 +182,7 @@ async function device(): Promise<Record<string, string | number>> {
 }
 
 function send(
-  kind: 'lost' | 'failed' | 'rescued',
+  kind: 'lost' | 'failed' | 'rescued' | 'retried',
   params: Record<string, unknown>,
 ) {
   void device().then(d => {
@@ -217,4 +220,10 @@ export function reportTakeFailed(message: string, note: TakeNote | null) {
 // The take is fine, so this is the only word of why the engine was not.
 export function reportTakeRescued(note: TakeNote) {
   send('rescued', { ...note })
+}
+
+// A take whose encoder failed before any chunk and worked at a lesser setting.
+// The take is fine, so this report is how we learn which setting it needed.
+export function reportTakeRetried(note: TakeNote, message: string) {
+  send('retried', { ...note, message })
 }

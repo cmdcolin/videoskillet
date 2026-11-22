@@ -28,8 +28,9 @@ const size = n =>
   n >= 1e9 ? `${(n / 1e9).toFixed(2)} GB` : `${Math.round(n / 1e6)} MB`
 
 // `lost` is a take whose note outlived its tab, `failed` one the encoder
-// declined, and `rescued` a live take the engine sent no frames, which went on
-// by reading the canvas; the model is only ever there on Chrome. Spelled out because
+// declined, `rescued` a live take the engine sent no frames, which went on
+// by reading the canvas, and `retried` one whose encoder failed before any
+// chunk and worked at a lesser setting; the model is only ever there on Chrome. Spelled out because
 // `lost  unknown device` read as a lost GPU device, which is a different fault
 // with its own page of documentation.
 const head = r =>
@@ -59,6 +60,9 @@ const block = r =>
           `  engine at ${r.engineFps} fps when attached, ${r.throttled === true ? 'dropping frames for a slow GPU' : 'not throttled'}, ${plural(r.renderErrors ?? 0, 'render error')}`,
         ]),
     ...(r.renderError === undefined ? [] : [`  render: ${r.renderError}`]),
+    ...(r.fallback === undefined
+      ? []
+      : [`  encoder fell back to the ${r.fallback} setting`]),
     ...(r.message === undefined
       ? []
       : [`  ${r.error === undefined ? '' : `${r.error}: `}${r.message}`]),

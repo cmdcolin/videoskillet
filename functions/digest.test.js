@@ -112,6 +112,23 @@ describe('digest', () => {
     expect(text).toContain('  vendor=nvidia arch=ampere')
   })
 
+  it('names the setting a retried take fell back to', () => {
+    const { text } = digest(
+      [
+        report({
+          kind: 'retried',
+          fallback: 'constant',
+          message: 'Encoding error.',
+          error: undefined,
+        }),
+      ],
+      1,
+    )
+    expect(text).toContain('take retried')
+    expect(text).toContain('  encoder fell back to the constant setting')
+    expect(text).toContain('  Encoding error.')
+  })
+
   it('shows a failure message and a sparse report', () => {
     const { text } = digest(
       [

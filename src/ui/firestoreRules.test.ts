@@ -572,6 +572,11 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
           .add(report({ kind: 'rescued', readback: 'canvas' })),
       )
       await assertSucceeds(
+        asAnon()
+          .collection('takeReports')
+          .add(report({ kind: 'retried', fallback: 'constant' })),
+      )
+      await assertSucceeds(
         asAnon().collection('takeReports').add({
           kind: 'failed',
           version: '2.6.0',
@@ -598,6 +603,7 @@ describe.skipIf(EMULATOR === undefined)('firestore.rules', () => {
       await add({ readError: 'x'.repeat(101) })
       await add({ gpu: 'x'.repeat(101) })
       await add({ placed: '3' })
+      await add({ fallback: 'x'.repeat(17) })
       await add({ engineFps: '12' })
       await add({ throttled: 'yes' })
       await add({ renderErrors: '3' })

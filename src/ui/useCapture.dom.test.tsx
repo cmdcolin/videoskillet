@@ -62,6 +62,7 @@ function fakeRecorder() {
     configs: () => 0,
     error: () => '',
     errorName: () => '',
+    fallback: () => null,
   }
   return rec
 }

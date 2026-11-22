@@ -9,6 +9,7 @@ import {
   reportLostTake,
   reportTakeFailed,
   reportTakeRescued,
+  reportTakeRetried,
   takeLive,
 } from './takeLog'
 import { sweepTakes } from './takeSink'
@@ -169,24 +170,28 @@ export function useCapture(
     detachRef.current = null
   }
 
-  const progress = (r: Recorder) => ({
-    seconds: Math.round((performance.now() - startRef.current) / 1000),
-    frames: r.frames(),
-    held: r.held(),
-    deepest: r.deepest(),
-    encoded: r.encoded(),
-    chunks: r.chunks(),
-    bytes: r.bytes(),
-    streamed: r.streamed(),
-    coded: r.coded(),
-    configs: r.configs(),
-    canvas:
-      canvasRef.current === null
-        ? ''
-        : `${canvasRef.current.width}x${canvasRef.current.height}`,
-    ...(r.errorName() === '' ? {} : { error: r.errorName() }),
-    ...feedRef.current(),
-  })
+  const progress = (r: Recorder) => {
+    const fallback = r.fallback()
+    return {
+      seconds: Math.round((performance.now() - startRef.current) / 1000),
+      frames: r.frames(),
+      held: r.held(),
+      deepest: r.deepest(),
+      encoded: r.encoded(),
+      chunks: r.chunks(),
+      bytes: r.bytes(),
+      streamed: r.streamed(),
+      coded: r.coded(),
+      configs: r.configs(),
+      canvas:
+        canvasRef.current === null
+          ? ''
+          : `${canvasRef.current.width}x${canvasRef.current.height}`,
+      ...(r.errorName() === '' ? {} : { error: r.errorName() }),
+      ...(fallback === null ? {} : { fallback: fallback.step }),
+      ...feedRef.current(),
+    }
+  }
 
   // The encoder and its rAF pump are browser objects that outlive React, so a
   // teardown mid-recording would leave both running forever. Aborted rather
@@ -280,6 +285,12 @@ export function useCapture(
     jot(noteRef, { stage: 'finishing', ...progress(rec) })
     try {
       deliver(await rec.finish(), fileName(name, 'mp4'))
+      const fallback = rec.fallback()
+      if (fallback !== null && noteRef.current !== null)
+        reportTakeRetried(
+          { ...noteRef.current, ...progress(rec) },
+          fallback.error,
+        )
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
       reportTakeFailed(message, noteRef.current)
