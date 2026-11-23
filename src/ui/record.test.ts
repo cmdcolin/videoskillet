@@ -10,13 +10,13 @@ describe('H.264 level selection', () => {
 
   it('declines level 4.2 for the retina window that broke recording', () => {
     // 2560x1592 codes as 2560x1600 = 16000 macroblocks, against 4.2's 8704.
-    const codecs = candidatesFor(2560, 1592)
+    const codecs = candidatesFor(2560, 1592, 30, 60_000_000)
     expect(codecs.some(c => c.endsWith('2a'))).toBe(false)
     expect(codecs[0]).toBe('avc1.640032')
   })
 
   it('asks for High first and keeps the lesser profiles as fallbacks', () => {
-    const codecs = candidatesFor(1920, 1080)
+    const codecs = candidatesFor(1920, 1080, 30, 16_000_000)
     expect(codecs[0]).toBe('avc1.640028')
     expect(codecs).toContain('avc1.4d0028')
     expect(codecs).toContain('avc1.420028')
@@ -26,40 +26,57 @@ describe('H.264 level selection', () => {
   })
 
   it('offers the smallest level that fits before the larger ones', () => {
-    expect(candidatesFor(640, 480)[0]).toBe('avc1.64001e')
-    expect(candidatesFor(3840, 2160)[0]).toBe('avc1.640033')
+    expect(candidatesFor(640, 480, 30, 9_000_000)[0]).toBe('avc1.64001e')
+    expect(candidatesFor(3840, 2160, 30, 60_000_000)[0]).toBe('avc1.640033')
+  })
+
+  it('raises the level for the frame rate and the bitrate', () => {
+    // 720x540 is 1530 macroblocks: 91800 a second at 60fps against 3.0's
+    // 40500, and 16 Mbps against High 3.0's 12.5.
+    expect(candidatesFor(720, 540, 60, 16_000_000)[0]).toBe('avc1.64001f')
+    expect(candidatesFor(640, 480, 30, 16_000_000)[0]).toBe('avc1.64001f')
+  })
+
+  it('gives High more bitrate at a level than the other profiles', () => {
+    const codecs = candidatesFor(1920, 1080, 30, 24_000_000)
+    expect(codecs[0]).toBe('avc1.640028')
+    expect(codecs).not.toContain('avc1.4d0028')
+    expect(codecs).toContain('avc1.4d0029')
+  })
+
+  it('tries only the profiles it is given', () => {
+    expect(
+      candidatesFor(1920, 1080, 30, 16_000_000, ['4200']).every(c =>
+        c.startsWith('avc1.4200'),
+      ),
+    ).toBe(true)
   })
 
   it('has nothing to offer a picture past the top level', () => {
-    expect(candidatesFor(16384, 16384)).toEqual([])
+    expect(candidatesFor(16384, 16384, 30, 16_000_000)).toEqual([])
   })
 })
 
 describe('settings a take falls back to', () => {
-  it('drops the floor, then variable bitrate, then the unaligned rows', () => {
-    const settings = settingsFor(720, 540, 60)
+  it('copies frames to memory, then drops to Baseline, then crops', () => {
+    const settings = settingsFor(720, 540)
     expect(settings.map(s => s.step)).toEqual([
       '',
-      'bitrate',
-      'constant',
+      'memory',
+      'baseline',
       'aligned',
     ])
-    expect(settings[0]?.bitrate).toBe(16_000_000)
-    expect(settings[1]?.bitrate).toBeCloseTo(9_331_200)
-    expect(settings[2]?.bitrateMode).toBe('constant')
+    expect(settings[0]?.memory).toBe(false)
+    expect(settings[1]?.memory).toBe(true)
+    expect(settings[2]).toMatchObject({ memory: true, profiles: ['4200'] })
     expect(settings[3]).toMatchObject({ width: 720, height: 528 })
   })
 
-  it('skips a step that would change nothing', () => {
-    expect(settingsFor(1920, 1080, 60).map(s => s.step)).toEqual([
+  it('skips the crop for a picture already a multiple of 16', () => {
+    expect(settingsFor(768, 1024).map(s => s.step)).toEqual([
       '',
-      'constant',
-      'aligned',
-    ])
-    expect(settingsFor(640, 480, 30).map(s => s.step)).toEqual([
-      '',
-      'bitrate',
-      'constant',
+      'memory',
+      'baseline',
     ])
   })
 })
@@ -75,13 +92,20 @@ interface EncoderInit {
 }
 
 describe('a live take', () => {
-  const encoded: { timestamp: number; key: boolean; height?: number }[] = []
+  const encoded: {
+    timestamp: number
+    key: boolean
+    height?: number
+    memory: boolean
+  }[] = []
+  const configured: string[] = []
   let refuse = 0
   // How many encoders fail on their first frame, before any chunk.
   let failing = 0
   let opened = 0
   beforeEach(() => {
     encoded.length = 0
+    configured.length = 0
     failing = 0
     opened = 0
     vi.stubGlobal('location', { search: '' })
@@ -99,17 +123,23 @@ describe('a live take', () => {
           if (failing > 0) failing--
           opened++
         }
-        configure() {
+        configure(config: { codec: string }) {
+          configured.push(config.codec)
           this.state = 'configured'
         }
         encode(
-          frame: { timestamp: number; visibleRect?: { height: number } },
+          frame: {
+            timestamp: number
+            visibleRect?: { height: number }
+            codedHeight?: number
+          },
           opts: { keyFrame: boolean },
         ) {
           encoded.push({
             timestamp: frame.timestamp,
             key: opts.keyFrame,
-            height: frame.visibleRect?.height,
+            height: frame.visibleRect?.height ?? frame.codedHeight,
+            memory: frame.visibleRect === undefined,
           })
           if (this.fails)
             queueMicrotask(() => {
@@ -139,9 +169,14 @@ describe('a live take', () => {
       class {
         timestamp: number
         visibleRect?: { height: number }
+        codedHeight?: number
         constructor(
           _: unknown,
-          init: { timestamp: number; visibleRect?: { height: number } },
+          init: {
+            timestamp: number
+            visibleRect?: { height: number }
+            codedHeight?: number
+          },
         ) {
           if (refuse > 0) {
             refuse--
@@ -149,10 +184,31 @@ describe('a live take', () => {
           }
           this.timestamp = init.timestamp
           this.visibleRect = init.visibleRect
+          this.codedHeight = init.codedHeight
         }
         closed = false
         close() {
           this.closed = true
+        }
+      },
+    )
+    vi.stubGlobal(
+      'OffscreenCanvas',
+      class {
+        width: number
+        height: number
+        constructor(width: number, height: number) {
+          this.width = width
+          this.height = height
+        }
+        getContext() {
+          return {
+            canvas: this,
+            drawImage: () => {},
+            getImageData: (_x: number, _y: number, w: number, h: number) => ({
+              data: new Uint8ClampedArray(w * h * 4),
+            }),
+          }
         }
       },
     )
@@ -216,10 +272,19 @@ describe('a live take', () => {
     expect(opened).toBe(3)
     expect(rec.error()).toBe('')
     expect(rec.fallback()).toEqual({
-      step: 'constant',
+      step: 'baseline',
       error: 'OperationError: Encoding error.',
     })
-    expect(encoded.at(-1)).toMatchObject({ timestamp: 50000, key: true })
+    expect(configured.map(c => c.slice(0, 9))).toEqual([
+      'avc1.6400',
+      'avc1.6400',
+      'avc1.4200',
+    ])
+    expect(encoded.at(-1)).toMatchObject({
+      timestamp: 50000,
+      key: true,
+      memory: true,
+    })
     expect(rec.chunks()).toBe(1)
     rec.abort()
   })

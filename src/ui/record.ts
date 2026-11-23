@@ -58,31 +58,60 @@ import type { Sample } from './mp4'
 // platform without High falls back rather than failing the take.
 const PROFILES = ['6400', '4d00', '4200']
 
-// `maxFS` from Table A-1, in 16x16 macroblocks, against the byte the codec
-// string spells the level with. Ordered, and read as "the first one that fits".
-const LEVELS: { code: number; maxMacroblocks: number }[] = [
-  { code: 0x1e, maxMacroblocks: 1620 },
-  { code: 0x1f, maxMacroblocks: 3600 },
-  { code: 0x20, maxMacroblocks: 5120 },
-  { code: 0x28, maxMacroblocks: 8192 },
-  { code: 0x2a, maxMacroblocks: 8704 },
-  { code: 0x32, maxMacroblocks: 22080 },
-  { code: 0x33, maxMacroblocks: 36864 },
-  { code: 0x3c, maxMacroblocks: 139264 },
+const BASELINE = '4200'
+
+// Table A-1 against the byte the codec string spells the level with: `maxFS`
+// in 16x16 macroblocks, `maxMBPS` in macroblocks a second and `maxBR` in
+// kbit/s. Chrome hands the level to MediaCodec as it is, so a level that the
+// frame size fits but the frame rate or bitrate does not is a promise the
+// stream breaks: 720x540 at 60fps and 16 Mbps was labelled 3.0, which allows
+// 40500 macroblocks a second and 12.5 Mbps, and a phone failed it. Ordered,
+// and read as "the first one that fits".
+const LEVELS: {
+  code: number
+  maxMacroblocks: number
+  maxRate: number
+  maxKbps: number
+}[] = [
+  { code: 0x1e, maxMacroblocks: 1620, maxRate: 40500, maxKbps: 10000 },
+  { code: 0x1f, maxMacroblocks: 3600, maxRate: 108000, maxKbps: 14000 },
+  { code: 0x20, maxMacroblocks: 5120, maxRate: 216000, maxKbps: 20000 },
+  { code: 0x28, maxMacroblocks: 8192, maxRate: 245760, maxKbps: 20000 },
+  { code: 0x29, maxMacroblocks: 8192, maxRate: 245760, maxKbps: 50000 },
+  { code: 0x2a, maxMacroblocks: 8704, maxRate: 522240, maxKbps: 50000 },
+  { code: 0x32, maxMacroblocks: 22080, maxRate: 589824, maxKbps: 135000 },
+  { code: 0x33, maxMacroblocks: 36864, maxRate: 983040, maxKbps: 240000 },
+  { code: 0x3c, maxMacroblocks: 139264, maxRate: 4177920, maxKbps: 240000 },
 ]
+
+// High's bitrate ceiling is `maxBR` times 1250 bits where the other profiles
+// get 1000 (Table A-2, cpbBrVclFactor).
+const bitsPerKbit = (profile: string) => (profile === '6400' ? 1250 : 1000)
 
 export const codecFor = (profile: string, level: number): string =>
   `avc1.${profile}${level.toString(16).padStart(2, '0')}`
 
 // Every codec string worth trying for this picture, best first: profile
 // outermost because a lesser profile costs picture on every frame, where a
-// larger level than the frame needs costs nothing at all. Within a profile the
-// smallest level that fits comes first — that is the honest label, since a
+// larger level than the stream needs costs nothing at all. Within a profile
+// the smallest level that fits comes first — that is the honest label, since a
 // decoder reads the level as a promise about what it will be asked for.
-export const candidatesFor = (width: number, height: number): string[] => {
+export const candidatesFor = (
+  width: number,
+  height: number,
+  rate: number,
+  bitrate: number,
+  profiles: string[] = PROFILES,
+): string[] => {
   const macroblocks = Math.ceil(width / 16) * Math.ceil(height / 16)
-  const levels = LEVELS.filter(l => macroblocks <= l.maxMacroblocks)
-  return PROFILES.flatMap(p => levels.map(l => codecFor(p, l.code)))
+  return profiles.flatMap(p =>
+    LEVELS.filter(
+      l =>
+        macroblocks <= l.maxMacroblocks &&
+        macroblocks * rate <= l.maxRate &&
+        bitrate <= l.maxKbps * bitsPerKbit(p),
+    ).map(l => codecFor(p, l.code)),
+  )
 }
 
 // Bits per pixel per frame. This content is worst-case for a codec — snow,
@@ -220,61 +249,49 @@ export function isSupported(): boolean {
 const even = (n: number): number => Math.max(2, n - (n % 2))
 
 // What a take gives up, one more at a time, each time the platform encoder
-// fails before it hands back a chunk: the bitrate floor, then variable
-// bitrate, then the rows and columns past a multiple of 16. Chrome reports
-// every such failure as "Encoding error." whatever MediaCodec said, and these
-// are the suspects in a phone that failed that way.
-type Step = '' | 'bitrate' | 'constant' | 'aligned'
+// fails before it hands back a chunk: frames from the GPU, then the High and
+// Main profiles, then the rows and columns past a multiple of 16. Chrome
+// reports every such failure as "Encoding error." whatever went wrong, and
+// these are the suspects in two Mali phones that failed that way at every
+// bitrate. A frame off a WebGPU canvas is a GPU texture that Chrome converts
+// for MediaCodec on the GPU, and a frame in memory is converted on the CPU
+// instead. Three reopens at most, because the picture holds still while each
+// new encoder starts.
+type Step = '' | 'memory' | 'baseline' | 'aligned'
 
 interface Setting {
   step: Step
   width: number
   height: number
-  bitrate: number
-  bitrateMode: VideoEncoderBitrateMode
+  memory: boolean
+  profiles: string[]
 }
 
 const aligned = (n: number): number => Math.max(16, n - (n % 16))
 
-const sameSetting = (a: Setting, b: Setting) =>
-  a.width === b.width &&
-  a.height === b.height &&
-  a.bitrate === b.bitrate &&
-  a.bitrateMode === b.bitrateMode
-
-export const settingsFor = (
-  width: number,
-  height: number,
-  rate: number,
-): Setting[] => {
+export const settingsFor = (width: number, height: number): Setting[] => {
   const first: Setting = {
     step: '',
     width,
     height,
-    bitrate: bitrateFor(width, height, rate),
-    bitrateMode: 'variable',
+    memory: false,
+    profiles: PROFILES,
   }
-  const unfloored: Setting = {
-    ...first,
-    step: 'bitrate',
-    bitrate: Math.min(MAX_BITRATE, width * height * rate * BITS_PER_PIXEL),
-  }
-  const constant: Setting = {
-    ...unfloored,
-    step: 'constant',
-    bitrateMode: 'constant',
+  const memory: Setting = { ...first, step: 'memory', memory: true }
+  const baseline: Setting = {
+    ...memory,
+    step: 'baseline',
+    profiles: [BASELINE],
   }
   const cropped: Setting = {
-    ...constant,
+    ...baseline,
     step: 'aligned',
     width: aligned(width),
     height: aligned(height),
   }
-  const all = [first, unfloored, constant, cropped]
-  return all.filter((s, i) => {
-    const before = all[i - 1]
-    return before === undefined || !sameSetting(s, before)
-  })
+  return [first, memory, baseline, cropped].filter(
+    s => s.step !== 'aligned' || s.width !== width || s.height !== height,
+  )
 }
 
 const describe = (name: string, message: string) =>
@@ -298,12 +315,14 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   let failureName = ''
   let closed = false
 
+  const bitrateOf = (s: Setting) => bitrateFor(s.width, s.height, rate)
+
   const configFor = (codec: string, s: Setting): VideoEncoderConfig => ({
     codec,
     width: s.width,
     height: s.height,
-    bitrate: s.bitrate,
-    bitrateMode: s.bitrateMode,
+    bitrate: bitrateOf(s),
+    bitrateMode: 'variable',
     framerate: rate,
     // Length-prefixed NAL units with the parameter sets out of band, which is
     // what an MP4 sample table wants; 'annexb' would inline them and the file
@@ -321,7 +340,13 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   // choice this function could have made differently.
   const supportedCodec = async (s: Setting) => {
     let found = ''
-    for (const candidate of candidatesFor(s.width, s.height)) {
+    for (const candidate of candidatesFor(
+      s.width,
+      s.height,
+      rate,
+      bitrateOf(s),
+      s.profiles,
+    )) {
       const { supported } = await VideoEncoder.isConfigSupported(
         configFor(candidate, s),
       )
@@ -378,7 +403,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
     })
   }
 
-  const settings = settingsFor(even(spec.width), even(spec.height), rate)
+  const settings = settingsFor(even(spec.width), even(spec.height))
   let attempt = 0
   let firstError = ''
   let needsKey = false
@@ -476,6 +501,39 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   // The take's start on its clock, and the period the last placed frame took.
   let origin: number | null = null
   let last = -1
+  // A frame copied into memory through a 2D canvas that the browser keeps on
+  // the CPU, because it is read back every frame. Closes the frame it was given.
+  let scratch: OffscreenCanvasRenderingContext2D | null = null
+  const copied = (
+    ctx: OffscreenCanvasRenderingContext2D,
+    frame: VideoFrame,
+  ) => {
+    try {
+      ctx.drawImage(frame, 0, 0)
+      return new VideoFrame(ctx.getImageData(0, 0, width, height).data, {
+        format: 'RGBX',
+        codedWidth: width,
+        codedHeight: height,
+        timestamp: frame.timestamp,
+        duration: Math.round(period),
+      })
+    } finally {
+      frame.close()
+    }
+  }
+  const inMemory = (frame: VideoFrame) => {
+    if (
+      scratch === null ||
+      scratch.canvas.width !== width ||
+      scratch.canvas.height !== height
+    )
+      scratch = new OffscreenCanvas(width, height).getContext('2d', {
+        willReadFrequently: true,
+      })
+    return scratch === null ? frame : copied(scratch, frame)
+  }
+  const prepared = (frame: VideoFrame) =>
+    setting.memory ? inMemory(frame) : frame
   const busy = () =>
     encoder.encodeQueueSize >= MAX_QUEUE || sink.backlog() >= MAX_BACKLOG
 
@@ -519,11 +577,13 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       }
       let stamped: VideoFrame
       try {
-        stamped = new VideoFrame(frame, {
-          timestamp: Math.round(slot * period),
-          duration: Math.round(period),
-          visibleRect: { x: 0, y: 0, width, height },
-        })
+        stamped = prepared(
+          new VideoFrame(frame, {
+            timestamp: Math.round(slot * period),
+            duration: Math.round(period),
+            visibleRect: { x: 0, y: 0, width, height },
+          }),
+        )
       } finally {
         frame.close()
       }
@@ -552,14 +612,16 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       // Microseconds, off the count and never off a clock. A frame that took
       // 200ms to render still lands exactly one frame after its predecessor,
       // which is the property the whole file is for.
-      const frame = new VideoFrame(source, {
-        timestamp: Math.round(count * period),
-        duration: Math.round(period),
-        // Cropped to the even size the encoder was configured with — see
-        // `even` above. A frame whose size disagrees with the configuration is
-        // the other way to fail this encoder asynchronously.
-        visibleRect: { x: 0, y: 0, width, height },
-      })
+      const frame = prepared(
+        new VideoFrame(source, {
+          timestamp: Math.round(count * period),
+          duration: Math.round(period),
+          // Cropped to the even size the encoder was configured with — see
+          // `even` above. A frame whose size disagrees with the configuration
+          // is the other way to fail this encoder asynchronously.
+          visibleRect: { x: 0, y: 0, width, height },
+        }),
+      )
       encoder.encode(frame, { keyFrame: needsKey || count % keyEvery === 0 })
       needsKey = false
       encoded++
