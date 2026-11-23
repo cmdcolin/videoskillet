@@ -282,11 +282,11 @@ function resumeSection(
   return box
 }
 
-// How many earlier sessions the home page shows before pointing at the
-// dedicated page for the rest. The account can keep far more than fit here —
+// How many earlier sessions the home page shows. A link to the dedicated page
+// for the full list follows them. The account can keep far more than fit here —
 // RECENT_MAX in profileModel.ts — without the home page turning into a scroll
 // of them.
-const EARLIER_PREVIEW = 6
+const EARLIER_PREVIEW = 12
 
 function earlierSection(
   doc: HomeDoc,
@@ -305,13 +305,11 @@ function earlierSection(
   for (const session of earlier.slice(0, EARLIER_PREVIEW))
     grid.append(sessionCard(doc, session, stills, now, edits))
   box.append(grid)
-  if (earlier.length > EARLIER_PREVIEW) {
-    const more = el('p', 'sessionsMore')
-    const go = el('a', 'btn', `See all ${earlier.length} sessions →`)
-    go.href = '/sessions/'
-    more.append(go)
-    box.append(more)
-  }
+  const more = el('p', 'sessionsMore')
+  const go = el('a', 'btn', 'See all sessions →')
+  go.href = '/sessions/'
+  more.append(go)
+  box.append(more)
   return box
 }
 
