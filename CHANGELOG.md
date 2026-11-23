@@ -2,6 +2,11 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.11](https://github.com/cmdcolin/videoskillet/compare/v2.25.10...v2.25.11) - 2026-11-23
+
+### Fixes
+- *(ui)* [`56b208f`](https://github.com/cmdcolin/videoskillet/commit/56b208f92fe7be09a6dabb6148e3ac107e632e3e) copy frames to memory and drop to Baseline when a take's encoder fails early
+
 ## [2.25.10](https://github.com/cmdcolin/videoskillet/compare/v2.25.9...v2.25.10) - 2026-11-22
 
 ### Fixes
