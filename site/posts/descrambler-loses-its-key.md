@@ -2,8 +2,9 @@
 title: More scramble channel effects - the weak signal
 date: 2026-11-13
 summary:
-  We made the cable descrambler box miss lines on a weak signal, because its
-  timing pulses rode on the channel's much weaker sound carrier.
+  We made the cable descrambler box miss its timing pulses on a weak signal and
+  leave those lines scrambled, because the pulses rode on the channel's much
+  weaker sound carrier.
 image: /blog/descrambler-foghorn.webp
 imageAlt:
   A smiling woman in sunglasses, her face and hair washed in bands of violet,
@@ -13,9 +14,11 @@ look: '#set=scramble:1,scrambleMode:3,decoderDb:10,rfSnow:0.14,hHold:0.08,syncSl
 ---
 
 In the 1980s, cable companies scrambled their pay channels, and subscribers
-rented a descrambler box to watch them. We made that box miss lines of the
-picture when the signal is weak, as it was at the far end of a long cable run or
-when split between several TVs.
+rented a descrambler box to watch them. The box listened for a timing pulse
+before every line of the picture and unscrambled the line when it heard one. We
+made the box miss those pulses when the signal is weak, as it was at the far end
+of a long cable run or when split between several TVs, so some lines reach the
+TV still scrambled.
 [Foghorn](/app/#set=scramble:1,scrambleMode:3,decoderDb:10,rfSnow:0.14,hHold:0.08,syncSlicer:2,agc:1,chromaGain:1.5,crtSat:1.4,noiseIre:2,hDetuneHz:4,hvSagUs:14,hvRing:0.2,afpcLagLines:40,humMod:0.3,scDetuneKHz:0.06,burstLock:0.3,accLagLines:30,matrixClip:1,ghostGain:0.1,ghostDelayUs:1.2&mod=rfSnow:lorenz:0.15:0.12,hDetuneHz:lorenz:0.25:0.0015,hvSagUs:lorenz:0.15:0.05&iurl=https://upload.wikimedia.org/wikipedia/commons/4/40/Pink_sunglasses_on_swimsuit_model_%286080359110%29.jpg),
 the look at the top of the page, shows the result.
 
@@ -32,9 +35,16 @@ apart. The descrambler box turned the gap back up.
 The box took its timing from pulses that the cable company sent on the
 [sound carrier](https://en.wikipedia.org/wiki/NTSC), the separate radio signal
 for the channel's audio. The sound carrier is much weaker than the picture, so
-on a weak signal the box misses pulses while the picture is still watchable.
-Each missed line stays scrambled and shows as a grey streak. The **RF snow**
-control sets how weak the signal is.
+on a weak signal the box misses some pulses while the picture is still
+watchable. On each line whose pulse it misses, the box leaves the gap turned
+down, so the TV gets that line scrambled. Where the picture tears, the gap comes
+on screen as a black band, and each missed line crosses that band in light grey
+and roughens the torn edge. The **RF snow** control sets how weak the signal is.
+
+<figure>
+<video style="aspect-ratio: 752 / 480; object-fit: cover; margin: 0; width: 100%;" autoplay muted loop playsinline aria-label="The right half of the sunglasses picture, twice, side by side. On the left the black band at the torn edge is solid and its edge is smooth. On the right the same band is combed with light grey lines and its edge is ragged." poster="/blog/descrambler-missed-pulses-poster.webp" src="https://myloveydove.com/videoskillet/blog/descrambler-missed-pulses.mp4"></video>
+<figcaption>The right half of the same Foghorn take, twice. On the left we made the box hear every pulse. On the right it misses them as it does in Foghorn, and the lines it misses comb through the black band.</figcaption>
+</figure>
 
 ## From the magazines
 
