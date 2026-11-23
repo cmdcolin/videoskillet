@@ -56,6 +56,8 @@ by Alan Butler, under CC0. The ballroom is
 [Abandoned grand piano](<https://commons.wikimedia.org/wiki/File:Abandoned_grand_piano_-_Abandoned_Ballroom_(6).jpg>)
 by Jan Bommes, under CC BY 2.0._
 
-_The skeleton is by Eva Vikström, under CC BY 3.0, and the graveyard is
+_The skeleton is from
+[Creatures For Chroma Key](https://archive.org/details/EvaVikstromCreaturesForChromaKey)
+by Eva Vikström, under CC BY 3.0, and the graveyard is
 [Temple Hill Graveyard (Cork) at night](<https://commons.wikimedia.org/wiki/File:Temple_Hill_Graveyard_(Cork)_at_night_01.JPG>)
 by Guliolopez, under CC BY-SA 3.0._

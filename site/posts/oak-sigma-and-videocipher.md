@@ -125,6 +125,12 @@ We took Sigma's timing from Oak's US patents
 from Communications Technology (June 1986, page 70). We chose the data levels
 and the inversion level ourselves.
 
+## Update, 23 November 2026
+
+We made the descrambler box for the Jerrold and General Instrument channels miss
+its timing pulses on a weak signal, so some lines reach the TV still scrambled:
+[the weak signal](/blog/descrambler-loses-its-key/).
+
 _The catalogue cover is LIZ fashion's
 [1984 catalogue cover](https://commons.wikimedia.org/wiki/File:%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg),
 from Wikimedia Commons under CC BY-SA 3.0, and the stills of it here are under

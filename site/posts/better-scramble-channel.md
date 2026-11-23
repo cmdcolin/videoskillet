@@ -86,10 +86,21 @@ it floods. The links above still open the version this post describes, and you
 can
 [open the new one](/app/#preset=scrambledChannel&iurl=https://upload.wikimedia.org/wikipedia/commons/f/f9/%D7%A7%D7%98%D7%9C%D7%95%D7%92_1984_-_1.jpg).
 
+<figure style="margin: 1.5rem 0;">
+<img style="margin: 0; width: 100%; aspect-ratio: 1480 / 1012; background: white;" loading="lazy" src="/blog/radio-electronics-1987-tri-mode-fig1.webp" alt="A waveform diagram that draws one stretch of signal three times, labelled clear, 6dB and 10dB. We drew each row's black level as a dashed blue line and pointed a blue arrow at its sync pulse. In the clear row the arrow is labelled sync below black and the pulse dips under the line. In the 6dB row it is labelled sync at black and the pulse rests on the line. In the 10dB row it is labelled sync above black and the whole gap floats over the line.">
+<figcaption>Fig. 1 from Radio-Electronics, February 1987, page 44, drawing one channel at its clear, 6 dB and 10 dB scrambling levels. We added the blue marks. A TV finds each line by the sync pulse that dips below black, and at 6 dB and 10 dB the scrambler lifts the pulse to black or above it, where the TV can't find it.</figcaption>
+</figure>
+
 ## Update, 11 November 2026
 
 We've since made more scramblers:
 [Oak Sigma and VideoCipher II](/blog/oak-sigma-and-videocipher/).
+
+## Update, 23 November 2026
+
+We made the descrambler box that subscribers rented for these channels miss its
+timing pulses on a weak signal, so some lines reach the TV still scrambled:
+[the weak signal](/blog/descrambler-loses-its-key/).
 
 _Photos from Wikimedia Commons under CC BY-SA 3.0, and the stills here are under
 the same licence: LIZ fashion's

@@ -1,5 +1,5 @@
 ---
-title: More scramble channel effects - the weak signal
+title: 'More scramble channel effects: the weak signal'
 date: 2026-11-13
 summary:
   We made the cable descrambler box miss its timing pulses on a weak signal and
