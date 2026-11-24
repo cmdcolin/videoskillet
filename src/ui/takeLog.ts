@@ -115,7 +115,7 @@ export interface TakeNote {
   renderError?: string
   // The GPU adapter the engine runs on, as the console trace names it.
   gpu?: string
-  // The setting a take fell back to after its encoder failed before any chunk.
+  // The setting a take fell back to after its encoder failed.
   fallback?: string
   // The DOMException name of the encoder's error, which Chrome reports when
   // its message says nothing.
@@ -222,7 +222,7 @@ export function reportTakeRescued(note: TakeNote) {
   send('rescued', { ...note })
 }
 
-// A take whose encoder failed before any chunk and worked at a lesser setting.
+// A take whose encoder failed and then worked at a lesser setting.
 // The take is fine, so this report is how we learn which setting it needed.
 export function reportTakeRetried(note: TakeNote, message: string) {
   send('retried', { ...note, message })

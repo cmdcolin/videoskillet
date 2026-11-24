@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { demuxMp4 } from './mp4demux'
 import { candidatesFor, codecFor, settingsFor, startRecording } from './record'
 
 describe('H.264 level selection', () => {
@@ -82,14 +83,23 @@ describe('settings a take falls back to', () => {
 })
 
 interface EncoderInit {
-  output: (chunk: {
-    byteLength: number
-    type: string
-    timestamp: number
-    copyTo: () => void
-  }) => void
+  output: (
+    chunk: {
+      byteLength: number
+      type: string
+      timestamp: number
+      copyTo: (d: Uint8Array) => void
+    },
+    meta?: { decoderConfig: { description: Uint8Array } },
+  ) => void
   error: (e: Error) => void
 }
+
+const avccOf = (last: number) =>
+  Uint8Array.from([
+    1, 0x42, 0xc0, 0x2a, 0xff, 0xe1, 0, 5, 0x67, 0x42, 0xc0, 0x2a, 0xd9, 1, 0,
+    4, 0x68, 0xcb, 0x8c, 0xb2,
+  ]).with(19, last)
 
 describe('a live take', () => {
   const encoded: {
@@ -100,13 +110,18 @@ describe('a live take', () => {
   }[] = []
   const configured: string[] = []
   let refuse = 0
-  // How many encoders fail on their first frame, before any chunk.
+  // How many encoders fail, and how many chunks each hands back first.
   let failing = 0
+  let failAfter = 0
+  // The last byte of each encoder's parameter sets, by the order they opened.
+  let sets: number[] = []
   let opened = 0
   beforeEach(() => {
     encoded.length = 0
     configured.length = 0
     failing = 0
+    failAfter = 0
+    sets = []
     opened = 0
     vi.stubGlobal('location', { search: '' })
     vi.stubGlobal(
@@ -116,11 +131,14 @@ describe('a live take', () => {
         state = 'unconfigured'
         encodeQueueSize = 0
         fails = false
+        index: number
+        outputs = 0
         init: EncoderInit
         constructor(init: EncoderInit) {
           this.init = init
           this.fails = failing > 0
           if (failing > 0) failing--
+          this.index = opened
           opened++
         }
         configure(config: { codec: string }) {
@@ -141,20 +159,31 @@ describe('a live take', () => {
             height: frame.visibleRect?.height ?? frame.codedHeight,
             memory: frame.visibleRect === undefined,
           })
-          if (this.fails)
+          if (this.fails && this.outputs >= failAfter)
             queueMicrotask(() => {
               this.state = 'closed'
               this.init.error(
                 new DOMException('Encoding error.', 'OperationError'),
               )
             })
-          else
-            this.init.output({
-              byteLength: 8,
-              type: opts.keyFrame ? 'key' : 'delta',
-              timestamp: frame.timestamp,
-              copyTo: () => {},
-            })
+          else {
+            this.init.output(
+              {
+                byteLength: 8,
+                type: opts.keyFrame ? 'key' : 'delta',
+                timestamp: frame.timestamp,
+                copyTo: (d: Uint8Array) => d.fill(this.index + 1),
+              },
+              this.outputs === 0
+                ? {
+                    decoderConfig: {
+                      description: avccOf(sets[this.index] ?? 0xb2),
+                    },
+                  }
+                : undefined,
+            )
+            this.outputs++
+          }
         }
         flush() {
           return Promise.resolve()
@@ -300,6 +329,50 @@ describe('a live take', () => {
     expect(rec.fallback()?.step).toBe('aligned')
     expect(encoded.at(-1)?.height).toBe(528)
     rec.abort()
+  })
+
+  it('falls back when the encoder fails after handing back chunks', async () => {
+    failing = 1
+    failAfter = 2
+    const rec = await start()
+    for (let i = 0; i < 4; i++) {
+      rec.frame(frame())
+      await settle()
+    }
+    expect(opened).toBe(2)
+    expect(rec.error()).toBe('')
+    expect(rec.fallback()?.step).toBe('memory')
+    expect(encoded.at(-1)).toMatchObject({ key: true, memory: true })
+    expect(rec.chunks()).toBe(3)
+    rec.abort()
+  })
+
+  const failMidTake = async () => {
+    failing = 1
+    failAfter = 2
+    const rec = await start()
+    for (let i = 0; i < 4; i++) {
+      rec.frame(frame())
+      await settle()
+    }
+    const file = new Uint8Array(await (await rec.finish()).arrayBuffer())
+    const track = demuxMp4(file)
+    return {
+      sets: track?.description?.at(-1),
+      samples: (track?.samples ?? []).map(s => file[s.offset]),
+    }
+  }
+
+  it('keeps the frames before the failure when the parameter sets match', async () => {
+    expect(await failMidTake()).toEqual({
+      sets: 0xb2,
+      samples: [1, 1, 2],
+    })
+  })
+
+  it('starts the file at the new encoder when its parameter sets differ', async () => {
+    sets = [0xb2, 0xb3]
+    expect(await failMidTake()).toEqual({ sets: 0xb3, samples: [2] })
   })
 
   it('fails as before once every setting has failed', async () => {

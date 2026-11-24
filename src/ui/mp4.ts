@@ -264,6 +264,11 @@ interface Mp4Tables {
   // unplayable; `VideoEncoder` hands it over on the first chunk's metadata.
   avcc: Uint8Array<ArrayBuffer>
   samples: readonly Sample[]
+  // Bytes at the front of the picture that no sample refers to: what an
+  // encoder that failed mid-take handed back, when the encoder that replaced
+  // it wrote different parameter sets. They stay in `mdat` and the chunk
+  // offset steps over them.
+  skipped?: number
   // Where the track ends, in frame periods. The last frame stays up until then;
   // absent, it lasts one period.
   end?: number
@@ -535,7 +540,8 @@ export function writeMp4(
 export function mp4Parts<P extends Payload>(
   spec: Mp4Spec<P>,
 ): (Uint8Array<ArrayBuffer> | P)[] {
-  const videoBytes = spec.samples.reduce((t, s) => t + s.size, 0)
+  const videoBytes =
+    (spec.skipped ?? 0) + spec.samples.reduce((t, s) => t + s.size, 0)
   const carried = spec.video.reduce((t, p) => t + sizeOf(p), 0)
   if (carried !== videoBytes) {
     throw new Error(
@@ -585,12 +591,13 @@ export function mp4Layout(spec: Mp4Tables): Mp4Layout {
   const movieDuration = Math.max(videoDuration, audioDuration)
 
   // The picture's samples, then the sound's, each track one chunk.
+  const skipped = spec.skipped ?? 0
   const videoBytes = samples.reduce((t, s) => t + s.size, 0)
   const audioBytes = audio?.samples.reduce((t, s) => t + s.data.length, 0) ?? 0
-  const payloadBytes = videoBytes + audioBytes
+  const payloadBytes = skipped + videoBytes + audioBytes
   // `mdat` comes before `moov` so the chunk offsets can be computed without
   // laying the movie box out twice: everything in front of the samples is the
-  // brand plus this box's own header.
+  // brand, this box's own header and any skipped bytes.
   const head = join([
     FTYP,
     mdatHeader(
@@ -598,7 +605,7 @@ export function mp4Layout(spec: Mp4Tables): Mp4Layout {
       spec.streamed === true || payloadBytes + 8 > 0xffffffff,
     ),
   ])
-  const sampleStart = head.length
+  const sampleStart = head.length + skipped
 
   const avc1 = box(
     'avc1',

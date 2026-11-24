@@ -29,8 +29,8 @@ const size = n =>
 
 // `lost` is a take whose note outlived its tab, `failed` one the encoder
 // declined, `rescued` a live take the engine sent no frames, which went on
-// by reading the canvas, and `retried` one whose encoder failed before any
-// chunk and worked at a lesser setting; the model is only ever there on Chrome. Spelled out because
+// by reading the canvas, and `retried` one whose encoder failed and worked at
+// a lesser setting; the model is only ever there on Chrome. Spelled out because
 // `lost  unknown device` read as a lost GPU device, which is a different fault
 // with its own page of documentation.
 const head = r =>

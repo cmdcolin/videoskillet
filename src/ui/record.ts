@@ -224,8 +224,8 @@ export interface Recorder {
   // platform encode is always "Encoding error.", so the name is most of what
   // a report learns.
   errorName: () => string
-  // The setting the take fell back to after the encoder failed before its
-  // first chunk, and the first failure's error, or null.
+  // The setting the take fell back to after its encoder failed, and the first
+  // failure's error, or null.
   fallback: () => { step: Step; error: string } | null
 }
 
@@ -249,14 +249,14 @@ export function isSupported(): boolean {
 const even = (n: number): number => Math.max(2, n - (n % 2))
 
 // What a take gives up, one more at a time, each time the platform encoder
-// fails before it hands back a chunk: frames from the GPU, then the High and
-// Main profiles, then the rows and columns past a multiple of 16. Chrome
-// reports every such failure as "Encoding error." whatever went wrong, and
-// these are the suspects in two Mali phones that failed that way at every
-// bitrate. A frame off a WebGPU canvas is a GPU texture that Chrome converts
-// for MediaCodec on the GPU, and a frame in memory is converted on the CPU
-// instead. Three reopens at most, because the picture holds still while each
-// new encoder starts.
+// fails: frames from the GPU, then the High and Main profiles, then the rows
+// and columns past a multiple of 16. Chrome reports every such failure as
+// "Encoding error." whatever went wrong, and these are the suspects in two
+// Mali phones that failed that way at every bitrate, before their first chunk,
+// and a third that failed after one chunk or after fifteen. A frame off a
+// WebGPU canvas is a GPU texture that Chrome converts for MediaCodec on the
+// GPU, and a frame in memory is converted on the CPU instead. Three reopens
+// at most, because the picture holds still while each new encoder starts.
 type Step = '' | 'memory' | 'baseline' | 'aligned'
 
 interface Setting {
@@ -294,6 +294,9 @@ export const settingsFor = (width: number, height: number): Setting[] => {
   )
 }
 
+const sameBytes = (a: Uint8Array, b: Uint8Array) =>
+  a.length === b.length && a.every((v, i) => v === b[i])
+
 const describe = (name: string, message: string) =>
   name === '' ? message : `${name}: ${message}`
 
@@ -311,6 +314,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   let chunks = 0
   let coded = ''
   let configs = 0
+  let skipped = 0
   let failure = ''
   let failureName = ''
   let closed = false
@@ -359,7 +363,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   }
 
   const output: EncodedVideoChunkOutputCallback = (chunk, meta) => {
-    // The parameter sets arrive once, on the first chunk. Kept rather than
+    // The parameter sets arrive on an encoder's first chunk. Kept rather than
     // re-read, because later chunks carry no metadata at all and a file
     // without an avcC record is a file nothing can decode.
     // `description` is typed as a union of every buffer-ish thing, because
@@ -372,8 +376,8 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
         coded = `${config.codedWidth}x${config.codedHeight}`
     }
     const description = config?.description
-    if (avcc === null && description !== undefined) {
-      avcc = (
+    if (description !== undefined && (avcc === null || reopened)) {
+      const next = (
         ArrayBuffer.isView(description)
           ? new Uint8Array(
               description.buffer,
@@ -382,7 +386,16 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
             )
           : new Uint8Array(description)
       ).slice()
+      // An encoder that replaced one that failed mid-take may write other
+      // parameter sets, which the frames before it do not decode with. Those
+      // frames stay in the sink and the file starts at the new encoder's.
+      if (avcc !== null && !sameBytes(avcc, next)) {
+        skipped += samples.reduce((t, s) => t + s.size, 0)
+        samples.length = 0
+      }
+      avcc = next
     }
+    reopened = false
     const data = new Uint8Array(chunk.byteLength)
     chunk.copyTo(data)
     chunks++
@@ -407,9 +420,9 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
   let attempt = 0
   let firstError = ''
   let needsKey = false
+  let reopened = false
 
   const open = (codec: string, s: Setting) => {
-    avcc = null
     configs = 0
     coded = ''
     const next = new VideoEncoder({
@@ -417,7 +430,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
       error: e => {
         const name = e instanceof Error ? e.name : ''
         const message = e instanceof Error ? e.message : String(e)
-        if (chunks === 0 && !closed && attempt < settings.length - 1) {
+        if (!closed && attempt < settings.length - 1) {
           if (firstError === '') firstError = describe(name, message)
           void fallBack(name, message)
         } else {
@@ -444,6 +457,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
           height = s.height
           encoder = open(next, s)
           needsKey = true
+          reopened = true
         }
         found = true
         break
@@ -677,6 +691,7 @@ export async function startRecording(spec: RecorderSpec): Promise<Recorder> {
             fps,
             avcc,
             samples,
+            skipped,
             end,
             streamed: sink.streamed,
             ...(audio === null ? {} : { audio }),
