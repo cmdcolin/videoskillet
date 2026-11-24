@@ -2,6 +2,19 @@
 
 All notable changes to videoskillet are documented here.
 
+## [2.25.12](https://github.com/cmdcolin/videoskillet/compare/v2.25.11...v2.25.12) - 2026-11-24
+
+### Features
+- *(ui)* [`41823c5`](https://github.com/cmdcolin/videoskillet/commit/41823c5626ac9ce8565b228ca597f1d87b1d2508) show 12 earlier sessions on the home page and always link the full list
+
+### Fixes
+- *(ui)* [`7fd4bde`](https://github.com/cmdcolin/videoskillet/commit/7fd4bdecd7e862d14c09dbcf93154f17192b4d3a) fall back to a lesser encoder setting when the encoder fails mid-take
+
+### Documentation
+- [`7632e76`](https://github.com/cmdcolin/videoskillet/commit/7632e76fd4bb8bfbbf21cf82627a18a8b5912b5a) say the descrambler box misses pulses, not lines, and show it side by side
+- [`8509a17`](https://github.com/cmdcolin/videoskillet/commit/8509a173b3c69f2b11ab434c0ea4ad931a095d61) mark the black level and sync pulse on the tri-mode figure
+- [`f839bb4`](https://github.com/cmdcolin/videoskillet/commit/f839bb40ee4c4ce33a7fc561cb84f983a8b0c6cc) link the scramble posts as a series and credit the skeleton's source
+
 ## [2.25.11](https://github.com/cmdcolin/videoskillet/compare/v2.25.10...v2.25.11) - 2026-11-23
 
 ### Fixes
