@@ -37,8 +37,8 @@ every fault acts on the same waveform.
 - Feedback delays up to 16 frames, and cables can loop back into earlier modules.
 - The spec lists no sync separator, PLL or burst gate. The Composite module encodes NTSC or PAL.
 - videoskillet runs the whole path on one waveform, so a receiver locks to the damage, and tearing, rolling and hue throw follow.
-- Raster Weaver has Spout, Syphon, OSC, MIDI clock, multiple output windows and offline rendering up to 8K; videoskillet has none of these.
-- License: Proprietary. The demo is free with a watermark; a one-time licence removes it.
+- Raster Weaver has Spout, Syphon, OSC, multiple output windows and offline rendering up to 8K. videoskillet has no built-in Spout, Syphon or OSC, and its raster is fixed.
+- License: Proprietary.
 
 ### BENDR
 
@@ -90,4 +90,4 @@ every fault acts on the same waveform.
 - **It needs a WebGPU browser.** [The FAQ](FAQ.md#what-does-it-need-to-run) lists them.
 - **The model is progressive.** It runs 525/60 frames; real NTSC sends 60 fields a second. This is the largest remaining authenticity gap ([the architecture](ARCHITECTURE.md)).
 
-<sub>Written from each project's own documentation, source and product pages. No benchmarks were run here. Yurenaki and Raster Weaver are closed source, so statements about how they work inside are inferred from their public manuals and specs, not confirmed. If something is out of date or unfair, please open an issue.</sub>
+<sub>Written from each project's public documentation and product pages, and the videoskillet side from this repo's docs. No benchmarks were run here. Yurenaki and Raster Weaver are closed source, so statements about how they work inside are inferred from their public manuals and specs, not confirmed. If something is out of date or unfair, please open an issue.</sub>
